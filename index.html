@@ -8,120 +8,228 @@
   :root {
     --bg: #0f1115; --panel: #171a21; --border: #262b36;
     --text: #e7e9ee; --muted: #8a90a2; --accent: #c9a86a;
-    --red: #d9534f; --yellow: #d9a441; --green: #4caf7d;
+    --red: #d9534f; --yellow: #d9a441; --green: #4caf7d; --blue: #7a9cff;
   }
   * { box-sizing: border-box; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: 'Georgia', 'Times New Roman', serif;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
     margin: 0; padding: 0;
   }
   header {
-    padding: 28px 40px; border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 24px 32px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
   }
-  header h1 { font-size: 20px; font-weight: 400; letter-spacing: 0.3px; margin: 0; }
-  header .sub { color: var(--muted); font-size: 13px; font-family: -apple-system, sans-serif; }
-  main { padding: 24px 40px; }
-  .stats { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
-  .stat {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
-    padding: 16px 20px; min-width: 140px;
+  header h1 { font-family: Georgia, serif; font-size: 19px; font-weight: 400; margin: 0; }
+  header .sub { color: var(--muted); font-size: 12.5px; }
+  nav { display: flex; gap: 4px; padding: 0 32px; border-bottom: 1px solid var(--border); }
+  nav button {
+    background: none; border: none; color: var(--muted); padding: 12px 16px; cursor: pointer;
+    font-size: 13.5px; border-bottom: 2px solid transparent;
   }
-  .stat .num { font-size: 26px; color: var(--accent); }
-  .stat .label { font-size: 12px; color: var(--muted); font-family: -apple-system, sans-serif; margin-top: 4px; }
-  table { width: 100%; border-collapse: collapse; font-family: -apple-system, sans-serif; font-size: 13.5px; }
-  th {
-    text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 500;
-    border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  nav button.active { color: var(--text); border-bottom-color: var(--accent); }
+  main { padding: 24px 32px; max-width: 1100px; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+  .stats { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; min-width: 130px; }
+  .stat .num { font-size: 24px; color: var(--accent); font-family: Georgia, serif; }
+  .stat .label { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .filtros { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  select, input {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 10px; border-radius: 6px; font-size: 13px;
   }
-  td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 9px 10px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
   tr:hover td { background: #1b1f28; }
-  .badge {
-    display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600;
-  }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
   .badge.alta { background: rgba(217,83,79,0.15); color: var(--red); }
   .badge.media { background: rgba(217,164,65,0.15); color: var(--yellow); }
-  .badge.logo { background: rgba(120,120,220,0.15); color: #9a9aff; }
+  .badge.logo { background: rgba(122,156,255,0.15); color: var(--blue); }
   .marca-nueva { font-weight: 600; }
-  .marca-vig { color: var(--muted); font-size: 12px; }
-  .empty { color: var(--muted); padding: 60px; text-align: center; font-family: -apple-system, sans-serif; }
-  a.acta-link { color: var(--accent); text-decoration: none; font-family: -apple-system, sans-serif; font-size: 12px; }
-  a.acta-link:hover { text-decoration: underline; }
-  footer { padding: 20px 40px; color: var(--muted); font-size: 11px; font-family: -apple-system, sans-serif; }
+  .empty { color: var(--muted); padding: 50px 0; text-align: center; }
+  a.acta-link, a.expand { color: var(--accent); text-decoration: none; font-size: 12px; cursor: pointer; }
+  a.acta-link:hover, a.expand:hover { text-decoration: underline; }
+  .borrador { display: none; background: #10131a; border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-top: 10px; white-space: pre-wrap; font-size: 12px; color: var(--muted); font-family: Georgia, serif; }
+  .borrador.show { display: block; }
+  form.alta { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; align-items: end; }
+  form.alta label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+  form.alta input, form.alta select { width: 100%; }
+  button.submit { background: var(--accent); color: #1a1a1a; border: none; padding: 9px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; }
+  button.submit:hover { opacity: 0.9; }
+  button.del { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; }
+  .aviso { font-size: 11.5px; color: var(--muted); margin-bottom: 16px; }
+  footer { padding: 20px 32px; color: var(--muted); font-size: 11px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Vigilancia de Marcas — INPI</h1>
-  <div class="sub">Alpha Gestoría 360</div>
+  <div>
+    <h1>Vigilancia de Marcas — INPI</h1>
+    <div class="sub">Alpha Gestoría 360</div>
+  </div>
 </header>
+<nav>
+  <button class="active" data-tab="alertas">Alertas</button>
+  <button data-tab="cartera">Mi cartera</button>
+</nav>
 <main>
-  <div class="stats" id="stats"></div>
-  <table id="tabla">
-    <thead>
-      <tr>
-        <th>Alerta</th>
-        <th>Marca vigilada</th>
-        <th>Marca nueva detectada</th>
-        <th>Clase</th>
-        <th>Titular</th>
-        <th>Boletín</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-  <div id="empty" class="empty" style="display:none">Sin alertas todavía. El sistema chequea el INPI automáticamente todos los jueves.</div>
+
+  <div id="tab-alertas" class="tab active">
+    <div class="stats" id="stats"></div>
+    <div class="filtros">
+      <select id="filtroTipo">
+        <option value="">Todos los tipos</option>
+        <option value="texto">Texto</option>
+        <option value="logo">Logo</option>
+      </select>
+      <select id="filtroRevisada">
+        <option value="">Todas</option>
+        <option value="no">No revisadas</option>
+        <option value="si">Revisadas</option>
+      </select>
+    </div>
+    <table>
+      <thead><tr><th>Score</th><th>Marca nueva</th><th>Clase</th><th>Titular</th><th>Boletín</th><th>Acta</th><th></th></tr></thead>
+      <tbody id="tbodyAlertas"></tbody>
+    </table>
+    <div id="emptyAlertas" class="empty" style="display:none">Sin alertas por ahora. El sistema chequea el INPI todos los jueves automáticamente.</div>
+  </div>
+
+  <div id="tab-cartera" class="tab">
+    <div class="aviso">⚠ Vista simple sin login — cualquiera con el link puede agregar o borrar marcas. Sirve para uso propio o demo; no la compartas ampliamente sin ese resguardo.</div>
+    <form class="alta" id="formAlta">
+      <div><label>Nombre de la marca</label><input type="text" id="fNombre" placeholder="ej. TORTE"></div>
+      <div><label>Clase (Niza)</label><input type="number" id="fClase" min="1" max="45" required></div>
+      <div><label>Tipo</label>
+        <select id="fTipo"><option value="D">Denominativa</option><option value="M">Mixta (logo)</option></select>
+      </div>
+      <div><label>Cliente</label><input type="text" id="fCliente" placeholder="opcional"></div>
+      <div><button type="submit" class="submit">Agregar</button></div>
+    </form>
+    <table>
+      <thead><tr><th>Marca</th><th>Clase</th><th>Tipo</th><th>Cliente</th><th></th></tr></thead>
+      <tbody id="tbodyCartera"></tbody>
+    </table>
+    <div id="emptyCartera" class="empty" style="display:none">Todavía no cargaste marcas.</div>
+  </div>
+
 </main>
 <footer>Sistema de vigilancia automática — corre semanalmente, cruza texto y logos contra el Boletín de Marcas del INPI.</footer>
 
 <script>
 const SUPABASE_URL = "https://oomczohvjqycpuhhmotv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_OwKVJX834gmqXdjT8o3DGg_Tdz5YZpa";
+const KEY = "sb_publishable_OwKVJX834gmqXdjT8o3DGg_Tdz5YZpa";
+const H = { apikey: KEY, Authorization: `Bearer ${KEY}` };
+const HJ = { ...H, "Content-Type": "application/json", Prefer: "return=representation" };
 
-async function cargar() {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/alertas?select=*&order=similitud_score.desc&limit=200`,
-    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-  );
-  const alertas = await res.json();
+let alertasCache = [];
 
-  const tbody = document.getElementById('tbody');
-  const statsEl = document.getElementById('stats');
-  const emptyEl = document.getElementById('empty');
+function renderAlertas() {
+  const tipo = document.getElementById('filtroTipo').value;
+  const rev = document.getElementById('filtroRevisada').value;
+  let filtradas = alertasCache;
+  if (tipo) filtradas = filtradas.filter(a => a.tipo_match === tipo);
+  if (rev === 'si') filtradas = filtradas.filter(a => a.revisada);
+  if (rev === 'no') filtradas = filtradas.filter(a => !a.revisada);
 
-  if (!Array.isArray(alertas) || alertas.length === 0) {
-    emptyEl.style.display = 'block';
-    document.getElementById('tabla').style.display = 'none';
-    return;
+  const tbody = document.getElementById('tbodyAlertas');
+  const empty = document.getElementById('emptyAlertas');
+
+  if (filtradas.length === 0) {
+    empty.style.display = 'block'; tbody.innerHTML = ''; return;
   }
+  empty.style.display = 'none';
 
-  const altas = alertas.filter(a => a.similitud_score >= 0.85).length;
-  statsEl.innerHTML = `
-    <div class="stat"><div class="num">${alertas.length}</div><div class="label">Alertas totales</div></div>
-    <div class="stat"><div class="num">${altas}</div><div class="label">Requieren oposición (&gt;85%)</div></div>
-  `;
+  const altas = alertasCache.filter(a => a.similitud_score >= 0.85).length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${alertasCache.length}</div><div class="label">Alertas totales</div></div>
+    <div class="stat"><div class="num">${altas}</div><div class="label">Requieren oposición (&gt;85%)</div></div>`;
 
-  tbody.innerHTML = alertas.map(a => {
+  tbody.innerHTML = filtradas.map((a, i) => {
     const pct = Math.round((a.similitud_score || 0) * 100);
     const badgeClass = a.tipo_match === 'logo' ? 'logo' : (pct >= 85 ? 'alta' : 'media');
-    const badgeLabel = a.tipo_match === 'logo' ? `logo ${pct}%` : `${pct}%`;
     const titulares = (a.titular_nuevo || []).map(t => t.nombre).join(', ') || '—';
+    const tieneBorrador = a.borrador_oposicion ? `<a class="expand" onclick="toggleBorrador('${a.id}')">ver borrador</a>` : '';
     return `
       <tr>
-        <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
-        <td class="marca-vig">clase ${a.clase}</td>
+        <td><span class="badge ${badgeClass}">${pct}%</span></td>
         <td class="marca-nueva">${a.denominacion_nueva || '(marca mixta)'}</td>
         <td>${a.clase}</td>
         <td>${titulares}</td>
         <td>${a.boletin_numero || '—'}</td>
-        <td><a class="acta-link" target="_blank" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${a.acta_nueva}">Acta ${a.acta_nueva}</a></td>
-      </tr>`;
+        <td><a class="acta-link" target="_blank" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${a.acta_nueva}">${a.acta_nueva}</a></td>
+        <td>${tieneBorrador}</td>
+      </tr>
+      ${a.borrador_oposicion ? `<tr id="borrador-${a.id}"><td colspan="7"><div class="borrador" id="bdiv-${a.id}">${a.borrador_oposicion}</div></td></tr>` : ''}
+    `;
   }).join('');
 }
 
-cargar();
+window.toggleBorrador = (id) => {
+  document.getElementById(`bdiv-${id}`).classList.toggle('show');
+};
+
+async function cargarAlertas() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/alertas?select=*&order=similitud_score.desc&limit=300`, { headers: H });
+  alertasCache = await res.json();
+  renderAlertas();
+}
+
+async function cargarCartera() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/marcas_vigiladas?select=*&order=created_at.desc`, { headers: H });
+  const marcas = await res.json();
+  const tbody = document.getElementById('tbodyCartera');
+  const empty = document.getElementById('emptyCartera');
+  if (!Array.isArray(marcas) || marcas.length === 0) {
+    empty.style.display = 'block'; tbody.innerHTML = ''; return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = marcas.map(m => `
+    <tr>
+      <td>${m.nombre || '(logo sin texto)'}</td>
+      <td>${m.clase}</td>
+      <td>${m.tipo === 'M' ? 'Mixta' : 'Denominativa'}</td>
+      <td>${m.cliente || '—'}</td>
+      <td><button class="del" onclick="borrarMarca('${m.id}')">borrar</button></td>
+    </tr>`).join('');
+}
+
+window.borrarMarca = async (id) => {
+  if (!confirm('¿Borrar esta marca de la cartera?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/marcas_vigiladas?id=eq.${id}`, { method: 'DELETE', headers: H });
+  cargarCartera();
+};
+
+document.getElementById('formAlta').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    nombre: document.getElementById('fNombre').value || null,
+    clase: parseInt(document.getElementById('fClase').value),
+    tipo: document.getElementById('fTipo').value,
+    cliente: document.getElementById('fCliente').value || null,
+  };
+  await fetch(`${SUPABASE_URL}/rest/v1/marcas_vigiladas`, { method: 'POST', headers: HJ, body: JSON.stringify(body) });
+  e.target.reset();
+  cargarCartera();
+});
+
+document.getElementById('filtroTipo').addEventListener('change', renderAlertas);
+document.getElementById('filtroRevisada').addEventListener('change', renderAlertas);
+
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+cargarAlertas();
+cargarCartera();
 </script>
 </body>
 </html>
