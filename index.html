@@ -107,6 +107,8 @@
         <select id="fTipo"><option value="D">Denominativa</option><option value="M">Mixta (logo)</option></select>
       </div>
       <div><label>Cliente</label><input type="text" id="fCliente" placeholder="opcional"></div>
+      <div id="campoLogo" style="display:none"><label>Logo (si es mixta)</label><input type="file" id="fLogo" accept="image/*"></div>
+      <div><label>Vence (opcional)</label><input type="date" id="fVencimiento"></div>
       <div><button type="submit" class="submit">Agregar</button></div>
     </form>
     <table>
@@ -203,16 +205,36 @@ window.borrarMarca = async (id) => {
   cargarCartera();
 };
 
+document.getElementById('fTipo').addEventListener('change', (e) => {
+  document.getElementById('campoLogo').style.display = e.target.value === 'M' ? 'block' : 'none';
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
 document.getElementById('formAlta').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const tipo = document.getElementById('fTipo').value;
+  const logoFile = document.getElementById('fLogo').files[0];
   const body = {
     nombre: document.getElementById('fNombre').value || null,
     clase: parseInt(document.getElementById('fClase').value),
-    tipo: document.getElementById('fTipo').value,
+    tipo,
     cliente: document.getElementById('fCliente').value || null,
+    fecha_vencimiento: document.getElementById('fVencimiento').value || null,
   };
+  if (tipo === 'M' && logoFile) {
+    body.logo_pendiente = await fileToBase64(logoFile);
+  }
   await fetch(`${SUPABASE_URL}/rest/v1/marcas_vigiladas`, { method: 'POST', headers: HJ, body: JSON.stringify(body) });
   e.target.reset();
+  document.getElementById('campoLogo').style.display = 'none';
   cargarCartera();
 });
 
