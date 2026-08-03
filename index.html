@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vigilancia de Marcas INPI — Alpha Gestoría 360</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --border: #262b36;
+    --text: #e7e9ee; --muted: #8a90a2; --accent: #c9a86a;
+    --red: #d9534f; --yellow: #d9a441; --green: #4caf7d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    margin: 0; padding: 0;
+  }
+  header {
+    padding: 28px 40px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  header h1 { font-size: 20px; font-weight: 400; letter-spacing: 0.3px; margin: 0; }
+  header .sub { color: var(--muted); font-size: 13px; font-family: -apple-system, sans-serif; }
+  main { padding: 24px 40px; }
+  .stats { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 16px 20px; min-width: 140px;
+  }
+  .stat .num { font-size: 26px; color: var(--accent); }
+  .stat .label { font-size: 12px; color: var(--muted); font-family: -apple-system, sans-serif; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-family: -apple-system, sans-serif; font-size: 13.5px; }
+  th {
+    text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 500;
+    border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: #1b1f28; }
+  .badge {
+    display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600;
+  }
+  .badge.alta { background: rgba(217,83,79,0.15); color: var(--red); }
+  .badge.media { background: rgba(217,164,65,0.15); color: var(--yellow); }
+  .badge.logo { background: rgba(120,120,220,0.15); color: #9a9aff; }
+  .marca-nueva { font-weight: 600; }
+  .marca-vig { color: var(--muted); font-size: 12px; }
+  .empty { color: var(--muted); padding: 60px; text-align: center; font-family: -apple-system, sans-serif; }
+  a.acta-link { color: var(--accent); text-decoration: none; font-family: -apple-system, sans-serif; font-size: 12px; }
+  a.acta-link:hover { text-decoration: underline; }
+  footer { padding: 20px 40px; color: var(--muted); font-size: 11px; font-family: -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Vigilancia de Marcas — INPI</h1>
+  <div class="sub">Alpha Gestoría 360</div>
+</header>
+<main>
+  <div class="stats" id="stats"></div>
+  <table id="tabla">
+    <thead>
+      <tr>
+        <th>Alerta</th>
+        <th>Marca vigilada</th>
+        <th>Marca nueva detectada</th>
+        <th>Clase</th>
+        <th>Titular</th>
+        <th>Boletín</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div id="empty" class="empty" style="display:none">Sin alertas todavía. El sistema chequea el INPI automáticamente todos los jueves.</div>
+</main>
+<footer>Sistema de vigilancia automática — corre semanalmente, cruza texto y logos contra el Boletín de Marcas del INPI.</footer>
+
+<script>
+const SUPABASE_URL = "https://oomczohvjqycpuhhmotv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_OwKVJX834gmqXdjT8o3DGg_Tdz5YZpa";
+
+async function cargar() {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/alertas?select=*&order=similitud_score.desc&limit=200`,
+    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+  );
+  const alertas = await res.json();
+
+  const tbody = document.getElementById('tbody');
+  const statsEl = document.getElementById('stats');
+  const emptyEl = document.getElementById('empty');
+
+  if (!Array.isArray(alertas) || alertas.length === 0) {
+    emptyEl.style.display = 'block';
+    document.getElementById('tabla').style.display = 'none';
+    return;
+  }
+
+  const altas = alertas.filter(a => a.similitud_score >= 0.85).length;
+  statsEl.innerHTML = `
+    <div class="stat"><div class="num">${alertas.length}</div><div class="label">Alertas totales</div></div>
+    <div class="stat"><div class="num">${altas}</div><div class="label">Requieren oposición (&gt;85%)</div></div>
+  `;
+
+  tbody.innerHTML = alertas.map(a => {
+    const pct = Math.round((a.similitud_score || 0) * 100);
+    const badgeClass = a.tipo_match === 'logo' ? 'logo' : (pct >= 85 ? 'alta' : 'media');
+    const badgeLabel = a.tipo_match === 'logo' ? `logo ${pct}%` : `${pct}%`;
+    const titulares = (a.titular_nuevo || []).map(t => t.nombre).join(', ') || '—';
+    return `
+      <tr>
+        <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+        <td class="marca-vig">clase ${a.clase}</td>
+        <td class="marca-nueva">${a.denominacion_nueva || '(marca mixta)'}</td>
+        <td>${a.clase}</td>
+        <td>${titulares}</td>
+        <td>${a.boletin_numero || '—'}</td>
+        <td><a class="acta-link" target="_blank" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${a.acta_nueva}">Acta ${a.acta_nueva}</a></td>
+      </tr>`;
+  }).join('');
+}
+
+cargar();
+</script>
+</body>
+</html>
