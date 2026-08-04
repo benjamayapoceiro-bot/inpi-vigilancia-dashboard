@@ -1,0 +1,234 @@
+/* ═══════════════════════════════════════════════════════════
+   Animations — Entrances, Loaders, Micro-interactions
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0);
+    }
+
+    50% {
+        box-shadow: 0 0 12px 4px rgba(var(--primary-rgb), 0.15);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Staggered entrance for lists ────────────────── */
+
+.stagger-enter>* {
+    animation: fadeSlideUp var(--transition-base) ease-out both;
+}
+
+.stagger-enter>*:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.stagger-enter>*:nth-child(2) {
+    animation-delay: 50ms;
+}
+
+.stagger-enter>*:nth-child(3) {
+    animation-delay: 100ms;
+}
+
+.stagger-enter>*:nth-child(4) {
+    animation-delay: 150ms;
+}
+
+.stagger-enter>*:nth-child(5) {
+    animation-delay: 200ms;
+}
+
+.stagger-enter>*:nth-child(6) {
+    animation-delay: 250ms;
+}
+
+/* ── Row entrance for table rows ─────────────────── */
+
+.data-table tbody tr {
+    animation: fadeIn 0.3s ease-out both;
+}
+
+.data-table tbody tr:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.data-table tbody tr:nth-child(2) {
+    animation-delay: 30ms;
+}
+
+.data-table tbody tr:nth-child(3) {
+    animation-delay: 60ms;
+}
+
+.data-table tbody tr:nth-child(4) {
+    animation-delay: 90ms;
+}
+
+.data-table tbody tr:nth-child(5) {
+    animation-delay: 120ms;
+}
+
+.data-table tbody tr:nth-child(6) {
+    animation-delay: 150ms;
+}
+
+.data-table tbody tr:nth-child(7) {
+    animation-delay: 180ms;
+}
+
+.data-table tbody tr:nth-child(8) {
+    animation-delay: 210ms;
+}
+
+.data-table tbody tr:nth-child(9) {
+    animation-delay: 240ms;
+}
+
+.data-table tbody tr:nth-child(10) {
+    animation-delay: 270ms;
+}
+
+/* ── Spinner ─────────────────────────────────────── */
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+/* ── Priority badge pulse ────────────────────────── */
+
+.badge--danger.pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Hover lift ──────────────────────────────────── */
+
+.hover-lift {
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ── Toast exit ──────────────────────────────────── */
+
+.toast.exit {
+    animation: slideOutRight 0.3s ease-in forwards;
+}
+
+@keyframes slideOutRight {
+    to {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+}

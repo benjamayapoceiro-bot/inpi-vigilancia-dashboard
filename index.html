@@ -1,257 +1,313 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vigilancia de Marcas INPI — Alpha Gestoría 360</title>
-<style>
-  :root {
-    --bg: #0f1115; --panel: #171a21; --border: #262b36;
-    --text: #e7e9ee; --muted: #8a90a2; --accent: #c9a86a;
-    --red: #d9534f; --yellow: #d9a441; --green: #4caf7d; --blue: #7a9cff;
-  }
-  * { box-sizing: border-box; }
-  body {
-    background: var(--bg); color: var(--text);
-    font-family: -apple-system, 'Segoe UI', sans-serif;
-    margin: 0; padding: 0;
-  }
-  header {
-    padding: 24px 32px; border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
-  }
-  header h1 { font-family: Georgia, serif; font-size: 19px; font-weight: 400; margin: 0; }
-  header .sub { color: var(--muted); font-size: 12.5px; }
-  nav { display: flex; gap: 4px; padding: 0 32px; border-bottom: 1px solid var(--border); }
-  nav button {
-    background: none; border: none; color: var(--muted); padding: 12px 16px; cursor: pointer;
-    font-size: 13.5px; border-bottom: 2px solid transparent;
-  }
-  nav button.active { color: var(--text); border-bottom-color: var(--accent); }
-  main { padding: 24px 32px; max-width: 1100px; }
-  .tab { display: none; }
-  .tab.active { display: block; }
-  .stats { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
-  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; min-width: 130px; }
-  .stat .num { font-size: 24px; color: var(--accent); font-family: Georgia, serif; }
-  .stat .label { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
-  .filtros { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  select, input {
-    background: var(--panel); border: 1px solid var(--border); color: var(--text);
-    padding: 7px 10px; border-radius: 6px; font-size: 13px;
-  }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 9px 10px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; }
-  td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  tr:hover td { background: #1b1f28; }
-  .badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .badge.alta { background: rgba(217,83,79,0.15); color: var(--red); }
-  .badge.media { background: rgba(217,164,65,0.15); color: var(--yellow); }
-  .badge.logo { background: rgba(122,156,255,0.15); color: var(--blue); }
-  .marca-nueva { font-weight: 600; }
-  .empty { color: var(--muted); padding: 50px 0; text-align: center; }
-  a.acta-link, a.expand { color: var(--accent); text-decoration: none; font-size: 12px; cursor: pointer; }
-  a.acta-link:hover, a.expand:hover { text-decoration: underline; }
-  .borrador { display: none; background: #10131a; border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-top: 10px; white-space: pre-wrap; font-size: 12px; color: var(--muted); font-family: Georgia, serif; }
-  .borrador.show { display: block; }
-  form.alta { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; align-items: end; }
-  form.alta label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
-  form.alta input, form.alta select { width: 100%; }
-  button.submit { background: var(--accent); color: #1a1a1a; border: none; padding: 9px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; }
-  button.submit:hover { opacity: 0.9; }
-  button.del { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; }
-  .aviso { font-size: 11.5px; color: var(--muted); margin-bottom: 16px; }
-  footer { padding: 20px 32px; color: var(--muted); font-size: 11px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Panel de vigilancia de marcas INPI — Sistema de monitoreo automático del Boletín de Marcas">
+  <title>Vigilancia de Marcas INPI</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/animations.css">
+
+  <!-- Inline extra styles for specifics -->
+  <style>
+    /* Review toggle checkbox */
+    .review-toggle {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .review-toggle input {
+      display: none;
+    }
+    .review-toggle__check {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: transparent;
+      transition: all var(--transition-fast);
+      background: var(--bg-elevated);
+    }
+    .review-toggle input:checked + .review-toggle__check {
+      background: var(--success);
+      border-color: var(--success);
+      color: var(--bg-deep);
+    }
+    .review-toggle:hover .review-toggle__check {
+      border-color: var(--text-tertiary);
+    }
+
+    /* Reviewed row */
+    .row-reviewed td {
+      opacity: 0.5;
+    }
+    .row-reviewed:hover td {
+      opacity: 0.8;
+    }
+
+    /* Draft row */
+    .draft-row td {
+      padding: 0 var(--space-md) var(--space-md) !important;
+      border: none !important;
+    }
+
+    /* Quick info list */
+    .quick-info-list > div:last-child {
+      border-bottom: none !important;
+    }
+
+    /* Responsive two-col grid */
+    @media (max-width: 768px) {
+      .view [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    /* Loading state for the whole app */
+    .app-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .app-loading .spinner {
+      width: 36px;
+      height: 36px;
+    }
+    .app-loading span {
+      color: var(--text-tertiary);
+      font-size: 0.8125rem;
+    }
+  </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>Vigilancia de Marcas — INPI</h1>
-    <div class="sub">Alpha Gestoría 360</div>
-  </div>
-</header>
-<nav>
-  <button class="active" data-tab="alertas">Alertas</button>
-  <button data-tab="cartera">Mi cartera</button>
-</nav>
-<main>
+  <div class="app">
 
-  <div id="tab-alertas" class="tab active">
-    <div class="stats" id="stats"></div>
-    <div class="filtros">
-      <select id="filtroTipo">
-        <option value="">Todos los tipos</option>
-        <option value="texto">Texto</option>
-        <option value="logo">Logo</option>
-      </select>
-      <select id="filtroRevisada">
-        <option value="">Todas</option>
-        <option value="no">No revisadas</option>
-        <option value="si">Revisadas</option>
-      </select>
-    </div>
-    <table>
-      <thead><tr><th>Score</th><th>Marca nueva</th><th>Clase</th><th>Titular</th><th>Boletín</th><th>Acta</th><th></th></tr></thead>
-      <tbody id="tbodyAlertas"></tbody>
-    </table>
-    <div id="emptyAlertas" class="empty" style="display:none">Sin alertas por ahora. El sistema chequea el INPI todos los jueves automáticamente.</div>
-  </div>
-
-  <div id="tab-cartera" class="tab">
-    <div class="aviso">⚠ Vista simple sin login — cualquiera con el link puede agregar o borrar marcas. Sirve para uso propio o demo; no la compartas ampliamente sin ese resguardo.</div>
-    <form class="alta" id="formAlta">
-      <div><label>Nombre de la marca</label><input type="text" id="fNombre" placeholder="ej. TORTE"></div>
-      <div><label>Clase (Niza)</label><input type="number" id="fClase" min="1" max="45" required></div>
-      <div><label>Tipo</label>
-        <select id="fTipo"><option value="D">Denominativa</option><option value="M">Mixta (logo)</option></select>
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo" id="brand-logo">A</div>
+        <div class="sidebar__brand-text">
+          <div class="sidebar__brand-name" id="brand-name">Cargando...</div>
+          <div class="sidebar__brand-tagline" id="brand-tagline"></div>
+        </div>
       </div>
-      <div><label>Cliente</label><input type="text" id="fCliente" placeholder="opcional"></div>
-      <div id="campoLogo" style="display:none"><label>Logo (si es mixta)</label><input type="file" id="fLogo" accept="image/*"></div>
-      <div><label>Vence (opcional)</label><input type="date" id="fVencimiento"></div>
-      <div><button type="submit" class="submit">Agregar</button></div>
-    </form>
-    <table>
-      <thead><tr><th>Marca</th><th>Clase</th><th>Tipo</th><th>Cliente</th><th></th></tr></thead>
-      <tbody id="tbodyCartera"></tbody>
-    </table>
-    <div id="emptyCartera" class="empty" style="display:none">Todavía no cargaste marcas.</div>
-  </div>
 
-</main>
-<footer>Sistema de vigilancia automática — corre semanalmente, cruza texto y logos contra el Boletín de Marcas del INPI.</footer>
+      <nav class="sidebar__nav">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-item__icon">📊</span>
+          Panel
+        </button>
+        <button class="nav-item" data-view="alertas">
+          <span class="nav-item__icon">🔔</span>
+          Alertas
+          <span class="nav-item__badge" id="alertas-badge" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-view="cartera">
+          <span class="nav-item__icon">💼</span>
+          Mi Cartera
+        </button>
+      </nav>
 
-<script>
-const SUPABASE_URL = "https://oomczohvjqycpuhhmotv.supabase.co";
-const KEY = "sb_publishable_OwKVJX834gmqXdjT8o3DGg_Tdz5YZpa";
-const H = { apikey: KEY, Authorization: `Bearer ${KEY}` };
-const HJ = { ...H, "Content-Type": "application/json", Prefer: "return=representation" };
+      <div class="sidebar__footer" id="footer-text">
+        Sistema de vigilancia automática — cruza texto y logos contra el Boletín de Marcas del INPI.
+      </div>
+    </aside>
 
-let alertasCache = [];
+    <!-- Mobile overlay -->
+    <div class="mobile-overlay" id="mobile-overlay"></div>
 
-function renderAlertas() {
-  const tipo = document.getElementById('filtroTipo').value;
-  const rev = document.getElementById('filtroRevisada').value;
-  let filtradas = alertasCache;
-  if (tipo) filtradas = filtradas.filter(a => a.tipo_match === tipo);
-  if (rev === 'si') filtradas = filtradas.filter(a => a.revisada);
-  if (rev === 'no') filtradas = filtradas.filter(a => !a.revisada);
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main-content">
+      <!-- Sticky Header -->
+      <header class="main-header">
+        <div>
+          <button class="hamburger" id="hamburger">☰</button>
+          <div class="main-header__title" id="header-title">Panel de Control</div>
+          <div class="main-header__subtitle" id="header-subtitle">Vista general de tu vigilancia de marcas</div>
+        </div>
+        <div class="main-header__actions">
+          <!-- Dynamic actions per view -->
+        </div>
+      </header>
 
-  const tbody = document.getElementById('tbodyAlertas');
-  const empty = document.getElementById('emptyAlertas');
+      <div class="content-area">
 
-  if (filtradas.length === 0) {
-    empty.style.display = 'block'; tbody.innerHTML = ''; return;
-  }
-  empty.style.display = 'none';
+        <!-- ═══ VIEW: DASHBOARD ═══ -->
+        <div class="view active" id="view-dashboard">
+          <div class="stat-grid stagger-enter">
+            <div class="card card--stat skeleton skeleton--card"></div>
+            <div class="card card--stat skeleton skeleton--card"></div>
+            <div class="card card--stat skeleton skeleton--card"></div>
+            <div class="card card--stat skeleton skeleton--card"></div>
+          </div>
+        </div>
 
-  const altas = alertasCache.filter(a => a.similitud_score >= 0.85).length;
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="num">${alertasCache.length}</div><div class="label">Alertas totales</div></div>
-    <div class="stat"><div class="num">${altas}</div><div class="label">Requieren oposición (&gt;85%)</div></div>`;
+        <!-- ═══ VIEW: ALERTAS ═══ -->
+        <div class="view" id="view-alertas">
+          <!-- Filters -->
+          <div class="section-header">
+            <div>
+              <h2 style="margin-bottom: 2px;">Alertas de vigilancia</h2>
+              <span style="font-size: 0.75rem; color: var(--text-tertiary);" id="alertas-count">Cargando...</span>
+            </div>
+            <div class="section-header__actions">
+              <button class="btn btn--secondary btn--sm" id="btn-export-alertas">
+                📥 Exportar CSV
+              </button>
+            </div>
+          </div>
 
-  tbody.innerHTML = filtradas.map((a, i) => {
-    const pct = Math.round((a.similitud_score || 0) * 100);
-    const badgeClass = a.tipo_match === 'logo' ? 'logo' : (pct >= 85 ? 'alta' : 'media');
-    const titulares = (a.titular_nuevo || []).map(t => t.nombre).join(', ') || '—';
-    const tieneBorrador = a.borrador_oposicion ? `<a class="expand" onclick="toggleBorrador('${a.id}')">ver borrador</a>` : '';
-    return `
-      <tr>
-        <td><span class="badge ${badgeClass}">${pct}%</span></td>
-        <td class="marca-nueva">${a.denominacion_nueva || '(marca mixta)'}</td>
-        <td>${a.clase}</td>
-        <td>${titulares}</td>
-        <td>${a.boletin_numero || '—'}</td>
-        <td><a class="acta-link" target="_blank" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${a.acta_nueva}">${a.acta_nueva}</a></td>
-        <td>${tieneBorrador}</td>
-      </tr>
-      ${a.borrador_oposicion ? `<tr id="borrador-${a.id}"><td colspan="7"><div class="borrador" id="bdiv-${a.id}">${a.borrador_oposicion}</div></td></tr>` : ''}
-    `;
-  }).join('');
-}
+          <div class="filter-bar">
+            <div class="search-input">
+              <span class="search-input__icon">🔍</span>
+              <input type="text" class="form-input" id="search-alertas" placeholder="Buscar marca..." style="padding-left: 40px;">
+            </div>
+            <select class="form-select" id="filtro-tipo">
+              <option value="">Todos los tipos</option>
+              <option value="texto">Texto</option>
+              <option value="logo">Logo</option>
+            </select>
+            <select class="form-select" id="filtro-revisada">
+              <option value="">Todas</option>
+              <option value="no">No revisadas</option>
+              <option value="si">Revisadas</option>
+            </select>
+          </div>
 
-window.toggleBorrador = (id) => {
-  document.getElementById(`bdiv-${id}`).classList.toggle('show');
-};
+          <!-- Table -->
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <table class="data-table" id="table-alertas">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Score</th>
+                  <th>Marca nueva</th>
+                  <th>Clase</th>
+                  <th>Titular</th>
+                  <th>Boletín</th>
+                  <th>Acta</th>
+                  <th style="width: 80px;"></th>
+                </tr>
+              </thead>
+              <tbody id="tbody-alertas"></tbody>
+            </table>
+          </div>
 
-async function cargarAlertas() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/alertas?select=*&order=similitud_score.desc&limit=300`, { headers: H });
-  alertasCache = await res.json();
-  renderAlertas();
-}
+          <!-- Empty state -->
+          <div class="empty-state" id="empty-alertas" style="display: none;">
+            <div class="empty-state__icon">🛡️</div>
+            <div class="empty-state__title">Sin alertas por ahora</div>
+            <div class="empty-state__desc">
+              El sistema chequea el INPI todos los jueves automáticamente.
+              Cuando se detecten coincidencias con tu cartera, aparecerán aquí.
+            </div>
+          </div>
+        </div>
 
-async function cargarCartera() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/marcas_vigiladas?select=*&order=created_at.desc`, { headers: H });
-  const marcas = await res.json();
-  const tbody = document.getElementById('tbodyCartera');
-  const empty = document.getElementById('emptyCartera');
-  if (!Array.isArray(marcas) || marcas.length === 0) {
-    empty.style.display = 'block'; tbody.innerHTML = ''; return;
-  }
-  empty.style.display = 'none';
-  tbody.innerHTML = marcas.map(m => `
-    <tr>
-      <td>${m.nombre || '(logo sin texto)'}</td>
-      <td>${m.clase}</td>
-      <td>${m.tipo === 'M' ? 'Mixta' : 'Denominativa'}</td>
-      <td>${m.cliente || '—'}</td>
-      <td><button class="del" onclick="borrarMarca('${m.id}')">borrar</button></td>
-    </tr>`).join('');
-}
+        <!-- ═══ VIEW: MI CARTERA ═══ -->
+        <div class="view" id="view-cartera">
+          <div class="section-header">
+            <div>
+              <h2 style="margin-bottom: 2px;">Mi cartera de marcas</h2>
+              <span style="font-size: 0.75rem; color: var(--text-tertiary);" id="cartera-count">Cargando...</span>
+            </div>
+            <div class="section-header__actions">
+              <button class="btn btn--secondary btn--sm" id="btn-export-cartera">
+                📥 Exportar CSV
+              </button>
+            </div>
+          </div>
 
-window.borrarMarca = async (id) => {
-  if (!confirm('¿Borrar esta marca de la cartera?')) return;
-  await fetch(`${SUPABASE_URL}/rest/v1/marcas_vigiladas?id=eq.${id}`, { method: 'DELETE', headers: H });
-  cargarCartera();
-};
+          <!-- Warning banner -->
+          <div class="banner banner--warning">
+            ⚠️ Vista sin autenticación — cualquiera con el link puede agregar o borrar marcas.
+            Sirve para uso propio o demo.
+          </div>
 
-document.getElementById('fTipo').addEventListener('change', (e) => {
-  document.getElementById('campoLogo').style.display = e.target.value === 'M' ? 'block' : 'none';
-});
+          <!-- Add form -->
+          <form class="form-alta" id="form-alta">
+            <div class="form-group">
+              <label class="form-label" for="f-nombre">Nombre de la marca</label>
+              <input type="text" class="form-input" id="f-nombre" placeholder="ej. TORTE">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-clase">Clase (Niza)</label>
+              <input type="number" class="form-input" id="f-clase" min="1" max="45" required placeholder="1-45">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-tipo">Tipo</label>
+              <select class="form-select" id="f-tipo">
+                <option value="D">Denominativa</option>
+                <option value="M">Mixta (logo)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-cliente">Cliente</label>
+              <input type="text" class="form-input" id="f-cliente" placeholder="opcional">
+            </div>
+            <div class="form-group" id="campo-logo" style="display:none">
+              <label class="form-label" for="f-logo">Logo (imagen)</label>
+              <input type="file" class="form-input" id="f-logo" accept="image/*">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-vencimiento">Vence (opcional)</label>
+              <input type="date" class="form-input" id="f-vencimiento">
+            </div>
+            <div class="form-group" style="justify-content: flex-end;">
+              <button type="submit" class="btn btn--primary">＋ Agregar marca</button>
+            </div>
+          </form>
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result.split(',')[1]);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
+          <!-- Table -->
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <table class="data-table" id="table-cartera">
+              <thead>
+                <tr>
+                  <th>Marca</th>
+                  <th>Clase</th>
+                  <th>Tipo</th>
+                  <th>Cliente</th>
+                  <th>Vencimiento</th>
+                  <th style="width: 90px;"></th>
+                </tr>
+              </thead>
+              <tbody id="tbody-cartera"></tbody>
+            </table>
+          </div>
 
-document.getElementById('formAlta').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const tipo = document.getElementById('fTipo').value;
-  const logoFile = document.getElementById('fLogo').files[0];
-  const body = {
-    nombre: document.getElementById('fNombre').value || null,
-    clase: parseInt(document.getElementById('fClase').value),
-    tipo,
-    cliente: document.getElementById('fCliente').value || null,
-    fecha_vencimiento: document.getElementById('fVencimiento').value || null,
-  };
-  if (tipo === 'M' && logoFile) {
-    body.logo_pendiente = await fileToBase64(logoFile);
-  }
-  await fetch(`${SUPABASE_URL}/rest/v1/marcas_vigiladas`, { method: 'POST', headers: HJ, body: JSON.stringify(body) });
-  e.target.reset();
-  document.getElementById('campoLogo').style.display = 'none';
-  cargarCartera();
-});
+          <!-- Empty state -->
+          <div class="empty-state" id="empty-cartera" style="display: none;">
+            <div class="empty-state__icon">📁</div>
+            <div class="empty-state__title">Todavía no cargaste marcas</div>
+            <div class="empty-state__desc">
+              Agregá marcas con el formulario de arriba para comenzar a monitorear el INPI.
+            </div>
+          </div>
+        </div>
 
-document.getElementById('filtroTipo').addEventListener('change', renderAlertas);
-document.getElementById('filtroRevisada').addEventListener('change', renderAlertas);
+      </div><!-- /content-area -->
+    </div><!-- /main-content -->
+  </div><!-- /app -->
 
-document.querySelectorAll('nav button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-  });
-});
-
-cargarAlertas();
-cargarCartera();
-</script>
+  <!-- Scripts (order matters) -->
+  <script src="config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/alertas.js"></script>
+  <script src="js/cartera.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

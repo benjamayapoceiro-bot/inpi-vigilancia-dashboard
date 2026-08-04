@@ -1,0 +1,649 @@
+/* ═══════════════════════════════════════════════════════════
+   Component Styles — Cards, Badges, Tables, Forms, Buttons
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Glass Card ──────────────────────────────────── */
+
+.card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-md);
+}
+
+.card--glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.card--stat {
+    padding: var(--space-lg) var(--space-xl);
+    min-width: 180px;
+}
+
+.card--stat::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.card--stat:hover::before {
+    opacity: 1;
+}
+
+.card--stat .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-md);
+    font-size: 1.25rem;
+}
+
+.card--stat .stat-icon.purple {
+    background: rgba(var(--primary-rgb), 0.15);
+    color: var(--primary-light);
+}
+
+.card--stat .stat-icon.cyan {
+    background: rgba(var(--accent-rgb), 0.15);
+    color: var(--accent);
+}
+
+.card--stat .stat-icon.red {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.card--stat .stat-icon.green {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.card--stat .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: var(--space-xs);
+    background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card--stat .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── Badges ──────────────────────────────────────── */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.badge--danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
+}
+
+.badge--warning {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning-border);
+}
+
+.badge--success {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success-border);
+}
+
+.badge--info {
+    background: var(--info-bg);
+    color: var(--info);
+    border: 1px solid var(--info-border);
+}
+
+.badge--primary {
+    background: rgba(var(--primary-rgb), 0.15);
+    color: var(--primary-light);
+    border: 1px solid rgba(var(--primary-rgb), 0.3);
+}
+
+/* ── Score Bar ───────────────────────────────────── */
+
+.score-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.score-bar__track {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    min-width: 60px;
+    max-width: 100px;
+}
+
+.score-bar__fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-slow);
+}
+
+.score-bar__fill--danger {
+    background: linear-gradient(90deg, var(--warning), var(--danger));
+}
+
+.score-bar__fill--warning {
+    background: linear-gradient(90deg, var(--success), var(--warning));
+}
+
+.score-bar__fill--success {
+    background: var(--success);
+}
+
+.score-bar__value {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    min-width: 38px;
+}
+
+/* ── Tables ──────────────────────────────────────── */
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8125rem;
+}
+
+.data-table thead th {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--text-tertiary);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-main);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.data-table tbody tr {
+    transition: background var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.data-table tbody td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.data-table .marca-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.data-table .acta-link {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    background: rgba(var(--accent-rgb), 0.08);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.data-table .acta-link:hover {
+    background: rgba(var(--accent-rgb), 0.2);
+}
+
+/* ── Form Controls ───────────────────────────────── */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.form-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-input,
+.form-select {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    transition: all var(--transition-fast);
+    width: 100%;
+    outline: none;
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+.form-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca0b0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn--primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+}
+
+.btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.4);
+}
+
+.btn--primary:active {
+    transform: translateY(0);
+}
+
+.btn--secondary {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.btn--secondary:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+}
+
+.btn--danger {
+    background: none;
+    color: var(--danger);
+    padding: 6px 12px;
+    font-size: 0.75rem;
+}
+
+.btn--danger:hover {
+    background: var(--danger-bg);
+}
+
+.btn--ghost {
+    background: none;
+    color: var(--text-secondary);
+    padding: 6px 12px;
+}
+
+.btn--ghost:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.btn--sm {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+}
+
+.btn--icon {
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+}
+
+/* ── Empty State ─────────────────────────────────── */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl) var(--space-lg);
+    text-align: center;
+}
+
+.empty-state__icon {
+    font-size: 3rem;
+    margin-bottom: var(--space-md);
+    opacity: 0.4;
+}
+
+.empty-state__title {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.empty-state__desc {
+    font-size: 0.8125rem;
+    color: var(--text-tertiary);
+    max-width: 360px;
+}
+
+/* ── Toast Notification ──────────────────────────── */
+
+.toast-container {
+    position: fixed;
+    bottom: var(--space-lg);
+    right: var(--space-lg);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.toast {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-lg);
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 280px;
+    animation: slideInRight var(--transition-base) ease-out;
+}
+
+.toast--success {
+    border-left: 3px solid var(--success);
+}
+
+.toast--error {
+    border-left: 3px solid var(--danger);
+}
+
+.toast--info {
+    border-left: 3px solid var(--info);
+}
+
+/* ── Modal / Confirm Dialog ──────────────────────── */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--transition-fast);
+}
+
+.modal {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl) var(--space-xl) var(--space-lg);
+    max-width: 420px;
+    width: 90%;
+    box-shadow: var(--shadow-lg);
+    animation: scaleIn var(--transition-base);
+}
+
+.modal__title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: var(--space-sm);
+}
+
+.modal__body {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+    line-height: 1.6;
+}
+
+.modal__actions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+}
+
+/* ── Skeleton Loader ─────────────────────────────── */
+
+.skeleton {
+    background: linear-gradient(90deg,
+            var(--bg-elevated) 25%,
+            var(--bg-hover) 50%,
+            var(--bg-elevated) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+.skeleton--text {
+    height: 14px;
+    width: 100%;
+    margin-bottom: var(--space-sm);
+}
+
+.skeleton--text:last-child {
+    width: 60%;
+}
+
+.skeleton--card {
+    height: 100px;
+    border-radius: var(--radius-lg);
+}
+
+/* ── Search Input ────────────────────────────────── */
+
+.search-input {
+    position: relative;
+}
+
+.search-input__icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+    font-size: 0.875rem;
+}
+
+.search-input input {
+    padding-left: 40px;
+}
+
+/* ── Section header ──────────────────────────────── */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.section-header__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.section-header__actions {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
+/* ── Filter Bar ──────────────────────────────────── */
+
+.filter-bar {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.filter-bar .form-select,
+.filter-bar .form-input {
+    min-width: 160px;
+    flex-shrink: 0;
+}
+
+/* ── Borrador / Draft panel ──────────────────────── */
+
+.draft-panel {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin: var(--space-sm) 0;
+    white-space: pre-wrap;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    display: none;
+}
+
+.draft-panel.show {
+    display: block;
+    animation: fadeSlideDown var(--transition-base);
+}
+
+/* ── Add/Alta Form ───────────────────────────────── */
+
+.form-alta {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-md);
+    align-items: end;
+}
+
+/* ── Warning banner ──────────────────────────────── */
+
+.banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    margin-bottom: var(--space-lg);
+}
+
+.banner--warning {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    color: var(--warning);
+}
+
+.banner--info {
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    color: var(--info);
+}
+
+/* ── Expiration badge ────────────────────────────── */
+
+.expiry-badge {
+    font-size: 0.6875rem;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-weight: 500;
+}
+
+.expiry-badge--urgent {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.expiry-badge--soon {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+.expiry-badge--ok {
+    background: var(--success-bg);
+    color: var(--success);
+}
