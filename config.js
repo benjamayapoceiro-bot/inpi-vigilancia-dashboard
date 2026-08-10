@@ -11,7 +11,7 @@
 window.APP_CONFIG = {
   // ── Datos del estudio ──────────────────────────────
   firm: {
-    name: "Alpha Gestoría 360",
+    name: "FONS LEGAL AND CORP",
     tagline: "Vigilancia Inteligente de Marcas",
     logoUrl: null,              // URL del logo del estudio (null = usa icono default)
     primaryColor: "#6C5CE7",    // Color principal de la marca
