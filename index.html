@@ -118,6 +118,10 @@
           <span class="nav-item__icon">💼</span>
           Mi Cartera
         </button>
+        <button class="nav-item" data-view="busqueda">
+          <span class="nav-item__icon">📄</span>
+          Búsqueda Previa
+        </button>
       </nav>
 
       <div class="sidebar__footer" id="footer-text">
@@ -296,15 +300,23 @@
           </div>
         </div>
 
+        <!-- ═══ VIEW: BÚSQUEDA PREVIA ═══ -->
+        <div class="view" id="view-busqueda"></div>
+
       </div><!-- /content-area -->
     </div><!-- /main-content -->
   </div><!-- /app -->
+
+  <!-- jsPDF para generar el informe de búsqueda previa -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- Scripts (order matters) -->
   <script src="config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/export.js"></script>
+  <script src="js/niza.js"></script>
+  <script src="js/busqueda.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/alertas.js"></script>
   <script src="js/cartera.js"></script>
