@@ -37,7 +37,6 @@ const App = (() => {
             const b = parseInt(hex.slice(5, 7), 16);
             document.documentElement.style.setProperty('--primary', hex);
             document.documentElement.style.setProperty('--primary-rgb', `${r}, ${g}, ${b}`);
-            // Lighter version
             document.documentElement.style.setProperty('--primary-light',
                 `rgb(${Math.min(r + 60, 255)}, ${Math.min(g + 60, 255)}, ${Math.min(b + 60, 255)})`);
             document.documentElement.style.setProperty('--primary-dark',
@@ -53,30 +52,26 @@ const App = (() => {
             document.documentElement.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
         }
 
-        // Footer
         const footer = document.getElementById('footer-text');
         if (footer) footer.textContent = cfg.texts.footerText;
 
-        // Page title
         document.title = `${cfg.texts.welcomeTitle} — ${cfg.firm.name}`;
     }
 
     function navigate(viewName) {
-        // Update nav items
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.view === viewName);
         });
 
-        // Update views
         document.querySelectorAll('.view').forEach(v => {
             v.classList.toggle('active', v.id === `view-${viewName}`);
         });
 
-        // Update header
         const titles = {
             dashboard: ['Panel de Control', 'Vista general de tu vigilancia de marcas'],
             alertas: ['Alertas', 'Coincidencias detectadas en el Boletín INPI'],
-            cartera: ['Mi Cartera', 'Marcas bajo vigilancia activa']
+            cartera: ['Mi Cartera', 'Marcas bajo vigilancia activa'],
+            busqueda: ['Búsqueda Previa', 'Informe de antecedentes y presupuesto para el cliente']
         };
         const [title, sub] = titles[viewName] || ['', ''];
         const headerTitle = document.getElementById('header-title');
@@ -84,10 +79,12 @@ const App = (() => {
         if (headerTitle) headerTitle.textContent = title;
         if (headerSub) headerSub.textContent = sub;
 
-        // Update alert badge count
+        if (viewName === 'busqueda') {
+            Busqueda.render();
+        }
+
         updateAlertBadge();
 
-        // Close mobile sidebar
         document.querySelector('.sidebar')?.classList.remove('open');
         document.querySelector('.mobile-overlay')?.classList.remove('open');
     }
@@ -108,12 +105,10 @@ const App = (() => {
     async function init() {
         applyConfig();
 
-        // Setup nav
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', () => navigate(btn.dataset.view));
         });
 
-        // Setup hamburger
         const hamburger = document.getElementById('hamburger');
         const sidebar = document.querySelector('.sidebar');
         const overlay = document.querySelector('.mobile-overlay');
@@ -132,13 +127,11 @@ const App = (() => {
             });
         }
 
-        // Setup form
         const form = document.getElementById('form-alta');
         if (form) {
             form.addEventListener('submit', Cartera.addMarca);
         }
 
-        // Setup tipo toggle for logo field
         const tipoSelect = document.getElementById('f-tipo');
         if (tipoSelect) {
             tipoSelect.addEventListener('change', e => {
@@ -147,11 +140,9 @@ const App = (() => {
             });
         }
 
-        // Alertas filters
         document.getElementById('filtro-tipo')?.addEventListener('change', Alertas.render);
         document.getElementById('filtro-revisada')?.addEventListener('change', Alertas.render);
 
-        // Search
         const searchInput = document.getElementById('search-alertas');
         if (searchInput) {
             let debounceTimer;
@@ -161,7 +152,6 @@ const App = (() => {
             });
         }
 
-        // Export buttons
         document.getElementById('btn-export-alertas')?.addEventListener('click', () => {
             Export.exportAlertasCSV(Alertas.getCache());
         });
@@ -169,22 +159,18 @@ const App = (() => {
             Export.exportCarteraCSV(Cartera.getCache());
         });
 
-        // Load data in parallel
         const [alertas, marcas] = await Promise.all([
             Alertas.load(),
             Cartera.load()
         ]);
 
-        // Render dashboard
         Dashboard.render(alertas, marcas);
         updateAlertBadge();
 
-        // Navigate to dashboard
         navigate('dashboard');
     }
 
     return { init, navigate, updateAlertBadge };
 })();
 
-// Boot
 document.addEventListener('DOMContentLoaded', App.init);
