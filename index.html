@@ -268,8 +268,29 @@
               <label class="form-label" for="f-vencimiento">Vence (opcional)</label>
               <input type="date" class="form-input" id="f-vencimiento">
             </div>
-            <div class="form-group" style="justify-content: flex-end;">
-              <button type="submit" class="btn btn--primary">＋ Agregar marca</button>
+            <div class="form-group">
+              <label class="form-label" for="f-estado">Estado</label>
+              <select class="form-select" id="f-estado">
+                <option value="Solicitada">Solicitada</option>
+                <option value="En trámite">En trámite</option>
+                <option value="Registrada">Registrada</option>
+                <option value="En oposición">En oposición</option>
+                <option value="En litigio">En litigio</option>
+                <option value="Vencida">Vencida</option>
+                <option value="Denegada">Denegada</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-acta">N° Acta (opcional)</label>
+              <input type="text" class="form-input" id="f-acta" placeholder="ej. 4675974">
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label" for="f-notas">Notas (opcional)</label>
+              <input type="text" class="form-input" id="f-notas" placeholder="ej. detalle de litigio, observaciones">
+            </div>
+            <div class="form-group" style="justify-content: flex-end; gap: var(--space-xs); flex-direction: row;">
+              <button type="button" class="btn btn--secondary" id="btn-cancelar-edicion" style="display:none;">Cancelar</button>
+              <button type="submit" class="btn btn--primary" id="btn-submit-marca">＋ Agregar marca</button>
             </div>
           </form>
 
@@ -282,8 +303,9 @@
                   <th>Clase</th>
                   <th>Tipo</th>
                   <th>Cliente</th>
+                  <th>Estado</th>
                   <th>Vencimiento</th>
-                  <th style="width: 90px;"></th>
+                  <th style="width: 130px;"></th>
                 </tr>
               </thead>
               <tbody id="tbody-cartera"></tbody>
