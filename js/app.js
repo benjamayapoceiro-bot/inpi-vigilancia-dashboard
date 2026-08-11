@@ -132,6 +132,8 @@ const App = (() => {
             form.addEventListener('submit', Cartera.addMarca);
         }
 
+        document.getElementById('btn-cancelar-edicion')?.addEventListener('click', Cartera.cancelarEdicion);
+
         const tipoSelect = document.getElementById('f-tipo');
         if (tipoSelect) {
             tipoSelect.addEventListener('change', e => {
