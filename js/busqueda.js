@@ -5,8 +5,8 @@
  */
 
 const Busqueda = (() => {
-    let resultados = []; // { marca, clase, titular, riesgo }
-    let clasesSugeridas = [];
+    let resultados = [];      // { marca, clase, titular, riesgo }
+    let clasesElegidas = [];  // [{ n, titulo }]
 
     function render() {
         const view = document.getElementById('view-busqueda');
@@ -33,6 +33,15 @@ const Busqueda = (() => {
           </div>
         </div>
         <div id="bq-clases-sugeridas" style="margin-top: var(--space-sm);"></div>
+
+        <div style="margin-top: var(--space-md);">
+          <label class="form-label">Clases elegidas para esta solicitud</label>
+          <div id="bq-clases-elegidas" style="margin: 6px 0;"></div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select class="form-select" id="bq-clase-manual" style="max-width:280px;"></select>
+            <button class="btn btn--secondary btn--sm" id="bq-add-clase" type="button">＋ Agregar clase</button>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="margin-top: var(--space-lg);">
@@ -56,15 +65,15 @@ const Busqueda = (() => {
         <div class="form-alta" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr));">
           <div class="form-group">
             <label class="form-label">Búsqueda de antecedentes</label>
-            <input type="number" class="form-input" id="bq-precio-busqueda" value="15000">
+            <input type="number" class="form-input" id="bq-precio-busqueda" value="0">
           </div>
           <div class="form-group">
             <label class="form-label">Presentación por clase</label>
-            <input type="number" class="form-input" id="bq-precio-clase" value="45000">
+            <input type="number" class="form-input" id="bq-precio-clase" value="135000">
           </div>
           <div class="form-group">
-            <label class="form-label">Cantidad de clases</label>
-            <input type="number" class="form-input" id="bq-cant-clases" value="1" min="1">
+            <label class="form-label">Clases a presentar</label>
+            <input type="number" class="form-input" id="bq-cant-clases" value="0" readonly style="opacity:0.7">
           </div>
           <div class="form-group">
             <label class="form-label">Otros (opcional)</label>
@@ -81,9 +90,45 @@ const Busqueda = (() => {
       </div>
     `;
 
+        llenarSelectorClases();
         renderResultados();
+        renderClasesElegidas();
         wireEvents();
         actualizarTotal();
+    }
+
+    function llenarSelectorClases() {
+        const sel = document.getElementById('bq-clase-manual');
+        if (!sel) return;
+        sel.innerHTML = NIZA.CLASES.map(c => `<option value="${c.n}">Clase ${c.n} — ${c.titulo}</option>`).join('');
+    }
+
+    function renderClasesElegidas() {
+        const cont = document.getElementById('bq-clases-elegidas');
+        const cantInput = document.getElementById('bq-cant-clases');
+        if (!cont) return;
+        if (clasesElegidas.length === 0) {
+            cont.innerHTML = `<span style="color:var(--text-tertiary); font-size:0.8125rem;">Ninguna clase elegida todavía.</span>`;
+        } else {
+            cont.innerHTML = clasesElegidas.map((c, i) =>
+                `<span class="badge badge--primary" style="margin-right:6px; margin-bottom:6px; display:inline-block; cursor:pointer;" onclick="Busqueda.quitarClase(${i})">Clase ${c.n} — ${c.titulo} ✕</span>`
+            ).join('');
+        }
+        if (cantInput) cantInput.value = clasesElegidas.length;
+        actualizarTotal();
+    }
+
+    function agregarClase(n) {
+        n = parseInt(n);
+        if (clasesElegidas.some(c => c.n === n)) return;
+        const c = NIZA.porNumero(n);
+        if (c) clasesElegidas.push(c);
+        renderClasesElegidas();
+    }
+
+    function quitarClase(i) {
+        clasesElegidas.splice(i, 1);
+        renderClasesElegidas();
     }
 
     function renderResultados() {
@@ -130,7 +175,7 @@ const Busqueda = (() => {
     function actualizarTotal() {
         const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
         const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
-        const cantClases = parseInt(document.getElementById('bq-cant-clases')?.value || 1);
+        const cantClases = clasesElegidas.length;
         const otros = parseFloat(document.getElementById('bq-precio-otros')?.value || 0);
         const total = busqueda + (porClase * cantClases) + otros;
         const totalEl = document.getElementById('bq-total');
@@ -140,21 +185,29 @@ const Busqueda = (() => {
 
     function wireEvents() {
         document.getElementById('bq-add-resultado')?.addEventListener('click', agregar);
+
+        document.getElementById('bq-add-clase')?.addEventListener('click', () => {
+            const sel = document.getElementById('bq-clase-manual');
+            if (sel && sel.value) agregarClase(sel.value);
+        });
+
         document.getElementById('bq-sugerir-clases')?.addEventListener('click', () => {
             const desc = document.getElementById('bq-descripcion')?.value || '';
             if (!desc.trim()) { UI.toast('Describí el producto/servicio primero', 'error'); return; }
-            clasesSugeridas = NIZA.sugerir(desc);
+            const sugeridas = NIZA.sugerir(desc);
             const cont = document.getElementById('bq-clases-sugeridas');
             if (!cont) return;
-            if (clasesSugeridas.length === 0) {
-                cont.innerHTML = `<div style="color:var(--text-tertiary); font-size:0.8125rem;">No encontré clases sugeridas por keyword — elegila manualmente según el nomenclador.</div>`;
+            if (sugeridas.length === 0) {
+                cont.innerHTML = `<div style="color:var(--text-tertiary); font-size:0.8125rem;">No encontré clases sugeridas por keyword — elegila manualmente con el selector de abajo.</div>`;
                 return;
             }
-            cont.innerHTML = clasesSugeridas.map(c =>
-                `<span class="badge badge--primary" style="margin-right:6px; margin-bottom:6px; display:inline-block;">Clase ${c.n} — ${c.titulo}</span>`
-            ).join('');
+            cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:4px;">Click para agregar a "Clases elegidas":</div>` +
+                sugeridas.map(c =>
+                    `<span class="badge badge--info" style="margin-right:6px; margin-bottom:6px; display:inline-block; cursor:pointer;" onclick="Busqueda.agregarClase(${c.n})">＋ Clase ${c.n} — ${c.titulo}</span>`
+                ).join('');
         });
-        ['bq-precio-busqueda', 'bq-precio-clase', 'bq-cant-clases', 'bq-precio-otros'].forEach(id => {
+
+        ['bq-precio-busqueda', 'bq-precio-clase', 'bq-precio-otros'].forEach(id => {
             document.getElementById(id)?.addEventListener('input', actualizarTotal);
         });
         document.getElementById('bq-generar-pdf')?.addEventListener('click', generarPDF);
@@ -172,7 +225,6 @@ const Busqueda = (() => {
         const doc = new jsPDF();
         let y = 20;
 
-        // Encabezado
         doc.setFontSize(16);
         doc.setFont(undefined, 'bold');
         doc.text(cfg.firm.name, 14, y);
@@ -197,18 +249,18 @@ const Busqueda = (() => {
         if (descripcion) { doc.text(`Actividad/producto: ${descripcion}`, 14, y); y += 6; }
         y += 4;
 
-        // Clases sugeridas
-        if (clasesSugeridas.length > 0) {
-            doc.setFont(undefined, 'bold');
-            doc.text('Clases sugeridas (Clasificación de Niza):', 14, y); y += 6;
-            doc.setFont(undefined, 'normal');
-            clasesSugeridas.forEach(c => {
+        doc.setFont(undefined, 'bold');
+        doc.text('Clases a presentar (Clasificación de Niza):', 14, y); y += 6;
+        doc.setFont(undefined, 'normal');
+        if (clasesElegidas.length === 0) {
+            doc.text('(sin clases elegidas todavía)', 18, y); y += 5;
+        } else {
+            clasesElegidas.forEach(c => {
                 doc.text(`• Clase ${c.n} — ${c.titulo}`, 18, y); y += 5;
             });
-            y += 4;
         }
+        y += 4;
 
-        // Resultados de búsqueda
         doc.setFont(undefined, 'bold');
         doc.text('Resultado de la búsqueda de antecedentes:', 14, y); y += 7;
         doc.setFont(undefined, 'normal');
@@ -236,18 +288,17 @@ const Busqueda = (() => {
             y += 6;
         }
 
-        if (y > 250) { doc.addPage(); y = 20; }
+        if (y > 240) { doc.addPage(); y = 20; }
 
-        // Presupuesto
         doc.setFont(undefined, 'bold');
         doc.text('Presupuesto estimado:', 14, y); y += 7;
         doc.setFont(undefined, 'normal');
         const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
         const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
-        const cantClases = parseInt(document.getElementById('bq-cant-clases')?.value || 1);
+        const cantClases = clasesElegidas.length;
         const otros = parseFloat(document.getElementById('bq-precio-otros')?.value || 0);
-        doc.text(`Búsqueda de antecedentes: $${busqueda.toLocaleString('es-AR')}`, 18, y); y += 6;
-        doc.text(`Presentación (${cantClases} clase${cantClases > 1 ? 's' : ''} x $${porClase.toLocaleString('es-AR')}): $${(porClase * cantClases).toLocaleString('es-AR')}`, 18, y); y += 6;
+        doc.text(`Búsqueda de antecedentes: ${busqueda === 0 ? 'SIN CARGO' : '$' + busqueda.toLocaleString('es-AR')}`, 18, y); y += 6;
+        doc.text(`Presentación (${cantClases} clase${cantClases !== 1 ? 's' : ''} x $${porClase.toLocaleString('es-AR')}): $${(porClase * cantClases).toLocaleString('es-AR')}`, 18, y); y += 6;
         if (otros > 0) { doc.text(`Otros: $${otros.toLocaleString('es-AR')}`, 18, y); y += 6; }
         y += 2;
         doc.setFont(undefined, 'bold');
@@ -265,8 +316,8 @@ const Busqueda = (() => {
 
     function reset() {
         resultados = [];
-        clasesSugeridas = [];
+        clasesElegidas = [];
     }
 
-    return { render, agregar, editar, borrar, reset };
+    return { render, agregar, editar, borrar, agregarClase, quitarClase, reset };
 })();
