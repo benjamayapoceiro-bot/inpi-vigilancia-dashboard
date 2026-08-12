@@ -203,7 +203,7 @@ const Busqueda = (() => {
             }
             cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:4px;">Click para agregar a "Clases elegidas":</div>` +
                 sugeridas.map(c =>
-                    `<span class="badge badge--info" style="margin-right:6px; margin-bottom:6px; display:inline-block; cursor:pointer;" onclick="Busqueda.agregarClase(${c.n})">＋ Clase ${c.n} — ${c.titulo}</span>`
+                    `<div class="badge badge--info" style="margin-right:6px; margin-bottom:6px; padding:6px 10px; display:inline-block; cursor:pointer; max-width:320px;" onclick="Busqueda.agregarClase(${c.n})" title="${UI.escapeHtml(c.incluye)}">＋ Clase ${c.n} — ${c.titulo}</div>`
                 ).join('');
         });
 
@@ -223,93 +223,258 @@ const Busqueda = (() => {
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        let y = 20;
+        const MARGEN = 14;
+        const ANCHO = 182; // 210 - 2*14
+        let y = 0;
+        let pagina = 1;
+
+        function piePagina() {
+            doc.setFontSize(7.5);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(150);
+            doc.text(`${cfg.firm.name} — Informe de búsqueda de antecedentes marcarios`, MARGEN, 290);
+            doc.text(`Página ${pagina}`, 196, 290, { align: 'right' });
+            doc.setTextColor(0);
+        }
+
+        function nuevaPagina() {
+            piePagina();
+            doc.addPage();
+            pagina++;
+            y = 20;
+        }
+
+        function saltoSiNecesario(espacioNecesario) {
+            if (y + espacioNecesario > 275) nuevaPagina();
+        }
+
+        function parrafo(texto, opciones = {}) {
+            const size = opciones.size || 9.5;
+            const bold = opciones.bold || false;
+            const color = opciones.color || 0;
+            doc.setFontSize(size);
+            doc.setFont(undefined, bold ? 'bold' : 'normal');
+            doc.setTextColor(color);
+            const lineas = doc.splitTextToSize(texto, opciones.ancho || ANCHO);
+            saltoSiNecesario(lineas.length * (size / 2) + 4);
+            doc.text(lineas, opciones.x || MARGEN, y);
+            y += lineas.length * (size / 2.2) + (opciones.espacioExtra ?? 4);
+            doc.setTextColor(0);
+        }
+
+        function subtitulo(texto) {
+            saltoSiNecesario(14);
+            y += 3;
+            doc.setDrawColor(cfg.firm.primaryColor || '#6C5CE7');
+            doc.setLineWidth(0.6);
+            doc.line(MARGEN, y, MARGEN + 8, y);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(30);
+            doc.text(texto, MARGEN + 12, y + 1.5);
+            y += 8;
+            doc.setTextColor(0);
+        }
+
+        // ═══ ENCABEZADO / PORTADA ═══
+        y = 22;
+        doc.setFontSize(19);
+        doc.setFont(undefined, 'bold');
+        doc.text(cfg.firm.name, MARGEN, y);
+        y += 7;
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100);
+        doc.text(cfg.firm.tagline || '', MARGEN, y);
+        y += 5;
+        doc.setFontSize(8.5);
+        doc.text(`${cfg.firm.contactEmail || ''}   ${cfg.firm.contactPhone || ''}`, MARGEN, y);
+        doc.setTextColor(0);
+        y += 6;
+        doc.setDrawColor(180);
+        doc.setLineWidth(0.3);
+        doc.line(MARGEN, y, 196, y);
+        y += 14;
 
         doc.setFontSize(16);
         doc.setFont(undefined, 'bold');
-        doc.text(cfg.firm.name, 14, y);
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.text(cfg.firm.tagline || '', 14, y + 6);
-        doc.text(`${cfg.firm.contactEmail || ''}  ${cfg.firm.contactPhone || ''}`, 14, y + 11);
-        doc.setDrawColor(200);
-        doc.line(14, y + 15, 196, y + 15);
-        y += 26;
+        doc.text('Informe de Búsqueda de Antecedentes Marcarios', MARGEN, y, { maxWidth: ANCHO });
+        y += 12;
 
-        doc.setFontSize(13);
-        doc.setFont(undefined, 'bold');
-        doc.text('Informe de búsqueda de antecedentes marcarios', 14, y);
-        y += 8;
+        // Ficha de datos
+        doc.setFillColor(246, 246, 250);
+        doc.roundedRect(MARGEN, y - 5, ANCHO, 32, 2, 2, 'F');
+        doc.setFontSize(9.5);
+        doc.setFont(undefined, 'bold'); doc.text('Fecha del informe:', MARGEN + 4, y + 2);
+        doc.setFont(undefined, 'normal'); doc.text(fecha, MARGEN + 45, y + 2);
+        doc.setFont(undefined, 'bold'); doc.text('Cliente:', MARGEN + 4, y + 9);
+        doc.setFont(undefined, 'normal'); doc.text(cliente, MARGEN + 45, y + 9);
+        doc.setFont(undefined, 'bold'); doc.text('Marca solicitada:', MARGEN + 4, y + 16);
+        doc.setFont(undefined, 'normal'); doc.text(marca, MARGEN + 45, y + 16);
+        if (descripcion) {
+            doc.setFont(undefined, 'bold'); doc.text('Actividad:', MARGEN + 4, y + 23);
+            const descLineas = doc.splitTextToSize(descripcion, ANCHO - 50);
+            doc.setFont(undefined, 'normal'); doc.text(descLineas, MARGEN + 45, y + 23);
+        }
+        y += 34;
 
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.text(`Fecha: ${fecha}`, 14, y); y += 6;
-        doc.text(`Cliente: ${cliente}`, 14, y); y += 6;
-        doc.text(`Marca solicitada: ${marca}`, 14, y); y += 6;
-        if (descripcion) { doc.text(`Actividad/producto: ${descripcion}`, 14, y); y += 6; }
-        y += 4;
+        // ═══ INTRODUCCIÓN ═══
+        subtitulo('¿Qué es este informe?');
+        parrafo(
+            `Una búsqueda de antecedentes marcarios es el primer paso antes de solicitar el registro de una marca ante el ` +
+            `Instituto Nacional de la Propiedad Industrial (INPI). Consiste en relevar si existen marcas ya registradas, en ` +
+            `trámite o publicadas que puedan resultar idénticas o confundibles con la marca que se pretende registrar, en las ` +
+            `mismas clases o clases relacionadas. Detectar esto de forma preventiva permite estimar la probabilidad de éxito ` +
+            `del registro y anticipar eventuales oposiciones de terceros, antes de incurrir en los costos de presentación.`
+        );
 
-        doc.setFont(undefined, 'bold');
-        doc.text('Clases a presentar (Clasificación de Niza):', 14, y); y += 6;
-        doc.setFont(undefined, 'normal');
+        // ═══ CLASES ═══
+        subtitulo('Clases sugeridas (Clasificación de Niza)');
+        parrafo(
+            'La Clasificación de Niza organiza todos los productos y servicios en 45 clases. El registro de una marca protege ' +
+            'únicamente dentro de las clases solicitadas, por lo que elegir bien la cobertura es una decisión estratégica: ' +
+            'muy pocas clases dejan la marca desprotegida en actividades conexas, y clases de más generan costos innecesarios.',
+            { espacioExtra: 6 }
+        );
+
         if (clasesElegidas.length === 0) {
-            doc.text('(sin clases elegidas todavía)', 18, y); y += 5;
+            parrafo('(sin clases elegidas todavía)', { color: 130 });
         } else {
             clasesElegidas.forEach(c => {
-                doc.text(`• Clase ${c.n} — ${c.titulo}`, 18, y); y += 5;
+                saltoSiNecesario(16);
+                doc.setFontSize(10.5);
+                doc.setFont(undefined, 'bold');
+                doc.text(`Clase ${c.n} — ${c.titulo}`, MARGEN, y);
+                y += 5;
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(90);
+                const notaLineas = doc.splitTextToSize(c.incluye || '', ANCHO - 4);
+                doc.text(notaLineas, MARGEN + 4, y);
+                y += notaLineas.length * 4.2 + 5;
+                doc.setTextColor(0);
             });
         }
-        y += 4;
 
-        doc.setFont(undefined, 'bold');
-        doc.text('Resultado de la búsqueda de antecedentes:', 14, y); y += 7;
-        doc.setFont(undefined, 'normal');
+        // ═══ RESULTADOS DE LA BÚSQUEDA ═══
+        subtitulo('Resultado de la búsqueda de antecedentes');
 
         if (resultados.length === 0) {
-            doc.text('No se encontraron antecedentes similares que impidan el registro.', 14, y);
-            y += 8;
-        } else {
-            const headers = ['Marca similar', 'Clase', 'Titular', 'Riesgo'];
-            const colX = [14, 90, 115, 165];
-            doc.setFont(undefined, 'bold');
-            headers.forEach((h, i) => doc.text(h, colX[i], y));
-            y += 5;
-            doc.setDrawColor(200);
-            doc.line(14, y - 2, 196, y - 2);
+            doc.setFillColor(235, 250, 240);
+            saltoSiNecesario(20);
+            doc.roundedRect(MARGEN, y - 5, ANCHO, 16, 2, 2, 'F');
+            doc.setFontSize(9.5);
             doc.setFont(undefined, 'normal');
+            doc.text('✓  No se encontraron antecedentes similares que impidan, en principio, el registro de la marca.', MARGEN + 4, y + 4);
+            y += 18;
+        } else {
+            parrafo(
+                `Se encontraron ${resultados.length} antecedente(s) que podrían representar un riesgo de confundibilidad. ` +
+                `El nivel de riesgo indicado es una evaluación preliminar del estudio y no reemplaza el análisis definitivo ` +
+                `que realiza el INPI al momento de examinar la solicitud.`,
+                { espacioExtra: 6 }
+            );
+
+            const headers = ['Marca similar', 'Clase', 'Titular', 'Riesgo'];
+            const colX = [MARGEN, MARGEN + 78, MARGEN + 103, MARGEN + 153];
+            saltoSiNecesario(12);
+            doc.setFillColor(240, 240, 245);
+            doc.rect(MARGEN, y - 5, ANCHO, 7, 'F');
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'bold');
+            headers.forEach((h, i) => doc.text(h, colX[i] + 2, y));
+            y += 6;
+            doc.setFont(undefined, 'normal');
+
+            const colorRiesgo = { Alto: [200, 60, 60], Medio: [190, 140, 30], Bajo: [60, 150, 90] };
+
             resultados.forEach(r => {
-                if (y > 270) { doc.addPage(); y = 20; }
-                doc.text(String(r.marca || '—').slice(0, 30), colX[0], y);
-                doc.text(String(r.clase || '—'), colX[1], y);
-                doc.text(String(r.titular || '—').slice(0, 20), colX[2], y);
-                doc.text(String(r.riesgo || '—'), colX[3], y);
-                y += 6;
+                saltoSiNecesario(8);
+                doc.setFontSize(9);
+                doc.setTextColor(0);
+                doc.text(String(r.marca || '—').slice(0, 34), colX[0] + 2, y);
+                doc.text(String(r.clase || '—'), colX[1] + 2, y);
+                doc.text(String(r.titular || '—').slice(0, 22), colX[2] + 2, y);
+                const [rr, gg, bb] = colorRiesgo[r.riesgo] || [0, 0, 0];
+                doc.setTextColor(rr, gg, bb);
+                doc.setFont(undefined, 'bold');
+                doc.text(String(r.riesgo || '—'), colX[3] + 2, y);
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(0);
+                y += 6.5;
+                doc.setDrawColor(230);
+                doc.line(MARGEN, y - 2, MARGEN + ANCHO, y - 2);
             });
             y += 6;
         }
 
-        if (y > 240) { doc.addPage(); y = 20; }
-
-        doc.setFont(undefined, 'bold');
-        doc.text('Presupuesto estimado:', 14, y); y += 7;
-        doc.setFont(undefined, 'normal');
+        // ═══ PRESUPUESTO ═══
+        subtitulo('Presupuesto estimado');
         const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
         const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
         const cantClases = clasesElegidas.length;
         const otros = parseFloat(document.getElementById('bq-precio-otros')?.value || 0);
-        doc.text(`Búsqueda de antecedentes: ${busqueda === 0 ? 'SIN CARGO' : '$' + busqueda.toLocaleString('es-AR')}`, 18, y); y += 6;
-        doc.text(`Presentación (${cantClases} clase${cantClases !== 1 ? 's' : ''} x $${porClase.toLocaleString('es-AR')}): $${(porClase * cantClases).toLocaleString('es-AR')}`, 18, y); y += 6;
-        if (otros > 0) { doc.text(`Otros: $${otros.toLocaleString('es-AR')}`, 18, y); y += 6; }
-        y += 2;
-        doc.setFont(undefined, 'bold');
-        doc.text(`TOTAL: $${total.toLocaleString('es-AR')}`, 18, y);
-        y += 12;
 
-        doc.setFontSize(8);
+        saltoSiNecesario(40);
+        doc.setFillColor(246, 246, 250);
+        const alturaCaja = 12 + (otros > 0 ? 7 : 0) + 14;
+        doc.roundedRect(MARGEN, y - 5, ANCHO, alturaCaja, 2, 2, 'F');
+        doc.setFontSize(9.5);
         doc.setFont(undefined, 'normal');
-        doc.setTextColor(120);
-        doc.text('Este informe es orientativo y no constituye garantía de concesión del registro. La resolución final depende del INPI.', 14, y);
+        doc.text('Búsqueda de antecedentes', MARGEN + 4, y + 2);
+        doc.text(busqueda === 0 ? 'Sin cargo' : `$${busqueda.toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
+        y += 7;
+        doc.text(`Presentación ante INPI (${cantClases} clase${cantClases !== 1 ? 's' : ''} × $${porClase.toLocaleString('es-AR')})`, MARGEN + 4, y + 2);
+        doc.text(`$${(porClase * cantClases).toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
+        y += 7;
+        if (otros > 0) {
+            doc.text('Otros conceptos', MARGEN + 4, y + 2);
+            doc.text(`$${otros.toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
+            y += 7;
+        }
+        doc.setDrawColor(200);
+        doc.line(MARGEN + 4, y, 192, y);
+        y += 6;
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'bold');
+        doc.text('TOTAL', MARGEN + 4, y + 2);
+        doc.text(`$${total.toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
+        y += 14;
 
+        // ═══ PRÓXIMOS PASOS ═══
+        subtitulo('Próximos pasos');
+        const pasos = [
+            'Confirmación del cliente sobre las clases a registrar y aceptación del presupuesto.',
+            'Presentación de la solicitud de registro ante el INPI (Trámites a Distancia).',
+            'Publicación en el Boletín de Marcas y apertura del plazo de oposición de terceros (30 días hábiles).',
+            'Seguimiento del expediente hasta la concesión del registro (proceso administrativo del INPI, de duración variable).',
+        ];
+        pasos.forEach((p, i) => {
+            saltoSiNecesario(10);
+            doc.setFontSize(9.5);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${i + 1}.`, MARGEN, y);
+            doc.setFont(undefined, 'normal');
+            const lineas = doc.splitTextToSize(p, ANCHO - 8);
+            doc.text(lineas, MARGEN + 6, y);
+            y += lineas.length * 4.3 + 3;
+        });
+
+        // ═══ ACLARACIÓN LEGAL ═══
+        y += 4;
+        saltoSiNecesario(24);
+        doc.setDrawColor(220);
+        doc.line(MARGEN, y, 196, y);
+        y += 6;
+        parrafo(
+            'Este informe tiene carácter orientativo y se basa en el relevamiento realizado a la fecha indicada. No constituye ' +
+            'garantía de concesión del registro: la resolución final sobre la solicitud, incluyendo la evaluación de similitud ' +
+            'con marcas de terceros, es potestad exclusiva del INPI. El presupuesto es estimado y puede variar según cambios ' +
+            'normativos en las tasas oficiales o particularidades del expediente.',
+            { size: 8, color: 120, espacioExtra: 0 }
+        );
+
+        piePagina();
         doc.save(`busqueda-previa-${marca.replace(/\s+/g, '-').toLowerCase()}.pdf`);
         UI.toast('PDF generado', 'success');
     }
