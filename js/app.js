@@ -134,6 +134,18 @@ const App = (() => {
 
         document.getElementById('btn-cancelar-edicion')?.addEventListener('click', Cartera.cancelarEdicion);
 
+        const carteraSearch = document.getElementById('cartera-search');
+        if (carteraSearch) {
+            let debounceCartera;
+            carteraSearch.addEventListener('input', e => {
+                clearTimeout(debounceCartera);
+                debounceCartera = setTimeout(() => Cartera.setFiltroTexto(e.target.value), 200);
+            });
+        }
+        document.getElementById('cartera-filtro-estado')?.addEventListener('change', e => {
+            Cartera.setFiltroEstado(e.target.value);
+        });
+
         const tipoSelect = document.getElementById('f-tipo');
         if (tipoSelect) {
             tipoSelect.addEventListener('change', e => {
