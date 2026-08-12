@@ -1,12 +1,16 @@
 /**
  * ═══════════════════════════════════════════════════════════
- *  Cartera View — CRM: alta, edición, estado, notas
+ *  Cartera View — CRM: alta, edición, estado, notas, filtros
  * ═══════════════════════════════════════════════════════════
  */
 
 const Cartera = (() => {
     let cache = [];
     let editingId = null;
+    let filtroTexto = '';
+    let filtroEstado = '';
+
+    const ESTADOS = ['Solicitada', 'En trámite', 'Registrada', 'En oposición', 'En litigio', 'Vencida', 'Denegada'];
 
     const ESTADO_BADGE = {
         'Solicitada': 'badge--info',
@@ -18,9 +22,14 @@ const Cartera = (() => {
         'Denegada': 'badge--danger',
     };
 
+    const ESTADO_ICON = {
+        'Solicitada': '📝', 'En trámite': '⏳', 'Registrada': '✅',
+        'En oposición': '⚠️', 'En litigio': '⚖️', 'Vencida': '⏰', 'Denegada': '🚫',
+    };
+
     async function load() {
         const tbody = document.getElementById('tbody-cartera');
-        if (tbody) tbody.innerHTML = UI.skeletonRows(3, 6);
+        if (tbody) tbody.innerHTML = UI.skeletonRows(3, 7);
 
         try {
             cache = await API.getMarcas();
@@ -29,8 +38,64 @@ const Cartera = (() => {
             cache = [];
             UI.toast('Error cargando cartera', 'error');
         }
+        renderStats();
         render();
         return cache;
+    }
+
+    function renderStats() {
+        const cont = document.getElementById('cartera-stats');
+        if (!cont) return;
+
+        const porEstado = {};
+        ESTADOS.forEach(e => porEstado[e] = 0);
+        cache.forEach(m => { const e = m.estado || 'Solicitada'; porEstado[e] = (porEstado[e] || 0) + 1; });
+
+        // Mostrar solo los estados que tienen al menos 1, más "Total" siempre primero
+        const destacados = ['Registrada', 'En trámite', 'En oposición', 'En litigio'];
+
+        cont.innerHTML = `
+      <div class="card card--stat hover-lift">
+        <div class="stat-icon purple">💼</div>
+        <div class="stat-value">${cache.length}</div>
+        <div class="stat-label">Total en cartera</div>
+      </div>
+      ${destacados.map(e => `
+        <div class="card card--stat hover-lift" style="cursor:pointer;" onclick="Cartera.filtrarPorEstado('${e}')">
+          <div class="stat-icon ${e === 'Registrada' ? 'green' : e === 'En oposición' ? 'red' : e === 'En litigio' ? 'red' : 'cyan'}">${ESTADO_ICON[e]}</div>
+          <div class="stat-value">${porEstado[e] || 0}</div>
+          <div class="stat-label">${e}</div>
+        </div>
+      `).join('')}
+    `;
+    }
+
+    function filtrarPorEstado(estado) {
+        filtroEstado = estado;
+        const sel = document.getElementById('cartera-filtro-estado');
+        if (sel) sel.value = estado;
+        render();
+    }
+
+    function setFiltroTexto(texto) {
+        filtroTexto = (texto || '').toLowerCase();
+        render();
+    }
+
+    function setFiltroEstado(estado) {
+        filtroEstado = estado;
+        render();
+    }
+
+    function aplicarFiltros(lista) {
+        return lista.filter(m => {
+            if (filtroEstado && (m.estado || 'Solicitada') !== filtroEstado) return false;
+            if (filtroTexto) {
+                const texto = `${m.nombre || ''} ${m.cliente || ''}`.toLowerCase();
+                if (!texto.includes(filtroTexto)) return false;
+            }
+            return true;
+        });
     }
 
     function render() {
@@ -38,17 +103,28 @@ const Cartera = (() => {
         const empty = document.getElementById('empty-cartera');
         const count = document.getElementById('cartera-count');
 
-        if (count) count.textContent = `${cache.length} marca${cache.length !== 1 ? 's' : ''}`;
+        const filtradas = aplicarFiltros(cache);
+
+        if (count) {
+            count.textContent = filtradas.length === cache.length
+                ? `${cache.length} marca${cache.length !== 1 ? 's' : ''}`
+                : `${filtradas.length} de ${cache.length} marcas`;
+        }
 
         if (!cache.length) {
             if (tbody) tbody.innerHTML = '';
-            if (empty) empty.style.display = 'flex';
+            if (empty) { empty.style.display = 'flex'; empty.querySelector('.empty-state__title').textContent = 'Todavía no cargaste marcas'; }
+            return;
+        }
+        if (!filtradas.length) {
+            if (tbody) tbody.innerHTML = '';
+            if (empty) { empty.style.display = 'flex'; empty.querySelector('.empty-state__title').textContent = 'Sin resultados para ese filtro'; }
             return;
         }
         if (empty) empty.style.display = 'none';
 
         if (tbody) {
-            tbody.innerHTML = cache.map(m => {
+            tbody.innerHTML = filtradas.map(m => {
                 const tipoStr = m.tipo === 'M' ? 'Mixta' : 'Denominativa';
                 const tipoBadge = m.tipo === 'M' ? 'badge--info' : 'badge--primary';
                 const estado = m.estado || 'Solicitada';
@@ -59,11 +135,12 @@ const Cartera = (() => {
           <tr>
             <td>
               <div class="marca-name"${notaTitle}>${UI.escapeHtml(m.nombre) || '(logo sin texto)'}</div>
+              ${m.numero_acta ? `<div style="font-size:0.6875rem; color:var(--text-tertiary);">Acta ${UI.escapeHtml(m.numero_acta)}</div>` : ''}
             </td>
             <td><span class="badge badge--primary">${m.clase}</span></td>
             <td><span class="badge ${tipoBadge}">${tipoStr}</span></td>
             <td style="color: var(--text-secondary);">${UI.escapeHtml(m.cliente) || '—'}</td>
-            <td><span class="badge ${estadoBadge}"${notaTitle}>${estado}</span></td>
+            <td><span class="badge ${estadoBadge}"${notaTitle}>${ESTADO_ICON[estado] || ''} ${estado}</span></td>
             <td>${UI.expiryBadge(m.fecha_vencimiento)}</td>
             <td>
               <div style="display: flex; gap: var(--space-xs);">
@@ -187,5 +264,8 @@ const Cartera = (() => {
 
     function getCache() { return cache; }
 
-    return { load, render, addMarca, editMarca, cancelarEdicion, deleteMarca, getCache };
+    return {
+        load, render, addMarca, editMarca, cancelarEdicion, deleteMarca, getCache,
+        filtrarPorEstado, setFiltroTexto, setFiltroEstado,
+    };
 })();
