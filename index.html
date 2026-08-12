@@ -239,6 +239,24 @@
             Sirve para uso propio o demo.
           </div>
 
+          <!-- Stats por estado (CRM) -->
+          <div class="stat-grid stagger-enter" id="cartera-stats"></div>
+
+          <!-- Filtros -->
+          <div style="display:flex; gap: var(--space-sm); margin-bottom: var(--space-md); flex-wrap: wrap; align-items:center;">
+            <input type="text" class="form-input" id="cartera-search" placeholder="🔎 Buscar por marca o cliente..." style="max-width: 260px;">
+            <select class="form-select" id="cartera-filtro-estado" style="max-width: 200px;">
+              <option value="">Todos los estados</option>
+              <option value="Solicitada">Solicitada</option>
+              <option value="En trámite">En trámite</option>
+              <option value="Registrada">Registrada</option>
+              <option value="En oposición">En oposición</option>
+              <option value="En litigio">En litigio</option>
+              <option value="Vencida">Vencida</option>
+              <option value="Denegada">Denegada</option>
+            </select>
+          </div>
+
           <!-- Add form -->
           <form class="form-alta" id="form-alta">
             <div class="form-group">
