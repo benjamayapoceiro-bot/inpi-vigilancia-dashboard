@@ -36,35 +36,30 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
-    opacity: 0;
-    transition: opacity var(--transition-base);
-}
-
-.card--stat:hover::before {
-    opacity: 1;
+    height: 2px;
+    background: var(--primary);
+    opacity: 0.55;
 }
 
 .card--stat .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-md);
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: var(--space-md);
-    font-size: 1.25rem;
+    font-size: 1.125rem;
 }
 
 .card--stat .stat-icon.purple {
-    background: rgba(var(--primary-rgb), 0.15);
-    color: var(--primary-light);
+    background: rgba(var(--primary-rgb), 0.12);
+    color: var(--primary);
 }
 
 .card--stat .stat-icon.cyan {
-    background: rgba(var(--accent-rgb), 0.15);
-    color: var(--accent);
+    background: var(--info-bg);
+    color: var(--info);
 }
 
 .card--stat .stat-icon.red {
@@ -78,14 +73,12 @@
 }
 
 .card--stat .stat-value {
-    font-size: 2rem;
-    font-weight: 800;
+    font-family: var(--font-mono);
+    font-size: 1.875rem;
+    font-weight: 600;
     line-height: 1;
     margin-bottom: var(--space-xs);
-    background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
 }
 
 .card--stat .stat-label {
@@ -93,7 +86,7 @@
     color: var(--text-tertiary);
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
 }
 
 /* ── Badges ──────────────────────────────────────── */
@@ -102,8 +95,8 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 3px 10px;
-    border-radius: var(--radius-full);
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
     font-size: 0.6875rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -135,10 +128,44 @@
 }
 
 .badge--primary {
-    background: rgba(var(--primary-rgb), 0.15);
-    color: var(--primary-light);
-    border: 1px solid rgba(var(--primary-rgb), 0.3);
+    background: rgba(var(--primary-rgb), 0.10);
+    color: var(--primary);
+    border: 1px solid rgba(var(--primary-rgb), 0.28);
 }
+
+/* ── Sello (elemento distintivo) ──────────────────
+   Se usa para estado del expediente (CRM) y coincidencias
+   de alta confianza: un círculo de doble anillo, como una
+   estampa de mesa de entradas, en vez del chip de SaaS. ── */
+
+.seal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 4px;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    background: var(--bg-elevated);
+    border: 1px solid currentColor;
+}
+
+.seal__ring {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    box-shadow: inset 0 0 0 2px var(--bg-elevated), inset 0 0 0 3px currentColor;
+    flex-shrink: 0;
+}
+
+.seal--success { color: var(--success); }
+.seal--warning { color: var(--warning); }
+.seal--danger { color: var(--danger); }
+.seal--info { color: var(--info); }
+.seal--neutral { color: var(--text-tertiary); }
 
 /* ── Score Bar ───────────────────────────────────── */
 
@@ -150,8 +177,8 @@
 
 .score-bar__track {
     flex: 1;
-    height: 6px;
-    background: var(--bg-elevated);
+    height: 5px;
+    background: var(--bg-deep);
     border-radius: var(--radius-full);
     overflow: hidden;
     min-width: 60px;
@@ -165,11 +192,11 @@
 }
 
 .score-bar__fill--danger {
-    background: linear-gradient(90deg, var(--warning), var(--danger));
+    background: var(--danger);
 }
 
 .score-bar__fill--warning {
-    background: linear-gradient(90deg, var(--success), var(--warning));
+    background: var(--warning);
 }
 
 .score-bar__fill--success {
@@ -309,18 +336,18 @@
 }
 
 .btn--primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    background: var(--primary);
     color: white;
-    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn--primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.4);
+    background: var(--primary-dark);
+    box-shadow: var(--shadow-md);
 }
 
 .btn--primary:active {
-    transform: translateY(0);
+    box-shadow: none;
 }
 
 .btn--secondary {
