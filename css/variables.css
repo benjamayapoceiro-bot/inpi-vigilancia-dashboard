@@ -1,51 +1,55 @@
 /* ═══════════════════════════════════════════════════════════
-   Design Tokens — INPI Vigilancia Dashboard
-   These are overridden by config.js at runtime
+   Design Tokens — FONS LEGAL AND CORP · Vigilancia de Marcas
+   Identidad: registro/expediente oficial. Papel, tinta, sello.
+   Estos valores pueden ser sobreescritos por config.js en runtime
+   (primary/accent), pero el resto del sistema (papel, tinta,
+   estados) es fijo — es la identidad seria del producto, no del
+   cliente que lo usa.
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* Primary palette — overridden by config */
-  --primary: #6C5CE7;
-  --primary-light: #a29bfe;
-  --primary-dark: #4a3db8;
-  --primary-rgb: 108, 92, 231;
-  --accent: #00CEC9;
-  --accent-rgb: 0, 206, 201;
+  /* Primario — sobreescrito por config.js (color de marca del estudio) */
+  --primary: #7A2331;       /* bordó sello — tono por defecto */
+  --primary-light: #9C4453;
+  --primary-dark: #591722;
+  --primary-rgb: 122, 35, 49;
+  --accent: #8C7126;        /* bronce, uso puntual */
+  --accent-rgb: 140, 113, 38;
 
-  /* Surfaces */
-  --bg-deep: #0a0b0f;
-  --bg-main: #0f1117;
-  --bg-surface: #161822;
-  --bg-elevated: #1c1f2e;
-  --bg-hover: #232739;
-  --bg-glass: rgba(22, 24, 34, 0.7);
+  /* Superficies — papel de registro, no negro SaaS */
+  --bg-deep: #ECEAE3;
+  --bg-main: #F4F2EC;
+  --bg-surface: #FBFAF7;
+  --bg-elevated: #FFFFFF;
+  --bg-hover: #EFEDE5;
+  --bg-glass: rgba(251, 250, 247, 0.88);
 
-  /* Borders */
-  --border: rgba(255, 255, 255, 0.06);
-  --border-light: rgba(255, 255, 255, 0.1);
-  --border-active: rgba(108, 92, 231, 0.4);
+  /* Bordes — filete fino, no glow */
+  --border: rgba(22, 35, 63, 0.10);
+  --border-light: rgba(22, 35, 63, 0.16);
+  --border-active: rgba(var(--primary-rgb), 0.45);
 
-  /* Text */
-  --text-primary: #f0f1f5;
-  --text-secondary: #9ca0b0;
-  --text-tertiary: #636780;
-  --text-inverse: #0f1117;
+  /* Texto — tinta marina, no gris-azulado de dashboard */
+  --text-primary: #16233F;
+  --text-secondary: #4B5768;
+  --text-tertiary: #7A8494;
+  --text-inverse: #F4F2EC;
 
-  /* Semantic colors */
-  --danger: #ff6b6b;
-  --danger-bg: rgba(255, 107, 107, 0.1);
-  --danger-border: rgba(255, 107, 107, 0.25);
-  --warning: #feca57;
-  --warning-bg: rgba(254, 202, 87, 0.1);
-  --warning-border: rgba(254, 202, 87, 0.25);
-  --success: #55efc4;
-  --success-bg: rgba(85, 239, 196, 0.1);
-  --success-border: rgba(85, 239, 196, 0.25);
-  --info: #74b9ff;
-  --info-bg: rgba(116, 185, 255, 0.1);
-  --info-border: rgba(116, 185, 255, 0.25);
+  /* Semántica — apagados, de expediente, no neón */
+  --danger: #A13A3A;
+  --danger-bg: rgba(161, 58, 58, 0.08);
+  --danger-border: rgba(161, 58, 58, 0.22);
+  --warning: #93691E;
+  --warning-bg: rgba(147, 105, 30, 0.10);
+  --warning-border: rgba(147, 105, 30, 0.24);
+  --success: #2F5D45;
+  --success-bg: rgba(47, 93, 69, 0.09);
+  --success-border: rgba(47, 93, 69, 0.22);
+  --info: #33526E;
+  --info-bg: rgba(51, 82, 110, 0.08);
+  --info-border: rgba(51, 82, 110, 0.20);
 
-  /* Spacing */
+  /* Espaciado */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -53,31 +57,32 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  /* Radios — más rectos, de documento, no de app burbujeante */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-full: 999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
-  --shadow-glow: 0 0 20px rgba(var(--primary-rgb), 0.15);
+  /* Sombras — chatas, de papel apilado, no glow de producto */
+  --shadow-sm: 0 1px 2px rgba(22, 35, 63, 0.06);
+  --shadow-md: 0 2px 8px rgba(22, 35, 63, 0.08);
+  --shadow-lg: 0 8px 24px rgba(22, 35, 63, 0.12);
+  --shadow-glow: 0 0 0 rgba(0,0,0,0); /* sin glow: identidad seria */
 
-  /* Typography */
-  --font-sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-display: 'Inter', Georgia, serif;
+  /* Tipografía — Plex Serif (títulos, tono de expediente),
+     Plex Sans (cuerpo), Plex Mono (números: actas, clases, montos) */
+  --font-sans: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --font-display: 'IBM Plex Serif', Georgia, serif;
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Transiciones — rápidas y discretas */
+  --transition-fast: 120ms ease-out;
+  --transition-base: 180ms ease-out;
+  --transition-slow: 280ms ease-out;
 
   /* Layout */
-  --sidebar-width: 260px;
+  --sidebar-width: 264px;
   --sidebar-collapsed: 72px;
   --header-height: 64px;
   --content-max: 1200px;
