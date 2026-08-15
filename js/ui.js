@@ -36,11 +36,16 @@ const UI = (() => {
             overlay.className = 'modal-overlay';
             overlay.innerHTML = `
         <div class="modal">
-          <div class="modal__title">${title}</div>
-          <div class="modal__body">${body}</div>
-          <div class="modal__actions">
-            <button class="btn btn--secondary" data-action="cancel">Cancelar</button>
-            <button class="btn btn--primary" data-action="confirm">Confirmar</button>
+          <div class="modal__header">
+            <div class="modal__title">${title}</div>
+            <button class="modal__close" data-action="cancel">✕</button>
+          </div>
+          <div class="modal__body">
+            <div>${body}</div>
+            <div class="modal__actions">
+              <button class="btn btn--secondary" data-action="cancel">Cancelar</button>
+              <button class="btn btn--primary" data-action="confirm">Confirmar</button>
+            </div>
           </div>
         </div>
       `;
@@ -52,6 +57,31 @@ const UI = (() => {
                 else if (action === 'cancel' || e.target === overlay) { resolve(false); overlay.remove(); }
             });
         });
+    }
+
+    // ── Generic Modal ──────────────────────────────────
+    function modal(title, bodyHtml, opts = {}) {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = `
+      <div class="modal ${opts.wide ? 'modal--wide' : ''}">
+        <div class="modal__header">
+          <div class="modal__title">${title}</div>
+          <button class="modal__close" data-action="close">✕</button>
+        </div>
+        <div class="modal__body">${bodyHtml}</div>
+      </div>
+    `;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', e => {
+            if (e.target.dataset.action === 'close' || e.target === overlay) overlay.remove();
+        });
+        return overlay;
+    }
+
+    function closeModal() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
     }
 
     // ── Skeleton Loader ───────────────────────────────
@@ -122,7 +152,7 @@ const UI = (() => {
     }
 
     return {
-        toast, confirm, skeletonRows, skeletonCards,
+        toast, confirm, modal, closeModal, skeletonRows, skeletonCards,
         formatDate, daysUntil, expiryBadge,
         scoreColor, scoreBadgeClass, escapeHtml, fileToBase64
     };
