@@ -71,7 +71,8 @@ const App = (() => {
             dashboard: ['Panel de Control', 'Vista general de tu vigilancia de marcas'],
             alertas: ['Alertas', 'Coincidencias detectadas en el Boletín INPI'],
             cartera: ['Mi Cartera', 'Marcas bajo vigilancia activa'],
-            busqueda: ['Búsqueda Previa', 'Informe de antecedentes y presupuesto para el cliente']
+            busqueda: ['Búsqueda Previa', 'Informe de antecedentes y presupuesto para el cliente'],
+            crm: ['CRM', 'Estado y seguimiento de cada expediente']
         };
         const [title, sub] = titles[viewName] || ['', ''];
         const headerTitle = document.getElementById('header-title');
@@ -81,6 +82,9 @@ const App = (() => {
 
         if (viewName === 'busqueda') {
             Busqueda.render();
+        }
+        if (viewName === 'crm') {
+            CRM.load();
         }
 
         updateAlertBadge();
