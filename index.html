@@ -122,6 +122,10 @@
           <span class="nav-item__icon">📄</span>
           Búsqueda Previa
         </button>
+        <button class="nav-item" data-view="crm">
+          <span class="nav-item__icon">⚖️</span>
+          CRM
+        </button>
       </nav>
 
       <div class="sidebar__footer" id="footer-text">
@@ -343,6 +347,18 @@
         <!-- ═══ VIEW: BÚSQUEDA PREVIA ═══ -->
         <div class="view" id="view-busqueda"></div>
 
+        <!-- ═══ VIEW: CRM ═══ -->
+        <div class="view" id="view-crm">
+          <div style="display:flex; gap: var(--space-sm); margin-bottom: var(--space-lg); flex-wrap: wrap; align-items:center; justify-content: space-between;">
+            <div style="display:flex; gap: var(--space-xs);">
+              <button class="btn btn--primary btn--sm" data-crm-vista="kanban" onclick="CRM.cambiarVista('kanban')">📋 Por estado</button>
+              <button class="btn btn--secondary btn--sm" data-crm-vista="clientes" onclick="CRM.cambiarVista('clientes')">👥 Por cliente</button>
+            </div>
+            <select class="form-select" id="crm-filtro-cliente" style="max-width: 220px;" onchange="CRM.render()"></select>
+          </div>
+          <div id="crm-board"></div>
+        </div>
+
       </div><!-- /content-area -->
     </div><!-- /main-content -->
   </div><!-- /app -->
@@ -360,6 +376,7 @@
   <script src="js/dashboard.js"></script>
   <script src="js/alertas.js"></script>
   <script src="js/cartera.js"></script>
+  <script src="js/crm.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
