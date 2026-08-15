@@ -480,24 +480,57 @@
 .modal {
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: var(--space-xl) var(--space-xl) var(--space-lg);
+    border-radius: var(--radius-lg);
+    padding: 0;
     max-width: 420px;
     width: 90%;
+    max-height: 86vh;
+    overflow-y: auto;
     box-shadow: var(--shadow-lg);
     animation: scaleIn var(--transition-base);
 }
 
+.modal--wide {
+    max-width: 640px;
+}
+
+.modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding: var(--space-lg) var(--space-xl) var(--space-md);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg-surface);
+}
+
 .modal__title {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+}
+
+.modal__close {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
     font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: var(--space-sm);
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.modal__close:hover {
+    color: var(--text-primary);
 }
 
 .modal__body {
     font-size: 0.8125rem;
     color: var(--text-secondary);
-    margin-bottom: var(--space-lg);
+    padding: var(--space-lg) var(--space-xl) var(--space-xl);
     line-height: 1.6;
 }
 
@@ -505,6 +538,157 @@
     display: flex;
     gap: var(--space-sm);
     justify-content: flex-end;
+    margin-top: var(--space-lg);
+}
+
+/* ── CRM: Kanban ─────────────────────────────────── */
+
+.kanban {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-md);
+    align-items: start;
+}
+
+.kanban__column {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.kanban__column-header {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+}
+
+.kanban__column-count {
+    font-family: var(--font-mono);
+    background: var(--bg-deep);
+    color: var(--text-tertiary);
+    border-radius: var(--radius-full);
+    padding: 1px 8px;
+    font-size: 0.6875rem;
+}
+
+.kanban__column-body {
+    padding: var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    min-height: 60px;
+}
+
+.kanban__card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.kanban__card:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-light);
+}
+
+.kanban__card-name {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.kanban__card-meta {
+    font-size: 0.6875rem;
+    color: var(--text-tertiary);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.kanban__card-meta .mono {
+    color: var(--text-secondary);
+}
+
+.kanban__empty {
+    padding: var(--space-md);
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+/* ── CRM: Timeline ───────────────────────────────── */
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: var(--space-sm);
+}
+
+.timeline__item {
+    display: flex;
+    gap: var(--space-md);
+    padding-bottom: var(--space-md);
+    position: relative;
+}
+
+.timeline__item::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 14px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border-light);
+}
+
+.timeline__item:last-child::before {
+    display: none;
+}
+
+.timeline__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--primary);
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.timeline__content {
+    flex: 1;
+}
+
+.timeline__date {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--text-tertiary);
+    margin-bottom: 2px;
+}
+
+.timeline__text {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.timeline__empty {
+    font-size: 0.8125rem;
+    color: var(--text-tertiary);
+    padding: var(--space-sm) 0;
 }
 
 /* ── Skeleton Loader ─────────────────────────────── */
