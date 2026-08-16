@@ -353,8 +353,21 @@
             <div style="display:flex; gap: var(--space-xs);">
               <button class="btn btn--primary btn--sm" data-crm-vista="kanban" onclick="CRM.cambiarVista('kanban')">📋 Por estado</button>
               <button class="btn btn--secondary btn--sm" data-crm-vista="clientes" onclick="CRM.cambiarVista('clientes')">👥 Por cliente</button>
+              <button class="btn btn--secondary btn--sm" data-crm-vista="tabla" onclick="CRM.cambiarVista('tabla')">🗂️ Vista completa</button>
             </div>
-            <select class="form-select" id="crm-filtro-cliente" style="max-width: 220px;" onchange="CRM.render()"></select>
+            <div style="display:flex; gap: var(--space-sm); flex-wrap:wrap;">
+              <select class="form-select" id="crm-filtro-estado" style="max-width: 180px;" onchange="CRM.render()">
+                <option value="">Todos los estados</option>
+                <option value="Solicitada">Solicitada</option>
+                <option value="En trámite">En trámite</option>
+                <option value="Registrada">Registrada</option>
+                <option value="En oposición">En oposición</option>
+                <option value="En litigio">En litigio</option>
+                <option value="Vencida">Vencida</option>
+                <option value="Denegada">Denegada</option>
+              </select>
+              <select class="form-select" id="crm-filtro-cliente" style="max-width: 220px;" onchange="CRM.render()"></select>
+            </div>
           </div>
           <div id="crm-board"></div>
         </div>
