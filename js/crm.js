@@ -1,14 +1,15 @@
 /**
  * ═══════════════════════════════════════════════════════════
  *  CRM — Vista completa de expedientes: kanban por estado,
- *  agrupación por cliente y ficha con historial de novedades.
+ *  agrupación por cliente, tabla completa y ficha con historial.
  * ═══════════════════════════════════════════════════════════
  */
 
 const CRM = (() => {
     let cache = [];
     let filtroCliente = '';
-    let vista = 'kanban'; // 'kanban' | 'clientes'
+    let filtroEstado = '';
+    let vista = 'kanban'; // 'kanban' | 'clientes' | 'tabla'
 
     const ESTADOS = ['Solicitada', 'En trámite', 'Registrada', 'En oposición', 'En litigio', 'Vencida', 'Denegada'];
 
@@ -32,8 +33,10 @@ const CRM = (() => {
 
     function render() {
         renderFiltroCliente();
+        filtroEstado = document.getElementById('crm-filtro-estado')?.value || '';
         if (vista === 'kanban') renderKanban();
-        else renderClientes();
+        else if (vista === 'clientes') renderClientes();
+        else renderTabla();
     }
 
     function renderFiltroCliente() {
@@ -48,20 +51,31 @@ const CRM = (() => {
     }
 
     function filtradas() {
-        return filtroCliente ? cache.filter(m => m.cliente === filtroCliente) : cache;
+        return cache.filter(m => {
+            if (filtroCliente && m.cliente !== filtroCliente) return false;
+            if (filtroEstado && (m.estado || 'Solicitada') !== filtroEstado) return false;
+            return true;
+        });
     }
 
+    function ultimaNovedad(m) {
+        if (!Array.isArray(m.historial) || m.historial.length === 0) return null;
+        return [...m.historial].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))[0];
+    }
+
+    function sello(estado) {
+        const e = estado || 'Solicitada';
+        const tipo = ESTADO_SEAL[e] || 'neutral';
+        return `<span class="seal seal--${tipo}"><span class="seal__ring"></span>${e}</span>`;
+    }
+
+    // ── Vista Kanban ──────────────────────────────────
     function renderKanban() {
         const cont = document.getElementById('crm-board');
         if (!cont) return;
         const lista = filtradas();
 
-        if (lista.length === 0) {
-            cont.innerHTML = `<div class="empty-state"><div class="empty-state__icon">⚖️</div>
-        <div class="empty-state__title">Sin expedientes para mostrar</div>
-        <div class="empty-state__desc">Cargá marcas en "Mi Cartera" o quitá el filtro de cliente.</div></div>`;
-            return;
-        }
+        if (lista.length === 0) return renderVacio(cont);
 
         cont.innerHTML = `<div class="kanban">${ESTADOS.map(estado => {
             const items = lista.filter(m => (m.estado || 'Solicitada') === estado);
@@ -91,16 +105,13 @@ const CRM = (() => {
         }).join('')}</div>`;
     }
 
+    // ── Vista por Cliente ─────────────────────────────
     function renderClientes() {
         const cont = document.getElementById('crm-board');
         if (!cont) return;
         const lista = filtradas();
 
-        if (lista.length === 0) {
-            cont.innerHTML = `<div class="empty-state"><div class="empty-state__icon">🗂️</div>
-        <div class="empty-state__title">Sin expedientes para mostrar</div></div>`;
-            return;
-        }
+        if (lista.length === 0) return renderVacio(cont);
 
         const porCliente = {};
         lista.forEach(m => {
@@ -135,10 +146,75 @@ const CRM = (() => {
         }).join('');
     }
 
-    function sello(estado) {
-        const e = estado || 'Solicitada';
-        const tipo = ESTADO_SEAL[e] || 'neutral';
-        return `<span class="seal seal--${tipo}"><span class="seal__ring"></span>${e}</span>`;
+    // ── Vista Tabla Completa ──────────────────────────
+    function renderTabla() {
+        const cont = document.getElementById('crm-board');
+        if (!cont) return;
+        const lista = filtradas();
+
+        if (lista.length === 0) return renderVacio(cont);
+
+        cont.innerHTML = `
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Marca</th>
+              <th>Cliente</th>
+              <th>Clase</th>
+              <th>Tipo</th>
+              <th>N° Acta</th>
+              <th>Estado</th>
+              <th>Vencimiento</th>
+              <th>Última novedad</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lista.map(m => {
+            const novedad = ultimaNovedad(m);
+            return `
+                <tr>
+                  <td class="marca-name" style="cursor:pointer;" onclick="CRM.abrirFicha('${m.id}')">${UI.escapeHtml(m.nombre) || '(logo sin texto)'}</td>
+                  <td>${UI.escapeHtml(m.cliente) || '—'}</td>
+                  <td><span class="mono">${m.clase}</span></td>
+                  <td>${m.tipo === 'M' ? 'Mixta' : 'Denominativa'}</td>
+                  <td><span class="mono">${UI.escapeHtml(m.numero_acta) || '—'}</span></td>
+                  <td>
+                    <select class="form-select" style="font-size:0.75rem; padding:4px 8px;" onchange="CRM.cambiarEstadoRapido('${m.id}', this.value)">
+                      ${ESTADOS.map(e => `<option value="${e}" ${e === (m.estado || 'Solicitada') ? 'selected' : ''}>${e}</option>`).join('')}
+                    </select>
+                  </td>
+                  <td>${UI.expiryBadge(m.fecha_vencimiento)}</td>
+                  <td style="font-size:0.75rem; color:var(--text-tertiary); max-width:220px;">
+                    ${novedad ? `<span class="mono">${UI.formatDate(novedad.fecha)}</span> — ${UI.escapeHtml(novedad.texto).slice(0, 60)}${novedad.texto.length > 60 ? '…' : ''}` : '—'}
+                  </td>
+                  <td><button class="btn btn--secondary btn--sm" onclick="CRM.abrirFicha('${m.id}')">Ver ficha</button></td>
+                </tr>
+              `;
+        }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    }
+
+    function renderVacio(cont) {
+        cont.innerHTML = `<div class="empty-state"><div class="empty-state__icon">⚖️</div>
+      <div class="empty-state__title">Sin expedientes para mostrar</div>
+      <div class="empty-state__desc">Cargá marcas en "Mi Cartera" o quitá los filtros.</div></div>`;
+    }
+
+    async function cambiarEstadoRapido(id, nuevoEstado) {
+        const m = cache.find(x => x.id === id);
+        try {
+            await API.updateMarca(id, { estado: nuevoEstado });
+            if (m) m.estado = nuevoEstado;
+            UI.toast('Estado actualizado', 'success');
+        } catch (err) {
+            UI.toast('No se pudo actualizar el estado', 'error');
+            render(); // revertir el select visualmente
+        }
     }
 
     function cambiarVista(v) {
@@ -201,18 +277,17 @@ const CRM = (() => {
     `;
 
         const overlay = UI.modal(UI.escapeHtml(m.nombre) || '(logo sin texto)', body, { wide: true });
+        let historialPendiente = Array.isArray(m.historial) ? [...m.historial] : [];
 
         overlay.querySelector('#ficha-add-nota').addEventListener('click', () => {
             const input = overlay.querySelector('#ficha-nueva-nota');
             const texto = input.value.trim();
             if (!texto) return;
-            const nuevaEntrada = { fecha: new Date().toISOString().slice(0, 10), texto };
-            const historialActual = Array.isArray(m.historial) ? m.historial : [];
-            m.historial = [...historialActual, nuevaEntrada];
+            historialPendiente = [...historialPendiente, { fecha: new Date().toISOString().slice(0, 10), texto }];
             input.value = '';
 
             const timelineEl = overlay.querySelector('#ficha-timeline');
-            const reversed = [...m.historial].reverse();
+            const reversed = [...historialPendiente].reverse();
             timelineEl.innerHTML = reversed.map(h => `
         <div class="timeline__item">
           <div class="timeline__dot"></div>
@@ -224,19 +299,24 @@ const CRM = (() => {
       `).join('');
         });
 
-        overlay.querySelector('#ficha-guardar').addEventListener('click', async () => {
+        overlay.querySelector('#ficha-guardar').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
             const nuevoEstado = overlay.querySelector('#ficha-estado').value;
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
             try {
-                await API.updateMarca(m.id, { estado: nuevoEstado, historial: m.historial || [] });
+                await API.updateMarca(m.id, { estado: nuevoEstado, historial: historialPendiente });
                 UI.toast('Expediente actualizado', 'success');
                 overlay.remove();
                 await load();
                 if (window.App) App.updateAlertBadge();
             } catch (err) {
-                UI.toast('Error guardando cambios', 'error');
+                UI.toast('Error guardando cambios: ' + err.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar cambios';
             }
         });
     }
 
-    return { load, render, cambiarVista, abrirFicha };
+    return { load, render, cambiarVista, cambiarEstadoRapido, abrirFicha };
 })();
