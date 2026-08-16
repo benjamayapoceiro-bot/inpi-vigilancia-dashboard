@@ -42,10 +42,14 @@ const API = (() => {
         },
 
         async markRevisada(id, revisada) {
-            return request(`/rest/v1/alertas?id=eq.${id}`, {
+            const result = await request(`/rest/v1/alertas?id=eq.${id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ revisada })
             });
+            if (!Array.isArray(result) || result.length === 0) {
+                throw new Error('La actualización no afectó ninguna fila (revisar permisos en Supabase)');
+            }
+            return result;
         },
 
         // ── Cartera ────────────────────────────────
@@ -61,10 +65,14 @@ const API = (() => {
         },
 
         async updateMarca(id, data) {
-            return request(`/rest/v1/marcas_vigiladas?id=eq.${id}`, {
+            const result = await request(`/rest/v1/marcas_vigiladas?id=eq.${id}`, {
                 method: 'PATCH',
                 body: JSON.stringify(data)
             });
+            if (!Array.isArray(result) || result.length === 0) {
+                throw new Error('La actualización no afectó ninguna fila (revisar permisos en Supabase)');
+            }
+            return result;
         },
 
         async deleteMarca(id) {
