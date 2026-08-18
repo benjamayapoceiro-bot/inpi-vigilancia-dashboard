@@ -209,6 +209,24 @@ const Cartera = (() => {
             return;
         }
 
+        // Si NO estamos editando, chequear que no exista ya una marca igual
+        // (evita duplicados por tocar el formulario de alta pensando que edita)
+        if (!editingId) {
+            const yaExiste = cache.some(m =>
+                (m.nombre || '').trim().toUpperCase() === (body.nombre || '').trim().toUpperCase() &&
+                m.clase === body.clase &&
+                (m.cliente || '') === (body.cliente || '')
+            );
+            if (yaExiste) {
+                const confirmado = await UI.confirm(
+                    '¿Ya existe una marca igual?',
+                    `Ya tenés cargada <strong>${UI.escapeHtml(body.nombre) || '(sin nombre)'}</strong> (clase ${body.clase}${body.cliente ? ', cliente ' + UI.escapeHtml(body.cliente) : ''}). ` +
+                    `Si querés modificarla, cancelá esto y usá el botón ✎ en la fila correspondiente en vez de cargarla de nuevo. ¿Seguro que querés crear una marca duplicada?`
+                );
+                if (!confirmado) return;
+            }
+        }
+
         const submitBtn = form.querySelector('#btn-submit-marca');
 
         try {
