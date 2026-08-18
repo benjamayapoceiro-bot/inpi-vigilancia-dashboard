@@ -19,9 +19,11 @@ const API = (() => {
 
     async function request(endpoint, options = {}) {
         try {
+            const metodosConRepresentacion = ['POST', 'PATCH', 'DELETE'];
+            const usarJsonHeaders = options.body || metodosConRepresentacion.includes(options.method);
             const res = await fetch(`${cfg().url}${endpoint}`, {
                 ...options,
-                headers: options.body ? jsonHeaders() : headers()
+                headers: usarJsonHeaders ? jsonHeaders() : headers()
             });
             if (!res.ok) {
                 const err = await res.text();
@@ -76,9 +78,13 @@ const API = (() => {
         },
 
         async deleteMarca(id) {
-            return request(`/rest/v1/marcas_vigiladas?id=eq.${id}`, {
+            const result = await request(`/rest/v1/marcas_vigiladas?id=eq.${id}`, {
                 method: 'DELETE'
             });
+            if (!Array.isArray(result) || result.length === 0) {
+                throw new Error('El borrado no afectó ninguna fila (revisar permisos en Supabase)');
+            }
+            return result;
         }
     };
 })();
