@@ -253,7 +253,7 @@
     color: var(--text-primary);
 }
 
-.data-table .acta-link {
+.acta-link {
     color: var(--accent);
     font-family: var(--font-mono);
     font-size: 0.75rem;
@@ -261,9 +261,11 @@
     background: rgba(var(--accent-rgb), 0.08);
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
+    text-decoration: none;
+    display: inline-block;
 }
 
-.data-table .acta-link:hover {
+.acta-link:hover {
     background: rgba(var(--accent-rgb), 0.2);
 }
 
