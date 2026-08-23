@@ -135,7 +135,7 @@ const Cartera = (() => {
           <tr>
             <td>
               <div class="marca-name"${notaTitle}>${UI.escapeHtml(m.nombre) || '(logo sin texto)'}</div>
-              ${m.numero_acta ? `<div style="font-size:0.6875rem; color:var(--text-tertiary);">Acta ${UI.escapeHtml(m.numero_acta)}</div>` : ''}
+              ${m.numero_acta ? `<a class="acta-link" target="_blank" rel="noopener" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(m.numero_acta)}" title="Ver esta acta en el INPI">Acta ${UI.escapeHtml(m.numero_acta)} ↗</a>` : ''}
             </td>
             <td><span class="badge badge--primary">${m.clase}</span></td>
             <td><span class="badge ${tipoBadge}">${tipoStr}</span></td>
