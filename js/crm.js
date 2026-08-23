@@ -179,7 +179,7 @@ const CRM = (() => {
                   <td>${UI.escapeHtml(m.cliente) || '—'}</td>
                   <td><span class="mono">${m.clase}</span></td>
                   <td>${m.tipo === 'M' ? 'Mixta' : 'Denominativa'}</td>
-                  <td><span class="mono">${UI.escapeHtml(m.numero_acta) || '—'}</span></td>
+                  <td>${m.numero_acta ? `<a class="acta-link" target="_blank" rel="noopener" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(m.numero_acta)}">${UI.escapeHtml(m.numero_acta)} ↗</a>` : '<span class="mono">—</span>'}</td>
                   <td>
                     <select class="form-select" style="font-size:0.75rem; padding:4px 8px;" onchange="CRM.cambiarEstadoRapido('${m.id}', this.value)">
                       ${ESTADOS.map(e => `<option value="${e}" ${e === (m.estado || 'Solicitada') ? 'selected' : ''}>${e}</option>`).join('')}
@@ -237,7 +237,7 @@ const CRM = (() => {
         <div><div class="form-label">Cliente</div><div style="font-size:0.875rem;">${UI.escapeHtml(m.cliente) || '—'}</div></div>
         <div><div class="form-label">Clase</div><div class="mono" style="font-size:0.875rem;">${m.clase}</div></div>
         <div><div class="form-label">Tipo</div><div style="font-size:0.875rem;">${m.tipo === 'M' ? 'Mixta' : 'Denominativa'}</div></div>
-        <div><div class="form-label">N° Acta</div><div class="mono" style="font-size:0.875rem;">${UI.escapeHtml(m.numero_acta) || '—'}</div></div>
+        <div><div class="form-label">N° Acta</div><div style="font-size:0.875rem;">${m.numero_acta ? `<a class="acta-link" target="_blank" rel="noopener" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(m.numero_acta)}">${UI.escapeHtml(m.numero_acta)} ↗</a>` : '—'}</div></div>
         <div><div class="form-label">Vencimiento</div><div style="font-size:0.875rem;">${UI.formatDate(m.fecha_vencimiento)}</div></div>
         <div>
           <div class="form-label">Estado</div>
