@@ -226,11 +226,64 @@ const CRM = (() => {
         render();
     }
 
-    function abrirFicha(id) {
+    const PLAZO_SEAL = { pendiente: 'info', en_gestion: 'warning', cumplido: 'success', vencido: 'danger', descartado: 'neutral' };
+
+    function renderPlazosList(plazos) {
+        if (!plazos.length) return `<div class="timeline__empty">Sin plazos cargados para este expediente.</div>`;
+        return plazos.map(p => `
+      <div class="kanban__card" style="cursor:default; margin-bottom:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <div>
+            <div class="kanban__card-name" style="font-size:0.8125rem;">${UI.escapeHtml(p.titulo)}</div>
+            <div class="kanban__card-meta">${UI.escapeHtml(p.tipo)} · vence ${UI.formatDate(p.fecha_vencimiento)}</div>
+          </div>
+          <span class="seal seal--${PLAZO_SEAL[p.estado] || 'neutral'}"><span class="seal__ring"></span>${p.estado}</span>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          ${p.estado !== 'cumplido' ? `<button class="btn btn--ghost btn--sm" onclick="CRM.marcarPlazoCumplido('${p.id}')">✓ Marcar cumplido</button>` : ''}
+          <button class="btn btn--ghost btn--sm" onclick="CRM.borrarPlazo('${p.id}')">🗑 Borrar</button>
+        </div>
+      </div>
+    `).join('');
+    }
+
+    async function marcarPlazoCumplido(plazoId) {
+        try {
+            await API.updatePlazo(plazoId, { estado: 'cumplido', completed_at: new Date().toISOString() });
+            UI.toast('Plazo marcado como cumplido', 'success');
+            const cont = document.getElementById('ficha-plazos');
+            if (cont && cont.dataset.marcaId) abrirFicha(cont.dataset.marcaId);
+        } catch (err) {
+            UI.toast('Error actualizando el plazo', 'error');
+        }
+    }
+
+    async function borrarPlazo(plazoId) {
+        const confirmed = await UI.confirm('¿Borrar este plazo?', 'Esta acción no se puede deshacer.');
+        if (!confirmed) return;
+        try {
+            await API.deletePlazo(plazoId);
+            UI.toast('Plazo eliminado', 'success');
+            const cont = document.getElementById('ficha-plazos');
+            if (cont && cont.dataset.marcaId) abrirFicha(cont.dataset.marcaId);
+        } catch (err) {
+            UI.toast('Error eliminando el plazo', 'error');
+        }
+    }
+
+    async function abrirFicha(id) {
         const m = cache.find(x => x.id === id);
         if (!m) return;
 
         const historial = Array.isArray(m.historial) ? [...m.historial].reverse() : [];
+
+        let plazos = [];
+        try {
+            plazos = await API.getPlazos(id);
+            if (!Array.isArray(plazos)) plazos = [];
+        } catch (err) {
+            plazos = [];
+        }
 
         const body = `
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: var(--space-md); margin-bottom: var(--space-lg);">
@@ -270,6 +323,26 @@ const CRM = (() => {
         <button class="btn btn--secondary" id="ficha-add-nota" type="button">＋ Agregar</button>
       </div>
 
+      <div class="form-label" style="margin: var(--space-lg) 0 var(--space-xs);">Plazos legales</div>
+      <div id="ficha-plazos" data-marca-id="${m.id}">${renderPlazosList(plazos)}</div>
+      <div class="form-alta" style="grid-template-columns: 2fr 1fr 1fr auto; margin-top:8px; margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label" for="plazo-titulo">Título</label>
+          <input type="text" class="form-input" id="plazo-titulo" placeholder="ej. Vencimiento plazo de oposición">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="plazo-tipo">Tipo</label>
+          <input type="text" class="form-input" id="plazo-tipo" placeholder="ej. oposicion">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="plazo-fecha">Vence</label>
+          <input type="date" class="form-input" id="plazo-fecha">
+        </div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <button class="btn btn--secondary" id="plazo-agregar" type="button">＋</button>
+        </div>
+      </div>
+
       <div class="modal__actions">
         <button class="btn btn--secondary" data-action="close">Cerrar</button>
         <button class="btn btn--primary" id="ficha-guardar">💾 Guardar cambios</button>
@@ -299,6 +372,29 @@ const CRM = (() => {
       `).join('');
         });
 
+        overlay.querySelector('#plazo-agregar').addEventListener('click', async () => {
+            const titulo = overlay.querySelector('#plazo-titulo').value.trim();
+            const tipo = overlay.querySelector('#plazo-tipo').value.trim() || 'otro';
+            const fecha = overlay.querySelector('#plazo-fecha').value;
+            if (!titulo || !fecha) { UI.toast('Falta título o fecha de vencimiento', 'error'); return; }
+            try {
+                await API.addPlazo({
+                    marca_vigilada_id: m.id,
+                    tipo,
+                    titulo,
+                    fecha_origen: new Date().toISOString().slice(0, 10),
+                    fecha_vencimiento: fecha,
+                    estado: 'pendiente',
+                    fuente: 'manual',
+                });
+                UI.toast('Plazo agregado', 'success');
+                overlay.remove();
+                abrirFicha(m.id);
+            } catch (err) {
+                UI.toast('Error agregando el plazo: ' + err.message, 'error');
+            }
+        });
+
         overlay.querySelector('#ficha-guardar').addEventListener('click', async (e) => {
             const btn = e.currentTarget;
             const nuevoEstado = overlay.querySelector('#ficha-estado').value;
@@ -318,5 +414,5 @@ const CRM = (() => {
         });
     }
 
-    return { load, render, cambiarVista, cambiarEstadoRapido, abrirFicha };
+    return { load, render, cambiarVista, cambiarEstadoRapido, abrirFicha, marcarPlazoCumplido, borrarPlazo };
 })();
