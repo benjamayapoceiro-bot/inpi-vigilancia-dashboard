@@ -54,6 +54,58 @@ const API = (() => {
             return result;
         },
 
+        async updateAlerta(id, data) {
+            const result = await request(`/rest/v1/alertas?id=eq.${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data)
+            });
+            if (!Array.isArray(result) || result.length === 0) {
+                throw new Error('La actualización no afectó ninguna fila (revisar permisos en Supabase)');
+            }
+            return result;
+        },
+
+        // ── Búsqueda contra histórico (actas_historicas) ──
+        async buscarSimilares(q, clase = null, umbral = 0.25, limite = 30) {
+            return request('/rest/v1/rpc/buscar_marcas_similares', {
+                method: 'POST',
+                body: JSON.stringify({ q, clase_filtro: clase, umbral, limite })
+            });
+        },
+
+        // ── Plazos legales ─────────────────────────
+        async getPlazos(marcaId = null) {
+            const filtro = marcaId ? `&marca_vigilada_id=eq.${marcaId}` : '';
+            return request(`/rest/v1/plazos_legales?select=*&order=fecha_vencimiento.asc${filtro}`);
+        },
+
+        async getPlazosProximos(dias = 30) {
+            const limite = new Date(Date.now() + dias * 86400000).toISOString().slice(0, 10);
+            return request(`/rest/v1/plazos_legales?select=*,marcas_vigiladas(nombre,cliente)&estado=in.(pendiente,en_gestion)&fecha_vencimiento=lte.${limite}&order=fecha_vencimiento.asc`);
+        },
+
+        async addPlazo(plazo) {
+            return request('/rest/v1/plazos_legales', {
+                method: 'POST',
+                body: JSON.stringify(plazo)
+            });
+        },
+
+        async updatePlazo(id, data) {
+            const result = await request(`/rest/v1/plazos_legales?id=eq.${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data)
+            });
+            if (!Array.isArray(result) || result.length === 0) {
+                throw new Error('La actualización no afectó ninguna fila (revisar permisos en Supabase)');
+            }
+            return result;
+        },
+
+        async deletePlazo(id) {
+            return request(`/rest/v1/plazos_legales?id=eq.${id}`, { method: 'DELETE' });
+        },
+
         // ── Cartera ────────────────────────────────
         async getMarcas() {
             return request('/rest/v1/marcas_vigiladas?select=*&order=created_at.desc');
