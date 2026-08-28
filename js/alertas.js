@@ -52,6 +52,8 @@ const Alertas = (() => {
         }
         if (empty) empty.style.display = 'none';
 
+        const RIESGO_SEAL = { alto: 'danger', medio: 'warning', bajo: 'success' };
+
         if (tbody) {
             tbody.innerHTML = filtered.map(a => {
                 const pct = Math.round((a.similitud_score || 0) * 100);
@@ -61,6 +63,9 @@ const Alertas = (() => {
                 const isLogo = a.tipo_match === 'logo';
                 const hasDraft = !!a.borrador_oposicion;
                 const reviewed = a.revisada ? 'checked' : '';
+                const opPresentada = a.oposicion_presentada ? 'checked' : '';
+                const necesitaOposicion = a.requiere_oposicion || hasDraft;
+                const enlace = a.enlace_inpi || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${a.acta_nueva}`;
 
                 return `
           <tr class="${a.revisada ? 'row-reviewed' : ''}">
@@ -71,27 +76,36 @@ const Alertas = (() => {
                 </div>
                 <span class="score-bar__value" style="color: var(--${colorClass})">${pct}%</span>
               </div>
+              ${a.nivel_riesgo ? `<span class="seal seal--${RIESGO_SEAL[a.nivel_riesgo] || 'neutral'}" style="margin-top:4px;"><span class="seal__ring"></span>Riesgo ${a.nivel_riesgo}</span>` : ''}
             </td>
             <td>
               <div class="marca-name">${UI.escapeHtml(a.denominacion_nueva) || '(marca mixta)'}</div>
               ${isLogo ? '<span class="badge badge--info" style="margin-top:4px">Logo</span>' : ''}
+              ${necesitaOposicion && a.fecha_limite_oposicion ? `<div style="margin-top:4px;">${UI.expiryBadge(a.fecha_limite_oposicion)} <span style="font-size:0.6875rem; color:var(--text-tertiary);">límite oposición</span></div>` : ''}
+              ${opPresentada ? `<div style="margin-top:4px;"><span class="badge badge--success">✓ Oposición presentada</span></div>` : ''}
             </td>
             <td><span class="badge badge--primary">${a.clase || '—'}</span></td>
             <td style="color: var(--text-secondary); font-size: 0.8125rem;">${titulares}</td>
             <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-tertiary);">${a.boletin_numero || '—'}</td>
             <td>
               <a class="data-table acta-link" target="_blank"
-                 href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${a.acta_nueva}">
+                 href="${enlace}">
                 ${a.acta_nueva || '—'}
               </a>
             </td>
             <td>
-              <div style="display: flex; gap: var(--space-sm); align-items: center;">
+              <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
                 ${hasDraft ? `<button class="btn btn--ghost btn--sm" onclick="Alertas.toggleDraft('${a.id}')" title="Ver borrador">📄</button>` : ''}
                 <label class="review-toggle" title="Marcar como revisada">
                   <input type="checkbox" ${reviewed} onchange="Alertas.toggleRevisada('${a.id}', this.checked)">
                   <span class="review-toggle__check">✓</span>
                 </label>
+                ${necesitaOposicion ? `
+                <label class="review-toggle" title="Marcar oposición como presentada">
+                  <input type="checkbox" ${opPresentada} onchange="Alertas.toggleOposicionPresentada('${a.id}', this.checked)">
+                  <span class="review-toggle__check">📨</span>
+                </label>
+                ` : ''}
               </div>
             </td>
           </tr>
@@ -119,6 +133,24 @@ const Alertas = (() => {
         }
     }
 
+    async function toggleOposicionPresentada(id, checked) {
+        try {
+            await API.updateAlerta(id, {
+                oposicion_presentada: checked,
+                oposicion_presentada_fecha: checked ? new Date().toISOString().slice(0, 10) : null
+            });
+            const item = cache.find(a => a.id === id);
+            if (item) {
+                item.oposicion_presentada = checked;
+                item.oposicion_presentada_fecha = checked ? new Date().toISOString().slice(0, 10) : null;
+            }
+            UI.toast(checked ? 'Oposición marcada como presentada' : 'Desmarcada', 'success');
+            render();
+        } catch (err) {
+            UI.toast('Error actualizando', 'error');
+        }
+    }
+
     function toggleDraft(id) {
         const row = document.getElementById(`draft-row-${id}`);
         if (row) {
@@ -133,5 +165,5 @@ const Alertas = (() => {
 
     function getCache() { return cache; }
 
-    return { load, render, toggleRevisada, toggleDraft, setSearch, getCache };
+    return { load, render, toggleRevisada, toggleOposicionPresentada, toggleDraft, setSearch, getCache };
 })();
