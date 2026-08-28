@@ -46,9 +46,13 @@ const Busqueda = (() => {
 
       <div class="card" style="margin-top: var(--space-lg);">
         <div class="section-header" style="margin-bottom: var(--space-md);">
-          <h3 style="font-size: 0.9375rem;">Resultados de la búsqueda (carga manual)</h3>
-          <button class="btn btn--secondary btn--sm" id="bq-add-resultado" type="button">＋ Agregar coincidencia</button>
+          <h3 style="font-size: 0.9375rem;">Resultados de la búsqueda</h3>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn--secondary btn--sm" id="bq-buscar-historico" type="button">🔍 Buscar en histórico</button>
+            <button class="btn btn--secondary btn--sm" id="bq-add-resultado" type="button">＋ Agregar manual</button>
+          </div>
         </div>
+        <div id="bq-historico-nota" style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: var(--space-sm); display:none;"></div>
         <table class="data-table">
           <thead>
             <tr><th>Marca similar encontrada</th><th>Clase</th><th>Titular</th><th>Riesgo</th><th></th></tr>
@@ -56,7 +60,7 @@ const Busqueda = (() => {
           <tbody id="bq-tbody-resultados"></tbody>
         </table>
         <div id="bq-empty-resultados" style="padding: var(--space-md) 0; color: var(--text-tertiary); font-size: 0.8125rem;">
-          Sin coincidencias cargadas todavía. Si la búsqueda dio negativa, dejalo así y va a figurar como "sin antecedentes" en el PDF.
+          Sin coincidencias cargadas todavía. Usá "Buscar en histórico" para chequear contra actas ya procesadas, o cargá coincidencias a mano. Si la búsqueda dio negativa, dejalo así y va a figurar como "sin antecedentes" en el PDF.
         </div>
       </div>
 
@@ -211,6 +215,51 @@ const Busqueda = (() => {
             document.getElementById(id)?.addEventListener('input', actualizarTotal);
         });
         document.getElementById('bq-generar-pdf')?.addEventListener('click', generarPDF);
+        document.getElementById('bq-buscar-historico')?.addEventListener('click', buscarEnHistorico);
+    }
+
+    // ── Búsqueda automática contra actas_historicas (pg_trgm) ──
+    // Umbral bajo a propósito: acá el resultado lo revisa una persona antes
+    // de armar el informe, así que preferimos mostrar de más (falsos
+    // positivos descartables con un vistazo) a que se escape un antecedente
+    // real. No confundir con los umbrales del matcher semanal (0.72/0.80),
+    // que sí generan alertas automáticas sin revisión previa.
+    async function buscarEnHistorico() {
+        const marca = document.getElementById('bq-marca')?.value?.trim();
+        if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
+
+        const clase = clasesElegidas.length === 1 ? clasesElegidas[0].n : null;
+        const btn = document.getElementById('bq-buscar-historico');
+        const nota = document.getElementById('bq-historico-nota');
+        if (btn) { btn.disabled = true; btn.textContent = 'Buscando...'; }
+
+        try {
+            const encontrados = await API.buscarSimilares(marca, clase, 0.25, 20);
+            if (!Array.isArray(encontrados) || encontrados.length === 0) {
+                if (nota) {
+                    nota.style.display = 'block';
+                    nota.textContent = '⚠ Sin coincidencias contra el histórico cargado (o el histórico todavía no tiene datos para esta clase). Revisá igual manualmente en el buscador del INPI.';
+                }
+                UI.toast('Sin coincidencias en el histórico', 'info');
+                return;
+            }
+            if (nota) nota.style.display = 'none';
+
+            for (const r of encontrados) {
+                const sim = r.similitud || 0;
+                const riesgo = sim >= 0.5 ? 'Alto' : sim >= 0.35 ? 'Medio' : 'Bajo';
+                const titular = (r.titulares || []).map(t => t.nombre).join(', ') || '—';
+                // Evitar duplicar si ya estaba cargado (misma acta)
+                if (resultados.some(x => x._acta === r.acta)) continue;
+                resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo, _acta: r.acta });
+            }
+            renderResultados();
+            UI.toast(`${encontrados.length} coincidencia(s) encontradas en el histórico`, 'success');
+        } catch (err) {
+            UI.toast('Error buscando en el histórico: ' + err.message, 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar en histórico'; }
+        }
     }
 
     function generarPDF() {
