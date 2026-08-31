@@ -47,12 +47,14 @@ const Busqueda = (() => {
       <div class="card" style="margin-top: var(--space-lg);">
         <div class="section-header" style="margin-bottom: var(--space-md);">
           <h3 style="font-size: 0.9375rem;">Resultados de la búsqueda</h3>
-          <div style="display:flex; gap:8px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn btn--secondary btn--sm" id="bq-buscar-historico" type="button">🔍 Buscar en histórico</button>
+            <button class="btn btn--secondary btn--sm" id="bq-consultar-inpi" type="button">📡 Consultar INPI en vivo</button>
             <button class="btn btn--secondary btn--sm" id="bq-add-resultado" type="button">＋ Agregar manual</button>
           </div>
         </div>
         <div id="bq-historico-nota" style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: var(--space-sm); display:none;"></div>
+        <div id="bq-inpi-vivo-resultado" style="display:none; margin-bottom: var(--space-md); padding: var(--space-md); background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.8125rem;"></div>
         <table class="data-table">
           <thead>
             <tr><th>Marca similar encontrada</th><th>Clase</th><th>Titular</th><th>Riesgo</th><th></th></tr>
@@ -216,6 +218,64 @@ const Busqueda = (() => {
         });
         document.getElementById('bq-generar-pdf')?.addEventListener('click', generarPDF);
         document.getElementById('bq-buscar-historico')?.addEventListener('click', buscarEnHistorico);
+        document.getElementById('bq-consultar-inpi')?.addEventListener('click', consultarInpiEnVivo);
+    }
+
+    // ── Consulta en vivo al WS del INPI (ConsultaDenominacion) ──
+    // Vía Supabase Edge Function "inpi-consulta" (proxy SOAP, sin
+    // credenciales — es una consulta pública). Primera versión: muestra
+    // los campos parseados + el XML crudo, porque el formato exacto de
+    // respuesta del INPI no se pudo confirmar en desarrollo.
+    async function consultarInpiEnVivo() {
+        const marca = document.getElementById('bq-marca')?.value?.trim();
+        if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
+
+        const btn = document.getElementById('bq-consultar-inpi');
+        const panel = document.getElementById('bq-inpi-vivo-resultado');
+        if (btn) { btn.disabled = true; btn.textContent = 'Consultando...'; }
+
+        try {
+            const cfg = window.APP_CONFIG.supabase;
+            const resp = await fetch(`${cfg.url}/functions/v1/inpi-consulta`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey },
+                body: JSON.stringify({ tipo: 'denominacion', valor: marca }),
+            });
+            const data = await resp.json();
+
+            if (!data.ok) {
+                if (panel) {
+                    panel.style.display = 'block';
+                    panel.innerHTML = `<strong style="color:var(--danger)">Error consultando INPI:</strong> ${UI.escapeHtml(data.error || 'desconocido')}`;
+                }
+                UI.toast('Error consultando al INPI', 'error');
+                return;
+            }
+
+            if (panel) {
+                panel.style.display = 'block';
+                const camposHtml = Object.keys(data.campos || {}).length
+                    ? Object.entries(data.campos).map(([k, v]) => `<div><b>${UI.escapeHtml(k)}:</b> ${UI.escapeHtml(String(v))}</div>`).join('')
+                    : '<div style="color:var(--text-tertiary)">Sin campos reconocibles en la respuesta — revisar XML crudo abajo.</div>';
+                panel.innerHTML = `
+          <div style="margin-bottom:8px;"><strong>Respuesta del INPI para "${UI.escapeHtml(marca)}":</strong></div>
+          ${camposHtml}
+          <details style="margin-top:8px;">
+            <summary style="cursor:pointer; color:var(--text-tertiary);">Ver XML crudo (para diagnóstico)</summary>
+            <pre style="white-space:pre-wrap; font-size:0.6875rem; margin-top:6px; max-height:200px; overflow:auto;">${UI.escapeHtml(data.xml_crudo || '')}</pre>
+          </details>
+        `;
+            }
+            UI.toast('Consulta al INPI completada', 'success');
+        } catch (err) {
+            if (panel) {
+                panel.style.display = 'block';
+                panel.innerHTML = `<strong style="color:var(--danger)">Error de conexión:</strong> ${UI.escapeHtml(err.message)}`;
+            }
+            UI.toast('Error de conexión con el proxy', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '📡 Consultar INPI en vivo'; }
+        }
     }
 
     // ── Búsqueda automática contra actas_historicas (pg_trgm) ──
