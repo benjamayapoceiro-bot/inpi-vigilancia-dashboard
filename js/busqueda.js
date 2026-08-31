@@ -221,11 +221,8 @@ const Busqueda = (() => {
         document.getElementById('bq-consultar-inpi')?.addEventListener('click', consultarInpiEnVivo);
     }
 
-    // ── Consulta en vivo al WS del INPI (ConsultaDenominacion) ──
-    // Vía Supabase Edge Function "inpi-consulta" (proxy SOAP, sin
-    // credenciales — es una consulta pública). Primera versión: muestra
-    // los campos parseados + el XML crudo, porque el formato exacto de
-    // respuesta del INPI no se pudo confirmar en desarrollo.
+    let ultimaBusquedaInpi = [];
+
     async function consultarInpiEnVivo() {
         const marca = document.getElementById('bq-marca')?.value?.trim();
         if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
@@ -252,21 +249,34 @@ const Busqueda = (() => {
                 return;
             }
 
+            ultimaBusquedaInpi = data.resultados || [];
+
             if (panel) {
                 panel.style.display = 'block';
-                const camposHtml = Object.keys(data.campos || {}).length
-                    ? Object.entries(data.campos).map(([k, v]) => `<div><b>${UI.escapeHtml(k)}:</b> ${UI.escapeHtml(String(v))}</div>`).join('')
-                    : '<div style="color:var(--text-tertiary)">Sin campos reconocibles en la respuesta — revisar XML crudo abajo.</div>';
-                panel.innerHTML = `
-          <div style="margin-bottom:8px;"><strong>Respuesta del INPI para "${UI.escapeHtml(marca)}":</strong></div>
-          ${camposHtml}
-          <details style="margin-top:8px;">
-            <summary style="cursor:pointer; color:var(--text-tertiary);">Ver XML crudo (para diagnóstico)</summary>
-            <pre style="white-space:pre-wrap; font-size:0.6875rem; margin-top:6px; max-height:200px; overflow:auto;">${UI.escapeHtml(data.xml_crudo || '')}</pre>
-          </details>
-        `;
+                if (!ultimaBusquedaInpi.length) {
+                    panel.innerHTML = `<div style="color:var(--success)">✓ Sin coincidencias en el INPI para "${UI.escapeHtml(marca)}".</div>`;
+                } else {
+                    panel.innerHTML = `
+            <div style="margin-bottom:8px;"><strong>${data.total} coincidencia(s) en el INPI para "${UI.escapeHtml(marca)}":</strong></div>
+            <table class="data-table" style="font-size:0.75rem;">
+              <thead><tr><th>Acta</th><th>Denominación</th><th>Clase</th><th>Titular</th><th>Estado</th><th></th></tr></thead>
+              <tbody>
+                ${ultimaBusquedaInpi.map((r, i) => `
+                  <tr>
+                    <td class="mono">${UI.escapeHtml(r.acta || '—')}</td>
+                    <td>${UI.escapeHtml(r.denominacion || '—')} ${r.tipo_marca === 'Mixta' ? '<span class="badge badge--info">Mixta</span>' : ''}</td>
+                    <td>${UI.escapeHtml(r.clase || '—')}</td>
+                    <td>${UI.escapeHtml((r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, ''))}</td>
+                    <td>${UI.escapeHtml(r.estado || '—')}</td>
+                    <td><button class="btn btn--ghost btn--sm" onclick="Busqueda.agregarDesdeInpi(${i})" title="Agregar a coincidencias">＋</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+                }
             }
-            UI.toast('Consulta al INPI completada', 'success');
+            UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI`, 'success');
         } catch (err) {
             if (panel) {
                 panel.style.display = 'block';
@@ -276,6 +286,15 @@ const Busqueda = (() => {
         } finally {
             if (btn) { btn.disabled = false; btn.textContent = '📡 Consultar INPI en vivo'; }
         }
+    }
+
+    function agregarDesdeInpi(i) {
+        const r = ultimaBusquedaInpi[i];
+        if (!r) return;
+        const titular = (r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, '');
+        resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo: 'Medio', _acta: r.acta });
+        renderResultados();
+        UI.toast('Agregada a las coincidencias del informe', 'success');
     }
 
     // ── Búsqueda automática contra actas_historicas (pg_trgm) ──
@@ -593,5 +612,5 @@ const Busqueda = (() => {
         clasesElegidas = [];
     }
 
-    return { render, agregar, editar, borrar, agregarClase, quitarClase, reset };
+    return { render, agregar, editar, borrar, agregarClase, quitarClase, reset, agregarDesdeInpi };
 })();
