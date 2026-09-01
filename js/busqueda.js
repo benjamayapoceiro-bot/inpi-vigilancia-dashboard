@@ -5,14 +5,14 @@
  */
 
 const Busqueda = (() => {
-    let resultados = [];      // { marca, clase, titular, riesgo }
-    let clasesElegidas = [];  // [{ n, titulo }]
+  let resultados = [];      // { marca, clase, titular, riesgo }
+  let clasesElegidas = [];  // [{ n, titulo }]
 
-    function render() {
-        const view = document.getElementById('view-busqueda');
-        if (!view) return;
+  function render() {
+    const view = document.getElementById('view-busqueda');
+    if (!view) return;
 
-        view.innerHTML = `
+    view.innerHTML = `
       <div class="card">
         <h3 style="margin-bottom: var(--space-md); font-size: 0.9375rem;">Datos de la consulta</h3>
         <div class="form-alta" style="grid-template-columns: repeat(auto-fit, minmax(180px,1fr));">
@@ -96,58 +96,58 @@ const Busqueda = (() => {
       </div>
     `;
 
-        llenarSelectorClases();
-        renderResultados();
-        renderClasesElegidas();
-        wireEvents();
-        actualizarTotal();
-    }
+    llenarSelectorClases();
+    renderResultados();
+    renderClasesElegidas();
+    wireEvents();
+    actualizarTotal();
+  }
 
-    function llenarSelectorClases() {
-        const sel = document.getElementById('bq-clase-manual');
-        if (!sel) return;
-        sel.innerHTML = NIZA.CLASES.map(c => `<option value="${c.n}">Clase ${c.n} — ${c.titulo}</option>`).join('');
-    }
+  function llenarSelectorClases() {
+    const sel = document.getElementById('bq-clase-manual');
+    if (!sel) return;
+    sel.innerHTML = NIZA.CLASES.map(c => `<option value="${c.n}">Clase ${c.n} — ${c.titulo}</option>`).join('');
+  }
 
-    function renderClasesElegidas() {
-        const cont = document.getElementById('bq-clases-elegidas');
-        const cantInput = document.getElementById('bq-cant-clases');
-        if (!cont) return;
-        if (clasesElegidas.length === 0) {
-            cont.innerHTML = `<span style="color:var(--text-tertiary); font-size:0.8125rem;">Ninguna clase elegida todavía.</span>`;
-        } else {
-            cont.innerHTML = clasesElegidas.map((c, i) =>
-                `<span class="badge badge--primary" style="margin-right:6px; margin-bottom:6px; display:inline-block; cursor:pointer;" onclick="Busqueda.quitarClase(${i})">Clase ${c.n} — ${c.titulo} ✕</span>`
-            ).join('');
-        }
-        if (cantInput) cantInput.value = clasesElegidas.length;
-        actualizarTotal();
+  function renderClasesElegidas() {
+    const cont = document.getElementById('bq-clases-elegidas');
+    const cantInput = document.getElementById('bq-cant-clases');
+    if (!cont) return;
+    if (clasesElegidas.length === 0) {
+      cont.innerHTML = `<span style="color:var(--text-tertiary); font-size:0.8125rem;">Ninguna clase elegida todavía.</span>`;
+    } else {
+      cont.innerHTML = clasesElegidas.map((c, i) =>
+        `<span class="badge badge--primary" style="margin-right:6px; margin-bottom:6px; display:inline-block; cursor:pointer;" onclick="Busqueda.quitarClase(${i})">Clase ${c.n} — ${c.titulo} ✕</span>`
+      ).join('');
     }
+    if (cantInput) cantInput.value = clasesElegidas.length;
+    actualizarTotal();
+  }
 
-    function agregarClase(n) {
-        n = parseInt(n);
-        if (clasesElegidas.some(c => c.n === n)) return;
-        const c = NIZA.porNumero(n);
-        if (c) clasesElegidas.push(c);
-        renderClasesElegidas();
+  function agregarClase(n) {
+    n = parseInt(n);
+    if (clasesElegidas.some(c => c.n === n)) return;
+    const c = NIZA.porNumero(n);
+    if (c) clasesElegidas.push(c);
+    renderClasesElegidas();
+  }
+
+  function quitarClase(i) {
+    clasesElegidas.splice(i, 1);
+    renderClasesElegidas();
+  }
+
+  function renderResultados() {
+    const tbody = document.getElementById('bq-tbody-resultados');
+    const empty = document.getElementById('bq-empty-resultados');
+    if (!tbody) return;
+    if (resultados.length === 0) {
+      tbody.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      return;
     }
-
-    function quitarClase(i) {
-        clasesElegidas.splice(i, 1);
-        renderClasesElegidas();
-    }
-
-    function renderResultados() {
-        const tbody = document.getElementById('bq-tbody-resultados');
-        const empty = document.getElementById('bq-empty-resultados');
-        if (!tbody) return;
-        if (resultados.length === 0) {
-            tbody.innerHTML = '';
-            if (empty) empty.style.display = 'block';
-            return;
-        }
-        if (empty) empty.style.display = 'none';
-        tbody.innerHTML = resultados.map((r, i) => `
+    if (empty) empty.style.display = 'none';
+    tbody.innerHTML = resultados.map((r, i) => `
       <tr>
         <td><input type="text" class="form-input" value="${UI.escapeHtml(r.marca)}" onchange="Busqueda.editar(${i},'marca',this.value)"></td>
         <td><input type="number" class="form-input" style="width:70px" value="${r.clase}" onchange="Busqueda.editar(${i},'clase',this.value)"></td>
@@ -162,101 +162,101 @@ const Busqueda = (() => {
         <td><button class="btn btn--danger btn--sm" onclick="Busqueda.borrar(${i})">✕</button></td>
       </tr>
     `).join('');
-    }
+  }
 
-    function agregar() {
-        resultados.push({ marca: '', clase: '', titular: '', riesgo: 'Medio' });
-        renderResultados();
-    }
+  function agregar() {
+    resultados.push({ marca: '', clase: '', titular: '', riesgo: 'Medio' });
+    renderResultados();
+  }
 
-    function editar(i, campo, valor) {
-        resultados[i][campo] = valor;
-    }
+  function editar(i, campo, valor) {
+    resultados[i][campo] = valor;
+  }
 
-    function borrar(i) {
-        resultados.splice(i, 1);
-        renderResultados();
-    }
+  function borrar(i) {
+    resultados.splice(i, 1);
+    renderResultados();
+  }
 
-    function actualizarTotal() {
-        const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
-        const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
-        const cantClases = clasesElegidas.length;
-        const otros = parseFloat(document.getElementById('bq-precio-otros')?.value || 0);
-        const total = busqueda + (porClase * cantClases) + otros;
-        const totalEl = document.getElementById('bq-total');
-        if (totalEl) totalEl.textContent = total.toLocaleString('es-AR');
-        return total;
-    }
+  function actualizarTotal() {
+    const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
+    const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
+    const cantClases = clasesElegidas.length;
+    const otros = parseFloat(document.getElementById('bq-precio-otros')?.value || 0);
+    const total = busqueda + (porClase * cantClases) + otros;
+    const totalEl = document.getElementById('bq-total');
+    if (totalEl) totalEl.textContent = total.toLocaleString('es-AR');
+    return total;
+  }
 
-    function wireEvents() {
-        document.getElementById('bq-add-resultado')?.addEventListener('click', agregar);
+  function wireEvents() {
+    document.getElementById('bq-add-resultado')?.addEventListener('click', agregar);
 
-        document.getElementById('bq-add-clase')?.addEventListener('click', () => {
-            const sel = document.getElementById('bq-clase-manual');
-            if (sel && sel.value) agregarClase(sel.value);
-        });
+    document.getElementById('bq-add-clase')?.addEventListener('click', () => {
+      const sel = document.getElementById('bq-clase-manual');
+      if (sel && sel.value) agregarClase(sel.value);
+    });
 
-        document.getElementById('bq-sugerir-clases')?.addEventListener('click', () => {
-            const desc = document.getElementById('bq-descripcion')?.value || '';
-            if (!desc.trim()) { UI.toast('Describí el producto/servicio primero', 'error'); return; }
-            const sugeridas = NIZA.sugerir(desc);
-            const cont = document.getElementById('bq-clases-sugeridas');
-            if (!cont) return;
-            if (sugeridas.length === 0) {
-                cont.innerHTML = `<div style="color:var(--text-tertiary); font-size:0.8125rem;">No encontré clases sugeridas por keyword — elegila manualmente con el selector de abajo.</div>`;
-                return;
-            }
-            cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:4px;">Click para agregar a "Clases elegidas":</div>` +
-                sugeridas.map(c =>
-                    `<div class="badge badge--info" style="margin-right:6px; margin-bottom:6px; padding:6px 10px; display:inline-block; cursor:pointer; max-width:320px;" onclick="Busqueda.agregarClase(${c.n})" title="${UI.escapeHtml(c.incluye)}">＋ Clase ${c.n} — ${c.titulo}</div>`
-                ).join('');
-        });
+    document.getElementById('bq-sugerir-clases')?.addEventListener('click', () => {
+      const desc = document.getElementById('bq-descripcion')?.value || '';
+      if (!desc.trim()) { UI.toast('Describí el producto/servicio primero', 'error'); return; }
+      const sugeridas = NIZA.sugerir(desc);
+      const cont = document.getElementById('bq-clases-sugeridas');
+      if (!cont) return;
+      if (sugeridas.length === 0) {
+        cont.innerHTML = `<div style="color:var(--text-tertiary); font-size:0.8125rem;">No encontré clases sugeridas por keyword — elegila manualmente con el selector de abajo.</div>`;
+        return;
+      }
+      cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:4px;">Click para agregar a "Clases elegidas":</div>` +
+        sugeridas.map(c =>
+          `<div class="badge badge--info" style="margin-right:6px; margin-bottom:6px; padding:6px 10px; display:inline-block; cursor:pointer; max-width:320px;" onclick="Busqueda.agregarClase(${c.n})" title="${UI.escapeHtml(c.incluye)}">＋ Clase ${c.n} — ${c.titulo}</div>`
+        ).join('');
+    });
 
-        ['bq-precio-busqueda', 'bq-precio-clase', 'bq-precio-otros'].forEach(id => {
-            document.getElementById(id)?.addEventListener('input', actualizarTotal);
-        });
-        document.getElementById('bq-generar-pdf')?.addEventListener('click', generarPDF);
-        document.getElementById('bq-buscar-historico')?.addEventListener('click', buscarEnHistorico);
-        document.getElementById('bq-consultar-inpi')?.addEventListener('click', consultarInpiEnVivo);
-    }
+    ['bq-precio-busqueda', 'bq-precio-clase', 'bq-precio-otros'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', actualizarTotal);
+    });
+    document.getElementById('bq-generar-pdf')?.addEventListener('click', generarPDF);
+    document.getElementById('bq-buscar-historico')?.addEventListener('click', buscarEnHistorico);
+    document.getElementById('bq-consultar-inpi')?.addEventListener('click', consultarInpiEnVivo);
+  }
 
-    let ultimaBusquedaInpi = [];
+  let ultimaBusquedaInpi = [];
 
-    async function consultarInpiEnVivo() {
-        const marca = document.getElementById('bq-marca')?.value?.trim();
-        if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
+  async function consultarInpiEnVivo() {
+    const marca = document.getElementById('bq-marca')?.value?.trim();
+    if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
 
-        const btn = document.getElementById('bq-consultar-inpi');
-        const panel = document.getElementById('bq-inpi-vivo-resultado');
-        if (btn) { btn.disabled = true; btn.textContent = 'Consultando...'; }
+    const btn = document.getElementById('bq-consultar-inpi');
+    const panel = document.getElementById('bq-inpi-vivo-resultado');
+    if (btn) { btn.disabled = true; btn.textContent = 'Consultando...'; }
 
-        try {
-            const cfg = window.APP_CONFIG.supabase;
-            const resp = await fetch(`${cfg.url}/functions/v1/inpi-consulta`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey },
-                body: JSON.stringify({ tipo: 'denominacion', valor: marca }),
-            });
-            const data = await resp.json();
+    try {
+      const cfg = window.APP_CONFIG.supabase;
+      const resp = await fetch(`${cfg.url}/functions/v1/inpi-consulta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey },
+        body: JSON.stringify({ tipo: 'denominacion', valor: marca }),
+      });
+      const data = await resp.json();
 
-            if (!data.ok) {
-                if (panel) {
-                    panel.style.display = 'block';
-                    panel.innerHTML = `<strong style="color:var(--danger)">Error consultando INPI:</strong> ${UI.escapeHtml(data.error || 'desconocido')}`;
-                }
-                UI.toast('Error consultando al INPI', 'error');
-                return;
-            }
+      if (!data.ok) {
+        if (panel) {
+          panel.style.display = 'block';
+          panel.innerHTML = `<strong style="color:var(--danger)">Error consultando INPI:</strong> ${UI.escapeHtml(data.error || 'desconocido')}`;
+        }
+        UI.toast('Error consultando al INPI', 'error');
+        return;
+      }
 
-            ultimaBusquedaInpi = data.resultados || [];
+      ultimaBusquedaInpi = data.resultados || [];
 
-            if (panel) {
-                panel.style.display = 'block';
-                if (!ultimaBusquedaInpi.length) {
-                    panel.innerHTML = `<div style="color:var(--success)">✓ Sin coincidencias en el INPI para "${UI.escapeHtml(marca)}".</div>`;
-                } else {
-                    panel.innerHTML = `
+      if (panel) {
+        panel.style.display = 'block';
+        if (!ultimaBusquedaInpi.length) {
+          panel.innerHTML = `<div style="color:var(--success)">✓ Sin coincidencias en el INPI para "${UI.escapeHtml(marca)}".</div>`;
+        } else {
+          panel.innerHTML = `
             <div style="margin-bottom:8px;"><strong>${data.total} coincidencia(s) en el INPI para "${UI.escapeHtml(marca)}":</strong></div>
             <table class="data-table" style="font-size:0.75rem;">
               <thead><tr><th>Acta</th><th>Denominación</th><th>Clase</th><th>Titular</th><th>Estado</th><th></th></tr></thead>
@@ -274,343 +274,308 @@ const Busqueda = (() => {
               </tbody>
             </table>
           `;
-                }
-            }
-            UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI`, 'success');
-        } catch (err) {
-            if (panel) {
-                panel.style.display = 'block';
-                panel.innerHTML = `<strong style="color:var(--danger)">Error de conexión:</strong> ${UI.escapeHtml(err.message)}`;
-            }
-            UI.toast('Error de conexión con el proxy', 'error');
-        } finally {
-            if (btn) { btn.disabled = false; btn.textContent = '📡 Consultar INPI en vivo'; }
         }
+      }
+      UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI`, 'success');
+    } catch (err) {
+      if (panel) {
+        panel.style.display = 'block';
+        panel.innerHTML = `<strong style="color:var(--danger)">Error de conexión:</strong> ${UI.escapeHtml(err.message)}`;
+      }
+      UI.toast('Error de conexión con el proxy', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '📡 Consultar INPI en vivo'; }
+    }
+  }
+
+  function agregarDesdeInpi(i) {
+    const r = ultimaBusquedaInpi[i];
+    if (!r) return;
+    const titular = (r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, '');
+    resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo: 'Medio', _acta: r.acta });
+    renderResultados();
+    UI.toast('Agregada a las coincidencias del informe', 'success');
+  }
+
+  // ── Búsqueda automática contra actas_historicas (pg_trgm) ──
+  // Umbral bajo a propósito: acá el resultado lo revisa una persona antes
+  // de armar el informe, así que preferimos mostrar de más (falsos
+  // positivos descartables con un vistazo) a que se escape un antecedente
+  // real. No confundir con los umbrales del matcher semanal (0.72/0.80),
+  // que sí generan alertas automáticas sin revisión previa.
+  async function buscarEnHistorico() {
+    const marca = document.getElementById('bq-marca')?.value?.trim();
+    if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
+
+    const clase = clasesElegidas.length === 1 ? clasesElegidas[0].n : null;
+    const btn = document.getElementById('bq-buscar-historico');
+    const nota = document.getElementById('bq-historico-nota');
+    if (btn) { btn.disabled = true; btn.textContent = 'Buscando...'; }
+
+    try {
+      const encontrados = await API.buscarSimilares(marca, clase, 0.25, 20);
+      if (!Array.isArray(encontrados) || encontrados.length === 0) {
+        if (nota) {
+          nota.style.display = 'block';
+          nota.textContent = '⚠ Sin coincidencias contra el histórico cargado (o el histórico todavía no tiene datos para esta clase). Revisá igual manualmente en el buscador del INPI.';
+        }
+        UI.toast('Sin coincidencias en el histórico', 'info');
+        return;
+      }
+      if (nota) nota.style.display = 'none';
+
+      for (const r of encontrados) {
+        const sim = r.similitud || 0;
+        const riesgo = sim >= 0.5 ? 'Alto' : sim >= 0.35 ? 'Medio' : 'Bajo';
+        const titular = (r.titulares || []).map(t => t.nombre).join(', ') || '—';
+        // Evitar duplicar si ya estaba cargado (misma acta)
+        if (resultados.some(x => x._acta === r.acta)) continue;
+        resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo, _acta: r.acta });
+      }
+      renderResultados();
+      UI.toast(`${encontrados.length} coincidencia(s) encontradas en el histórico`, 'success');
+    } catch (err) {
+      UI.toast('Error buscando en el histórico: ' + err.message, 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar en histórico'; }
+    }
+  }
+
+  function generarPDF() {
+    const cfg = window.APP_CONFIG;
+    const cliente = document.getElementById('bq-cliente')?.value || '(sin nombre)';
+    const marca = document.getElementById('bq-marca')?.value || '(sin nombre)';
+    const descripcion = document.getElementById('bq-descripcion')?.value || '';
+    const total = actualizarTotal();
+    const fecha = new Date().toLocaleDateString('es-AR');
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const MARGEN = 14;
+    const ANCHO = 182; // 210 - 2*14
+    let y = 0;
+    let pagina = 1;
+
+    function piePagina() {
+      doc.setFontSize(7.5);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(150);
+      doc.text(`${cfg.firm.name} — Informe de búsqueda de antecedentes marcarios`, MARGEN, 290);
+      doc.text(`Página ${pagina}`, 196, 290, { align: 'right' });
+      doc.setTextColor(0);
     }
 
-    function agregarDesdeInpi(i) {
-        const r = ultimaBusquedaInpi[i];
-        if (!r) return;
-        const titular = (r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, '');
-        resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo: 'Medio', _acta: r.acta });
-        renderResultados();
-        UI.toast('Agregada a las coincidencias del informe', 'success');
+    function nuevaPagina() {
+      piePagina();
+      doc.addPage();
+      pagina++;
+      y = 20;
     }
 
-    // ── Búsqueda automática contra actas_historicas (pg_trgm) ──
-    // Umbral bajo a propósito: acá el resultado lo revisa una persona antes
-    // de armar el informe, así que preferimos mostrar de más (falsos
-    // positivos descartables con un vistazo) a que se escape un antecedente
-    // real. No confundir con los umbrales del matcher semanal (0.72/0.80),
-    // que sí generan alertas automáticas sin revisión previa.
-    async function buscarEnHistorico() {
-        const marca = document.getElementById('bq-marca')?.value?.trim();
-        if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
-
-        const clase = clasesElegidas.length === 1 ? clasesElegidas[0].n : null;
-        const btn = document.getElementById('bq-buscar-historico');
-        const nota = document.getElementById('bq-historico-nota');
-        if (btn) { btn.disabled = true; btn.textContent = 'Buscando...'; }
-
-        try {
-            const encontrados = await API.buscarSimilares(marca, clase, 0.25, 20);
-            if (!Array.isArray(encontrados) || encontrados.length === 0) {
-                if (nota) {
-                    nota.style.display = 'block';
-                    nota.textContent = '⚠ Sin coincidencias contra el histórico cargado (o el histórico todavía no tiene datos para esta clase). Revisá igual manualmente en el buscador del INPI.';
-                }
-                UI.toast('Sin coincidencias en el histórico', 'info');
-                return;
-            }
-            if (nota) nota.style.display = 'none';
-
-            for (const r of encontrados) {
-                const sim = r.similitud || 0;
-                const riesgo = sim >= 0.5 ? 'Alto' : sim >= 0.35 ? 'Medio' : 'Bajo';
-                const titular = (r.titulares || []).map(t => t.nombre).join(', ') || '—';
-                // Evitar duplicar si ya estaba cargado (misma acta)
-                if (resultados.some(x => x._acta === r.acta)) continue;
-                resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo, _acta: r.acta });
-            }
-            renderResultados();
-            UI.toast(`${encontrados.length} coincidencia(s) encontradas en el histórico`, 'success');
-        } catch (err) {
-            UI.toast('Error buscando en el histórico: ' + err.message, 'error');
-        } finally {
-            if (btn) { btn.disabled = false; btn.textContent = '🔍 Buscar en histórico'; }
-        }
+    function saltoSiNecesario(espacioNecesario) {
+      if (y + espacioNecesario > 275) nuevaPagina();
     }
 
-    function generarPDF() {
-        const cfg = window.APP_CONFIG;
-        const cliente = document.getElementById('bq-cliente')?.value || '(sin nombre)';
-        const marca = document.getElementById('bq-marca')?.value || '(sin nombre)';
-        const descripcion = document.getElementById('bq-descripcion')?.value || '';
-        const total = actualizarTotal();
-        const fecha = new Date().toLocaleDateString('es-AR');
+    function parrafo(texto, opciones = {}) {
+      const size = opciones.size || 9.5;
+      const bold = opciones.bold || false;
+      const color = opciones.color || 0;
+      doc.setFontSize(size);
+      doc.setFont(undefined, bold ? 'bold' : 'normal');
+      doc.setTextColor(color);
+      const lineas = doc.splitTextToSize(texto, opciones.ancho || ANCHO);
+      saltoSiNecesario(lineas.length * (size / 2) + 4);
+      doc.text(lineas, opciones.x || MARGEN, y);
+      y += lineas.length * (size / 2.2) + (opciones.espacioExtra ?? 4);
+      doc.setTextColor(0);
+    }
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const MARGEN = 14;
-        const ANCHO = 182; // 210 - 2*14
-        let y = 0;
-        let pagina = 1;
+    function subtitulo(texto) {
+      saltoSiNecesario(14);
+      y += 3;
+      doc.setDrawColor(cfg.firm.primaryColor || '#6C5CE7');
+      doc.setLineWidth(0.6);
+      doc.line(MARGEN, y, MARGEN + 8, y);
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(30);
+      doc.text(texto, MARGEN + 12, y + 1.5);
+      y += 8;
+      doc.setTextColor(0);
+    }
 
-        function piePagina() {
-            doc.setFontSize(7.5);
-            doc.setFont(undefined, 'normal');
-            doc.setTextColor(150);
-            doc.text(`${cfg.firm.name} — Informe de búsqueda de antecedentes marcarios`, MARGEN, 290);
-            doc.text(`Página ${pagina}`, 196, 290, { align: 'right' });
-            doc.setTextColor(0);
-        }
+    // ═══ ENCABEZADO / PORTADA ═══
+    y = 22;
+    doc.setFontSize(19);
+    doc.setFont(undefined, 'bold');
+    doc.text(cfg.firm.name, MARGEN, y);
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100);
+    doc.text(cfg.firm.tagline || '', MARGEN, y);
+    y += 5;
+    doc.setFontSize(8.5);
+    doc.text(`${cfg.firm.contactEmail || ''}   ${cfg.firm.contactPhone || ''}`, MARGEN, y);
+    doc.setTextColor(0);
+    y += 6;
+    doc.setDrawColor(180);
+    doc.setLineWidth(0.3);
+    doc.line(MARGEN, y, 196, y);
+    y += 14;
 
-        function nuevaPagina() {
-            piePagina();
-            doc.addPage();
-            pagina++;
-            y = 20;
-        }
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('Informe de Búsqueda de Antecedentes Marcarios', MARGEN, y, { maxWidth: ANCHO });
+    y += 12;
 
-        function saltoSiNecesario(espacioNecesario) {
-            if (y + espacioNecesario > 275) nuevaPagina();
-        }
+    // Ficha de datos
+    doc.setFillColor(246, 246, 250);
+    doc.roundedRect(MARGEN, y - 5, ANCHO, 32, 2, 2, 'F');
+    doc.setFontSize(9.5);
+    doc.setFont(undefined, 'bold'); doc.text('Fecha del informe:', MARGEN + 4, y + 2);
+    doc.setFont(undefined, 'normal'); doc.text(fecha, MARGEN + 45, y + 2);
+    doc.setFont(undefined, 'bold'); doc.text('Cliente:', MARGEN + 4, y + 9);
+    doc.setFont(undefined, 'normal'); doc.text(cliente, MARGEN + 45, y + 9);
+    doc.setFont(undefined, 'bold'); doc.text('Marca solicitada:', MARGEN + 4, y + 16);
+    doc.setFont(undefined, 'normal'); doc.text(marca, MARGEN + 45, y + 16);
+    if (descripcion) {
+      doc.setFont(undefined, 'bold'); doc.text('Actividad:', MARGEN + 4, y + 23);
+      const descLineas = doc.splitTextToSize(descripcion, ANCHO - 50);
+      doc.setFont(undefined, 'normal'); doc.text(descLineas, MARGEN + 45, y + 23);
+    }
+    y += 34;
 
-        function parrafo(texto, opciones = {}) {
-            const size = opciones.size || 9.5;
-            const bold = opciones.bold || false;
-            const color = opciones.color || 0;
-            doc.setFontSize(size);
-            doc.setFont(undefined, bold ? 'bold' : 'normal');
-            doc.setTextColor(color);
-            const lineas = doc.splitTextToSize(texto, opciones.ancho || ANCHO);
-            saltoSiNecesario(lineas.length * (size / 2) + 4);
-            doc.text(lineas, opciones.x || MARGEN, y);
-            y += lineas.length * (size / 2.2) + (opciones.espacioExtra ?? 4);
-            doc.setTextColor(0);
-        }
+    // ═══ INTRODUCCIÓN ═══
+    y += 4;
+    doc.setFontSize(10.5);
+    doc.setFont(undefined, 'bold');
+    doc.text(cliente + ',', MARGEN, y);
+    y += 6;
+    parrafo(
+      `A continuación, te paso toda la información necesaria para la solicitud de una marca en Argentina.\n\n` +
+      `El primer paso consiste en proceder a la CLASIFICACIÓN de la marca; lo cual significa establecer en qué rubros se va ` +
+      `a proteger. En tal sentido, habrá que encuadrarla dentro de las 34 clases de productos y 11 de servicios que dispone ` +
+      `el Instituto Nacional de la Propiedad Industrial. Ello teniendo en cuenta los productos y/o servicios que se ` +
+      `comercializan y/o comercializarán bajo el nombre de la marca.`
+    );
 
-        function subtitulo(texto) {
-            saltoSiNecesario(14);
-            y += 3;
-            doc.setDrawColor(cfg.firm.primaryColor || '#6C5CE7');
-            doc.setLineWidth(0.6);
-            doc.line(MARGEN, y, MARGEN + 8, y);
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(30);
-            doc.text(texto, MARGEN + 12, y + 1.5);
-            y += 8;
-            doc.setTextColor(0);
-        }
+    parrafo(
+      `Teniendo en consideración el uso que se dará a la marca ${marca}, sugerimos para una adecuada protección, ` +
+      `solicitar la marca en las siguientes clases:`, { espacioExtra: 4 }
+    );
 
-        // ═══ ENCABEZADO / PORTADA ═══
-        y = 22;
-        doc.setFontSize(19);
+    if (clasesElegidas.length === 0) {
+      parrafo('(sin clases elegidas todavía)', { color: 130 });
+    } else {
+      clasesElegidas.forEach(c => {
+        saltoSiNecesario(12);
+        doc.setFontSize(9.5);
         doc.setFont(undefined, 'bold');
-        doc.text(cfg.firm.name, MARGEN, y);
-        y += 7;
-        doc.setFontSize(10);
+        const titleLine = doc.splitTextToSize(`• CLASE ${c.n} (${c.titulo})`, ANCHO - 4);
+        doc.text(titleLine, MARGEN, y);
+        y += titleLine.length * 4.2 + 2;
         doc.setFont(undefined, 'normal');
-        doc.setTextColor(100);
-        doc.text(cfg.firm.tagline || '', MARGEN, y);
-        y += 5;
-        doc.setFontSize(8.5);
-        doc.text(`${cfg.firm.contactEmail || ''}   ${cfg.firm.contactPhone || ''}`, MARGEN, y);
+      });
+    }
+
+    y += 4;
+
+    // ═══ RESULTADOS DE LA BÚSQUEDA ═══
+    parrafo(
+      `Luego, una vez establecidas en qué clase/s se podría solicitar la marca, el segundo paso y no menos importante, es la ` +
+      `BÚSQUEDA DE ANTECEDENTES. En esta etapa, efectuamos una exhaustiva búsqueda de antecedentes en nuestras ` +
+      `bases, a fin de descartar la existencia de nombres idénticos y/o similares que pudieren ` +
+      `obstaculizar el registro de su marca y oponerse a la misma.`, { espacioExtra: 6 }
+    );
+
+    if (resultados.length === 0) {
+      parrafo(`Habiendo realizado la búsqueda en las clases sugeridas no se encontraron antecedentes idénticos ni similares.`, { bold: true });
+    } else {
+      const classText = clasesElegidas.map(c => c.n).join(' y ');
+      parrafo(
+        `Sin embargo, ${classText ? 'en clases ' + classText : ''} se encontraron los siguientes antecedentes que podrían representar riesgo de oposición:`, { bold: true, espacioExtra: 6 }
+      );
+
+      const headers = ['Marca similar', 'Clase', 'Titular', 'Riesgo'];
+      const colX = [MARGEN, MARGEN + 78, MARGEN + 103, MARGEN + 153];
+      saltoSiNecesario(12);
+      doc.setFillColor(240, 240, 245);
+      doc.rect(MARGEN, y - 5, ANCHO, 7, 'F');
+      doc.setFontSize(8.5);
+      doc.setFont(undefined, 'bold');
+      headers.forEach((h, i) => doc.text(h, colX[i] + 2, y));
+      y += 6;
+      doc.setFont(undefined, 'normal');
+
+      const colorRiesgo = { Alto: [200, 60, 60], Medio: [190, 140, 30], Bajo: [60, 150, 90] };
+
+      resultados.forEach(r => {
+        saltoSiNecesario(8);
+        doc.setFontSize(9);
         doc.setTextColor(0);
-        y += 6;
-        doc.setDrawColor(180);
-        doc.setLineWidth(0.3);
-        doc.line(MARGEN, y, 196, y);
-        y += 14;
-
-        doc.setFontSize(16);
+        doc.text(String(r.marca || '—').slice(0, 34), colX[0] + 2, y);
+        doc.text(String(r.clase || '—'), colX[1] + 2, y);
+        doc.text(String(r.titular || '—').slice(0, 22), colX[2] + 2, y);
+        const [rr, gg, bb] = colorRiesgo[r.riesgo] || [0, 0, 0];
+        doc.setTextColor(rr, gg, bb);
         doc.setFont(undefined, 'bold');
-        doc.text('Informe de Búsqueda de Antecedentes Marcarios', MARGEN, y, { maxWidth: ANCHO });
-        y += 12;
-
-        // Ficha de datos
-        doc.setFillColor(246, 246, 250);
-        doc.roundedRect(MARGEN, y - 5, ANCHO, 32, 2, 2, 'F');
-        doc.setFontSize(9.5);
-        doc.setFont(undefined, 'bold'); doc.text('Fecha del informe:', MARGEN + 4, y + 2);
-        doc.setFont(undefined, 'normal'); doc.text(fecha, MARGEN + 45, y + 2);
-        doc.setFont(undefined, 'bold'); doc.text('Cliente:', MARGEN + 4, y + 9);
-        doc.setFont(undefined, 'normal'); doc.text(cliente, MARGEN + 45, y + 9);
-        doc.setFont(undefined, 'bold'); doc.text('Marca solicitada:', MARGEN + 4, y + 16);
-        doc.setFont(undefined, 'normal'); doc.text(marca, MARGEN + 45, y + 16);
-        if (descripcion) {
-            doc.setFont(undefined, 'bold'); doc.text('Actividad:', MARGEN + 4, y + 23);
-            const descLineas = doc.splitTextToSize(descripcion, ANCHO - 50);
-            doc.setFont(undefined, 'normal'); doc.text(descLineas, MARGEN + 45, y + 23);
-        }
-        y += 34;
-
-        // ═══ INTRODUCCIÓN ═══
-        subtitulo('¿Qué es este informe?');
-        parrafo(
-            `Una búsqueda de antecedentes marcarios es el primer paso antes de solicitar el registro de una marca ante el ` +
-            `Instituto Nacional de la Propiedad Industrial (INPI). Consiste en relevar si existen marcas ya registradas, en ` +
-            `trámite o publicadas que puedan resultar idénticas o confundibles con la marca que se pretende registrar, en las ` +
-            `mismas clases o clases relacionadas. Detectar esto de forma preventiva permite estimar la probabilidad de éxito ` +
-            `del registro y anticipar eventuales oposiciones de terceros, antes de incurrir en los costos de presentación.`
-        );
-
-        // ═══ CLASES ═══
-        subtitulo('Clases sugeridas (Clasificación de Niza)');
-        parrafo(
-            'La Clasificación de Niza organiza todos los productos y servicios en 45 clases. El registro de una marca protege ' +
-            'únicamente dentro de las clases solicitadas, por lo que elegir bien la cobertura es una decisión estratégica: ' +
-            'muy pocas clases dejan la marca desprotegida en actividades conexas, y clases de más generan costos innecesarios.',
-            { espacioExtra: 6 }
-        );
-
-        if (clasesElegidas.length === 0) {
-            parrafo('(sin clases elegidas todavía)', { color: 130 });
-        } else {
-            clasesElegidas.forEach(c => {
-                saltoSiNecesario(16);
-                doc.setFontSize(10.5);
-                doc.setFont(undefined, 'bold');
-                doc.text(`Clase ${c.n} — ${c.titulo}`, MARGEN, y);
-                y += 5;
-                doc.setFontSize(9);
-                doc.setFont(undefined, 'normal');
-                doc.setTextColor(90);
-                const notaLineas = doc.splitTextToSize(c.incluye || '', ANCHO - 4);
-                doc.text(notaLineas, MARGEN + 4, y);
-                y += notaLineas.length * 4.2 + 5;
-                doc.setTextColor(0);
-            });
-        }
-
-        // ═══ RESULTADOS DE LA BÚSQUEDA ═══
-        subtitulo('Resultado de la búsqueda de antecedentes');
-
-        if (resultados.length === 0) {
-            doc.setFillColor(235, 250, 240);
-            saltoSiNecesario(20);
-            doc.roundedRect(MARGEN, y - 5, ANCHO, 16, 2, 2, 'F');
-            doc.setFontSize(9.5);
-            doc.setFont(undefined, 'normal');
-            doc.text('✓  No se encontraron antecedentes similares que impidan, en principio, el registro de la marca.', MARGEN + 4, y + 4);
-            y += 18;
-        } else {
-            parrafo(
-                `Se encontraron ${resultados.length} antecedente(s) que podrían representar un riesgo de confundibilidad. ` +
-                `El nivel de riesgo indicado es una evaluación preliminar del estudio y no reemplaza el análisis definitivo ` +
-                `que realiza el INPI al momento de examinar la solicitud.`,
-                { espacioExtra: 6 }
-            );
-
-            const headers = ['Marca similar', 'Clase', 'Titular', 'Riesgo'];
-            const colX = [MARGEN, MARGEN + 78, MARGEN + 103, MARGEN + 153];
-            saltoSiNecesario(12);
-            doc.setFillColor(240, 240, 245);
-            doc.rect(MARGEN, y - 5, ANCHO, 7, 'F');
-            doc.setFontSize(8.5);
-            doc.setFont(undefined, 'bold');
-            headers.forEach((h, i) => doc.text(h, colX[i] + 2, y));
-            y += 6;
-            doc.setFont(undefined, 'normal');
-
-            const colorRiesgo = { Alto: [200, 60, 60], Medio: [190, 140, 30], Bajo: [60, 150, 90] };
-
-            resultados.forEach(r => {
-                saltoSiNecesario(8);
-                doc.setFontSize(9);
-                doc.setTextColor(0);
-                doc.text(String(r.marca || '—').slice(0, 34), colX[0] + 2, y);
-                doc.text(String(r.clase || '—'), colX[1] + 2, y);
-                doc.text(String(r.titular || '—').slice(0, 22), colX[2] + 2, y);
-                const [rr, gg, bb] = colorRiesgo[r.riesgo] || [0, 0, 0];
-                doc.setTextColor(rr, gg, bb);
-                doc.setFont(undefined, 'bold');
-                doc.text(String(r.riesgo || '—'), colX[3] + 2, y);
-                doc.setFont(undefined, 'normal');
-                doc.setTextColor(0);
-                y += 6.5;
-                doc.setDrawColor(230);
-                doc.line(MARGEN, y - 2, MARGEN + ANCHO, y - 2);
-            });
-            y += 6;
-        }
-
-        // ═══ PRESUPUESTO ═══
-        subtitulo('Presupuesto estimado');
-        const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
-        const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
-        const cantClases = clasesElegidas.length;
-        const otros = parseFloat(document.getElementById('bq-precio-otros')?.value || 0);
-
-        saltoSiNecesario(40);
-        doc.setFillColor(246, 246, 250);
-        const alturaCaja = 12 + (otros > 0 ? 7 : 0) + 14;
-        doc.roundedRect(MARGEN, y - 5, ANCHO, alturaCaja, 2, 2, 'F');
-        doc.setFontSize(9.5);
+        doc.text(String(r.riesgo || '—'), colX[3] + 2, y);
         doc.setFont(undefined, 'normal');
-        doc.text('Búsqueda de antecedentes', MARGEN + 4, y + 2);
-        doc.text(busqueda === 0 ? 'Sin cargo' : `$${busqueda.toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
-        y += 7;
-        doc.text(`Presentación ante INPI (${cantClases} clase${cantClases !== 1 ? 's' : ''} × $${porClase.toLocaleString('es-AR')})`, MARGEN + 4, y + 2);
-        doc.text(`$${(porClase * cantClases).toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
-        y += 7;
-        if (otros > 0) {
-            doc.text('Otros conceptos', MARGEN + 4, y + 2);
-            doc.text(`$${otros.toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
-            y += 7;
-        }
-        doc.setDrawColor(200);
-        doc.line(MARGEN + 4, y, 192, y);
-        y += 6;
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text('TOTAL', MARGEN + 4, y + 2);
-        doc.text(`$${total.toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
-        y += 14;
-
-        // ═══ PRÓXIMOS PASOS ═══
-        subtitulo('Próximos pasos');
-        const pasos = [
-            'Confirmación del cliente sobre las clases a registrar y aceptación del presupuesto.',
-            'Presentación de la solicitud de registro ante el INPI (Trámites a Distancia).',
-            'Publicación en el Boletín de Marcas y apertura del plazo de oposición de terceros (30 días hábiles).',
-            'Seguimiento del expediente hasta la concesión del registro (proceso administrativo del INPI, de duración variable).',
-        ];
-        pasos.forEach((p, i) => {
-            saltoSiNecesario(10);
-            doc.setFontSize(9.5);
-            doc.setFont(undefined, 'bold');
-            doc.text(`${i + 1}.`, MARGEN, y);
-            doc.setFont(undefined, 'normal');
-            const lineas = doc.splitTextToSize(p, ANCHO - 8);
-            doc.text(lineas, MARGEN + 6, y);
-            y += lineas.length * 4.3 + 3;
-        });
-
-        // ═══ ACLARACIÓN LEGAL ═══
-        y += 4;
-        saltoSiNecesario(24);
-        doc.setDrawColor(220);
-        doc.line(MARGEN, y, 196, y);
-        y += 6;
-        parrafo(
-            'Este informe tiene carácter orientativo y se basa en el relevamiento realizado a la fecha indicada. No constituye ' +
-            'garantía de concesión del registro: la resolución final sobre la solicitud, incluyendo la evaluación de similitud ' +
-            'con marcas de terceros, es potestad exclusiva del INPI. El presupuesto es estimado y puede variar según cambios ' +
-            'normativos en las tasas oficiales o particularidades del expediente.',
-            { size: 8, color: 120, espacioExtra: 0 }
-        );
-
-        piePagina();
-        doc.save(`busqueda-previa-${marca.replace(/\s+/g, '-').toLowerCase()}.pdf`);
-        UI.toast('PDF generado', 'success');
+        doc.setTextColor(0);
+        y += 6.5;
+        doc.setDrawColor(230);
+        doc.line(MARGEN, y - 2, MARGEN + ANCHO, y - 2);
+      });
+      y += 8;
     }
 
-    function reset() {
-        resultados = [];
-        clasesElegidas = [];
+    // ═══ SUGERENCIAS Y DISCLAIMER ═══
+    if (resultados.length > 0) {
+      parrafo(`En virtud de los antecedentes encontrados, vemos viable avanzar con la marca ${marca}, pero necesariamente hay que realizar algunos ajustes para disminuir el riesgo de oposiciones:\n` +
+        `• sumar un logo\n` +
+        `• limitar la cobertura de la marca a los servicios que efectivamente se prestarán`,
+        { espacioExtra: 4 }
+      );
     }
 
-    return { render, agregar, editar, borrar, agregarClase, quitarClase, reset, agregarDesdeInpi };
+    parrafo(`Sin perjuicio de las sugerencias efectuadas y en tanto no manejamos voluntades de terceros, no podemos garantizar resultados; es decir no podemos brindar certeza de que la marca no recibirá oposiciones.`,
+      { bold: true, espacioExtra: 6 }
+    );
+
+    // ═══ PRESUPUESTO Y PLAZOS ═══
+    subtitulo('Precios de Presentación');
+    const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
+    const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
+    const cantClases = clasesElegidas.length || 1;
+    const otros = parseFloat(document.getElementById('bq-precio-otros')?.value || 0);
+    const totalFinal = busqueda + (porClase * cantClases) + otros;
+
+    parrafo(`Precio unitario......$ ${porClase.toLocaleString('es-AR')} finales POR MARCA Y POR CLASE (honorarios, IVA y tasa de presentación incluidos). En caso de querer avanzar con las ${cantClases} clase${cantClases === 1 ? '' : 's'}, la tarifa total es de $ ${totalFinal.toLocaleString('es-AR')} finales.`);
+
+    y += 4;
+    parrafo(
+      `Una vez que la marca es concedida, habrá que abonar el servicio de obtención de título, el cual al día de hoy tiene un ` +
+      `valor de $ 116.000 más IVA por clase; dicho importe es estimativo, puede variar al momento de la concesión e incluye ` +
+      `la custodia de la marca por el primer año de su vigencia.\n\n` +
+      `En cuanto a los plazos del procedimiento, desde que la marca es presentada hasta que la misma es concedida, puede ` +
+      `variar entre 6-12 meses.\n\n` +
+      `Cabe destacar que estos plazos se mantendrán siempre y cuando no existan situaciones que dilaten el proceso (ej. ` +
+      `oposiciones de terceros, vistas emitidas por el Instituto, etc.) y que conllevan costos adicionales.`
+    );
+
+    y += 6;
+    parrafo(`Quedo a disposición.\nSaludos, Muchas Gracias!`, { bold: true });
+
+    piePagina();
+    doc.save(`busqueda-previa-${marca.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+    UI.toast('PDF generado', 'success');
+  }
+
+  function reset() {
+    resultados = [];
+    clasesElegidas = [];
+  }
+
+  return { render, agregar, editar, borrar, agregarClase, quitarClase, reset, agregarDesdeInpi };
 })();
