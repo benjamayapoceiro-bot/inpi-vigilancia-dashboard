@@ -4,9 +4,13 @@
  * ═══════════════════════════════════════════════════════════
  */
 
+const INPI_ESTADO_MAP = { C: 'Concedida', R: 'Registrada', T: 'En trámite', D: 'Denegada', V: 'Vencida', A: 'Abandonada', O: 'En oposición', P: 'Publicada', S: 'Solicitada', E: 'En estudio' };
+function inpiEstadoLabel(cod) { if (!cod) return '—'; return INPI_ESTADO_MAP[String(cod).trim().toUpperCase()] || String(cod).trim(); }
+function inpiLink(acta) { return acta ? `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}` : '#'; }
+
 const Busqueda = (() => {
-    let resultados = [];      // { marca, clase, titular, riesgo }
-    let clasesElegidas = [];  // [{ n, titulo }]
+    let resultados = [];
+    let clasesElegidas = [];
 
     function render() {
         const view = document.getElementById('view-busqueda');
@@ -263,11 +267,11 @@ const Busqueda = (() => {
               <tbody>
                 ${ultimaBusquedaInpi.map((r, i) => `
                   <tr>
-                    <td><a class="data-table acta-link" href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${UI.escapeHtml(r.acta || '')}" target="_blank">${UI.escapeHtml(r.acta || '—')}</a></td>
+                    <td><a class="data-table acta-link" href="${inpiLink(r.acta)}" target="_blank" rel="noopener" style="text-decoration:underline;font-weight:600;">${UI.escapeHtml(r.acta || '—')} ↗</a></td>
                     <td>${UI.escapeHtml(r.denominacion || '—')} ${r.tipo_marca === 'Mixta' ? '<span class="badge badge--info">Mixta</span>' : ''}</td>
                     <td>${UI.escapeHtml(r.clase || '—')}</td>
                     <td>${UI.escapeHtml((r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, ''))}</td>
-                    <td>${UI.escapeHtml(r.estado || '—')}</td>
+                    <td><span class="badge badge--primary" title="${UI.escapeHtml(r.estado||'')}">${UI.escapeHtml(inpiEstadoLabel(r.estado))}</span></td>
                     <td><button class="btn btn--ghost btn--sm" onclick="Busqueda.agregarDesdeInpi(${i})" title="Agregar a coincidencias">＋</button></td>
                   </tr>
                 `).join('')}

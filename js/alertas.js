@@ -93,7 +93,7 @@ const Alertas = (() => {
                 </div>
               ` : ''}
             </td>
-            <td><span class="badge badge--primary">${a.clase || '—'}</span></td>
+            <td><span class="badge badge--primary">${a.clase || '—'}</span>${a.clase_acta && a.clase_acta !== a.clase ? `<div style="font-size:0.7rem; color:var(--text-tertiary);">acta cl.${a.clase_acta}</div><span class="badge ${a.relacion_clases==='afin'?'badge--warning':'badge--info'}" style="font-size:0.65rem; margin-top:2px;">${a.relacion_clases==='afin'?'Clase afín':'Clase distinta'}</span>` : ''}${a.relacion_clases==='misma' ? `<div style="font-size:0.65rem; color:var(--danger); font-weight:600;">Misma clase</div>` : ''}</td>
             <td style="color: var(--text-secondary); font-size: 0.8125rem;">${titulares}</td>
             <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-tertiary);">${a.boletin_numero || '—'}</td>
             <td>
