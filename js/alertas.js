@@ -61,6 +61,7 @@ const Alertas = (() => {
         const badgeClass = UI.scoreBadgeClass(a.similitud_score || 0);
         const titulares = (a.titular_nuevo || []).map(t => UI.escapeHtml(t.nombre)).join(', ') || '—';
         const isLogo = a.tipo_match === 'logo';
+        const isOposicion = a.tipo_match === 'oposicion_recibida';
         const hasDraft = !!a.borrador_oposicion;
         const reviewed = a.revisada ? 'checked' : '';
         const opPresentada = a.oposicion_presentada ? 'checked' : '';
@@ -81,6 +82,7 @@ const Alertas = (() => {
             <td>
               <div class="marca-name">${UI.escapeHtml(a.denominacion_nueva) || '(marca mixta)'}</div>
               ${isLogo ? '<span class="badge badge--info" style="margin-top:4px">Logo</span>' : ''}
+              ${isOposicion ? '<div style="margin-top:4px"><span class="badge badge--danger" style="background-color: var(--danger); color: white; padding: 4px 8px; font-weight: bold;">🚨 OPOSICIÓN RECIBIDA</span></div>' : ''}
               ${necesitaOposicion && a.fecha_limite_oposicion ? `<div style="margin-top:4px;">${UI.expiryBadge(a.fecha_limite_oposicion)} <span style="font-size:0.6875rem; color:var(--text-tertiary);">límite oposición</span></div>` : ''}
               ${opPresentada ? `<div style="margin-top:4px;"><span class="badge badge--success">✓ Oposición presentada</span></div>` : ''}
               ${a.marcas_vigiladas ? `
