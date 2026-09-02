@@ -158,7 +158,7 @@ const App = (() => {
         if (tipoSelect) {
             tipoSelect.addEventListener('change', e => {
                 const campoLogo = document.getElementById('campo-logo');
-                if (campoLogo) campoLogo.style.display = e.target.value === 'M' ? 'block' : 'none';
+                if (campoLogo) campoLogo.style.display = (e.target.value === 'M' || e.target.value === 'F') ? 'block' : 'none';
             });
         }
 

@@ -137,6 +137,31 @@ const API = (() => {
                 throw new Error('El borrado no afectó ninguna fila (revisar permisos en Supabase)');
             }
             return result;
+        },
+
+        async buscarClaseNiza(q, limite = 6) {
+            try {
+                return await request('/rest/v1/rpc/buscar_clase_niza', {
+                    method: 'POST',
+                    body: JSON.stringify({ q, limite })
+                });
+            } catch (e) {
+                console.warn('[API] buscar_clase_niza fallo, fallback local', e);
+                return null;
+            }
+        },
+
+        async getDetalleActa(acta) {
+            const r = await request(`/rest/v1/detalle_actas_inpi?acta=eq.${encodeURIComponent(acta)}&select=*&limit=1`);
+            return r && r[0] ? r[0] : null;
+        },
+
+        async saveDetalleActa(detalle) {
+            return request('/rest/v1/detalle_actas_inpi', {
+                method: 'POST',
+                headers: { ...jsonHeaders(), Prefer: 'resolution=merge-duplicates' },
+                body: JSON.stringify(detalle)
+            });
         }
     };
 })();

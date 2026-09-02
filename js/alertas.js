@@ -98,11 +98,10 @@ const Alertas = (() => {
             <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-tertiary);">${a.boletin_numero || '—'}</td>
             <td>
               ${a.acta_nueva ? `
-              <a class="btn btn--sm btn--primary" target="_blank"
-                 href="${enlace}" style="text-decoration:none; padding:4px 8px;">
-                Ver en INPI ↗
-              </a>
-              <div style="margin-top:4px; font-size:0.75rem; color:var(--text-tertiary); text-align:center;">Acta ${a.acta_nueva}</div>
+              <button class="btn btn--sm btn--primary" onclick="Detalle.abrir('${a.acta_nueva}')" style="padding:4px 8px;">
+                Ver detalle 👁️
+              </button>
+              <div style="margin-top:4px; font-size:0.75rem; color:var(--text-tertiary); text-align:center;">Acta ${a.acta_nueva} · <a href="${enlace}" target="_blank" style="text-decoration:underline;">INPI ↗</a></div>
               ` : '—'}
             </td>
             <td>

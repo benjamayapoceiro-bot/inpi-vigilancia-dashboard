@@ -125,8 +125,9 @@ const Cartera = (() => {
 
         if (tbody) {
             tbody.innerHTML = filtradas.map(m => {
-                const tipoStr = m.tipo === 'M' ? 'Mixta' : 'Denominativa';
-                const tipoBadge = m.tipo === 'M' ? 'badge--info' : 'badge--primary';
+                const tipoMap = {D:'Denominativa',M:'Mixta',F:'Figurativa'};
+                const tipoStr = tipoMap[m.tipo] || 'Denominativa';
+                const tipoBadge = m.tipo === 'D' ? 'badge--primary' : (m.tipo==='F' ? 'badge--warning' : 'badge--info');
                 const estado = m.estado || 'Solicitada';
                 const estadoBadge = ESTADO_BADGE[estado] || 'badge--info';
                 const notaTitle = m.notas ? ` title="${UI.escapeHtml(m.notas)}"` : '';
@@ -169,7 +170,7 @@ const Cartera = (() => {
         document.getElementById('f-notas').value = m.notas || '';
 
         const campoLogo = document.getElementById('campo-logo');
-        if (campoLogo) campoLogo.style.display = m.tipo === 'M' ? 'block' : 'none';
+        if (campoLogo) campoLogo.style.display = (m.tipo === 'M' || m.tipo === 'F') ? 'block' : 'none';
 
         document.getElementById('btn-submit-marca').textContent = '💾 Guardar cambios';
         document.getElementById('btn-cancelar-edicion').style.display = 'inline-flex';
@@ -230,8 +231,11 @@ const Cartera = (() => {
         const submitBtn = form.querySelector('#btn-submit-marca');
 
         try {
-            if (tipo === 'M' && logoFile) {
+            if ((tipo === 'M' || tipo === 'F') && logoFile) {
                 body.logo_pendiente = await UI.fileToBase64(logoFile);
+            }
+            if (tipo === 'F' && !body.nombre) {
+                body.nombre = null;
             }
 
             if (submitBtn) {

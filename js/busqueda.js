@@ -201,20 +201,31 @@ const Busqueda = (() => {
             if (sel && sel.value) agregarClase(sel.value);
         });
 
-        document.getElementById('bq-sugerir-clases')?.addEventListener('click', () => {
+        document.getElementById('bq-sugerir-clases')?.addEventListener('click', async () => {
             const desc = document.getElementById('bq-descripcion')?.value || '';
             if (!desc.trim()) { UI.toast('Describí el producto/servicio primero', 'error'); return; }
-            const sugeridas = NIZA.sugerir(desc);
+            const btn = document.getElementById('bq-sugerir-clases');
+            if (btn) { btn.disabled = true; btn.textContent = 'Buscando...'; }
+            let sugeridas = null;
+            try {
+                const rpc = await API.buscarClaseNiza(desc, 6);
+                if (Array.isArray(rpc) && rpc.length) {
+                    sugeridas = rpc.map(r => ({ n: r.clase, titulo: r.titulo, incluye: r.descripcion || r.incluye, score: r.score }));
+                }
+            } catch(e) {}
+            if (!sugeridas || !sugeridas.length) sugeridas = NIZA.sugerir(desc);
             const cont = document.getElementById('bq-clases-sugeridas');
-            if (!cont) return;
+            if (!cont) { if (btn) { btn.disabled=false; btn.textContent='🔎 Sugerir clases'; } return; }
             if (sugeridas.length === 0) {
                 cont.innerHTML = `<div style="color:var(--text-tertiary); font-size:0.8125rem;">No encontré clases sugeridas por keyword — elegila manualmente con el selector de abajo.</div>`;
+                if (btn) { btn.disabled=false; btn.textContent='🔎 Sugerir clases'; }
                 return;
             }
-            cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:4px;">Click para agregar a "Clases elegidas":</div>` +
+            cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:4px;">Click para agregar a "Clases elegidas" ${sugeridas[0].score ? '(vía Supabase FTS)' : '(local)'}:</div>` +
                 sugeridas.map(c =>
-                    `<div class="badge badge--info" style="margin-right:6px; margin-bottom:6px; padding:6px 10px; display:inline-block; cursor:pointer; max-width:320px;" onclick="Busqueda.agregarClase(${c.n})" title="${UI.escapeHtml(c.incluye)}">＋ Clase ${c.n} — ${c.titulo}</div>`
+                    `<div class="badge badge--info" style="margin-right:6px; margin-bottom:6px; padding:6px 10px; display:inline-block; cursor:pointer; max-width:320px;" onclick="Busqueda.agregarClase(${c.n})" title="${UI.escapeHtml(c.incluye)}">＋ Clase ${c.n} — ${c.titulo}${c.score ? ` (${(c.score*100).toFixed(0)}%)` : ''}</div>`
                 ).join('');
+            if (btn) { btn.disabled=false; btn.textContent='🔎 Sugerir clases'; }
         });
 
         ['bq-precio-busqueda', 'bq-precio-clase', 'bq-precio-otros'].forEach(id => {
