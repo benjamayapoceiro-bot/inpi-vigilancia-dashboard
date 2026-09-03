@@ -73,7 +73,8 @@ const App = (() => {
             cartera: ['Mi Cartera', 'Marcas bajo vigilancia activa'],
             busqueda: ['Búsqueda Previa', 'Informe de antecedentes y presupuesto para el cliente'],
             crm: ['CRM', 'Estado y seguimiento de cada expediente'],
-            presentar: ['Presentar Marca', 'Generar XML o enviar directo al INPI']
+            presentar: ['Presentar Marca', 'Generar XML o enviar directo al INPI'],
+            admin: ['Admin', 'Gestión de estudios y usuarios']
         };
         const [title, sub] = titles[viewName] || ['', ''];
         const headerTitle = document.getElementById('header-title');
@@ -89,6 +90,9 @@ const App = (() => {
         }
         if (viewName === 'presentar') {
             Presentar.render();
+        }
+        if (viewName === 'admin') {
+            Admin.render();
         }
 
         updateAlertBadge();
@@ -110,8 +114,32 @@ const App = (() => {
         }
     }
 
+    function initSupabase() {
+        const cfg = window.APP_CONFIG?.supabase;
+        if (!cfg || !window.supabase) return null;
+        if (window._sb) return window._sb;
+        window._sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+        return window._sb;
+    }
+    async function checkAdmin() {
+        try {
+            const sb = initSupabase();
+            if (!sb) return;
+            const { data: { session } } = await sb.auth.getSession();
+            const navAdmin = document.getElementById('nav-admin');
+            if (!session) { if (navAdmin) navAdmin.style.display = 'none'; return; }
+            const { data: perfil } = await sb.from('perfiles').select('rol').eq('id', session.user.id).maybeSingle();
+            if (perfil && perfil.rol === 'admin') {
+                if (navAdmin) navAdmin.style.display = 'flex';
+            } else {
+                if (navAdmin) navAdmin.style.display = 'none';
+            }
+        } catch {}
+    }
     async function init() {
         applyConfig();
+        initSupabase();
+        checkAdmin();
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', () => navigate(btn.dataset.view));

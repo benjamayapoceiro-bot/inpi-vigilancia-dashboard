@@ -9,7 +9,7 @@ const Presentar = (() => {
         <div class="form-alta" style="grid-template-columns: repeat(auto-fit, minmax(200px,1fr));">
           <div class="form-group"><label class="form-label">Denominación *</label><input class="form-input" id="p-denominacion" placeholder="ej. CASA CUMBRE"></div>
           <div class="form-group"><label class="form-label">Clase *</label><input type="number" class="form-input" id="p-clase" min="1" max="45" placeholder="36"></div>
-          <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="p-tipo"><option value="1">Denominativa (1)</option><option value="2">Mixta con logo (2)</option></select></div>
+          <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="p-tipo"><option value="1">Denominativa (1)</option><option value="2">Mixta con logo (2)</option><option value="3">Figurativa (solo logo - 3)</option></select></div>
           <div class="form-group"><label class="form-label">Titular *</label><input class="form-input" id="p-titular" placeholder="ej. Juan Pérez"></div>
           <div class="form-group"><label class="form-label">CUIT Titular *</label><input class="form-input" id="p-cuit" placeholder="20450129896"></div>
           <div class="form-group"><label class="form-label">Email titular *</label><input class="form-input" id="p-email" placeholder="titular@ejemplo.com"></div>

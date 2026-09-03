@@ -130,6 +130,10 @@
           <span class="nav-item__icon">📨</span>
           Presentar Marca
         </button>
+        <button class="nav-item" data-view="admin" id="nav-admin" style="display:none">
+          <span class="nav-item__icon">👑</span>
+          Admin
+        </button>
       </nav>
 
       <div class="sidebar__footer" id="footer-text">
@@ -355,6 +359,9 @@
         <!-- ═══ VIEW: PRESENTAR ═══ -->
         <div class="view" id="view-presentar"></div>
 
+        <!-- ═══ VIEW: ADMIN ═══ -->
+        <div class="view" id="view-admin"></div>
+
         <!-- ═══ VIEW: CRM ═══ -->
         <div class="view" id="view-crm">
           <div style="display:flex; gap: var(--space-sm); margin-bottom: var(--space-lg); flex-wrap: wrap; align-items:center; justify-content: space-between;">
@@ -398,8 +405,10 @@
   <script src="js/alertas.js?v=20260901"></script>
   <script src="js/cartera.js?v=20260901"></script>
   <script src="js/crm.js?v=20260901"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/presentar.js?v=20260901"></script>
   <script src="js/detalle.js?v=20260901"></script>
+  <script src="js/admin.js?v=20260901"></script>
   <script src="js/app.js?v=20260901"></script>
 </body>
 </html>
