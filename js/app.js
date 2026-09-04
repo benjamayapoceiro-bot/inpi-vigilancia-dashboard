@@ -74,7 +74,8 @@ const App = (() => {
             busqueda: ['Búsqueda Previa', 'Informe de antecedentes y presupuesto para el cliente'],
             crm: ['CRM', 'Estado y seguimiento de cada expediente'],
             presentar: ['Presentar Marca', 'Generar XML o enviar directo al INPI'],
-            admin: ['Admin', 'Gestión de estudios y usuarios']
+            admin: ['Admin', 'Gestión de estudios y usuarios'],
+            login: ['Ingresar', 'Accedé a tu estudio']
         };
         const [title, sub] = titles[viewName] || ['', ''];
         const headerTitle = document.getElementById('header-title');
@@ -93,6 +94,9 @@ const App = (() => {
         }
         if (viewName === 'admin') {
             Admin.render();
+        }
+        if (viewName === 'login') {
+            Auth.renderLogin('view-login');
         }
 
         updateAlertBadge();
@@ -118,28 +122,33 @@ const App = (() => {
         const cfg = window.APP_CONFIG?.supabase;
         if (!cfg || !window.supabase) return null;
         if (window._sb) return window._sb;
-        window._sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+        window._sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true } });
         return window._sb;
     }
-    async function checkAdmin() {
-        try {
-            const sb = initSupabase();
-            if (!sb) return;
-            const { data: { session } } = await sb.auth.getSession();
-            const navAdmin = document.getElementById('nav-admin');
-            if (!session) { if (navAdmin) navAdmin.style.display = 'none'; return; }
-            const { data: perfil } = await sb.from('perfiles').select('rol').eq('id', session.user.id).maybeSingle();
-            if (perfil && perfil.rol === 'admin') {
-                if (navAdmin) navAdmin.style.display = 'flex';
-            } else {
-                if (navAdmin) navAdmin.style.display = 'none';
-            }
-        } catch {}
+    async function initAuth() {
+        if (typeof Auth !== 'undefined' && Auth.initHeader) {
+            await Auth.initHeader();
+        } else {
+            try {
+                const sb = initSupabase();
+                if (!sb) return false;
+                const { data: { session } } = await sb.auth.getSession();
+                const navAdmin = document.getElementById('nav-admin');
+                if (!session) { if (navAdmin) navAdmin.style.display = 'none'; return false; }
+                const { data: perfil } = await sb.from('perfiles').select('rol').eq('id', session.user.id).maybeSingle();
+                if (perfil && perfil.rol === 'admin' && navAdmin) navAdmin.style.display = 'flex';
+                return !!session;
+            } catch { return false; }
+        }
+        const sb = initSupabase();
+        if (!sb) return false;
+        const { data: { session } } = await sb.auth.getSession();
+        return !!session;
     }
     async function init() {
         applyConfig();
         initSupabase();
-        checkAdmin();
+        const logged = await initAuth();
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', () => navigate(btn.dataset.view));
@@ -209,15 +218,18 @@ const App = (() => {
             Export.exportCarteraCSV(Cartera.getCache());
         });
 
-        const [alertas, marcas] = await Promise.all([
-            Alertas.load(),
-            Cartera.load()
-        ]);
-
-        Dashboard.render(alertas, marcas);
-        updateAlertBadge();
-
-        navigate('dashboard');
+        if (!logged) {
+            navigate('login');
+            if (typeof Auth !== 'undefined') Auth.renderLogin('view-login');
+        } else {
+            const [alertas, marcas] = await Promise.all([
+                Alertas.load(),
+                Cartera.load()
+            ]);
+            Dashboard.render(alertas, marcas);
+            updateAlertBadge();
+            navigate('dashboard');
+        }
     }
 
     return { init, navigate, updateAlertBadge };
