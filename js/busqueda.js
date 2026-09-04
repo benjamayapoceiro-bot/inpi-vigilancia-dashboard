@@ -357,7 +357,7 @@ const Busqueda = (() => {
                 if (!ultimaBusquedaInpi.length) {
                     panel.innerHTML = `<div style="color:var(--success)">✓ Sin coincidencias en el INPI para "${UI.escapeHtml(marca)}".</div>`;
                 } else {
-                    const clasesOpts = [...new Set(ultimaBusquedaInpi.map(r=>r.clase))].sort((a,b)=>a-b).map(c=>`<option value="${c}">Clase ${c}</option>`).join('');
+                    const clasesOpts = Array.from({length:45},(_,i)=>String(i+1)).map(c=>`<option value="${c}">Clase ${c}</option>`).join('');
                     panel.innerHTML = `
             <div style="margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
               <strong>${data.total} coincidencia(s) en el INPI para "${UI.escapeHtml(marca)}":</strong>
