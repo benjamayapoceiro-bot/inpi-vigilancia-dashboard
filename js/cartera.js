@@ -136,7 +136,7 @@ const Cartera = (() => {
           <tr>
             <td>
               <div class="marca-name"${notaTitle}>${UI.escapeHtml(m.nombre) || '(logo sin texto)'}</div>
-              ${m.numero_acta ? `<div style="margin-top:6px;"><button class="btn btn--sm btn--primary" onclick="Detalle.abrir('${m.numero_acta}')" style="padding:2px 6px;">Ver grilla 👁️</button> <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline; margin-left:4px;">INPI ↗</a> <span style="font-size:0.75rem; color:var(--text-tertiary);">Acta ${UI.escapeHtml(m.numero_acta)}</span></div>` : ''}
+              ${m.numero_acta ? `<div style="margin-top:6px;"><button class="btn btn--sm btn--primary" onclick="Detalle.abrir('${m.numero_acta}')" style="padding:2px 6px;">Ver grilla 👁️</button> <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline; margin-left:4px;">INPI ↗</a> <span style="font-size:0.75rem; color:var(--text-tertiary);">Acta ${UI.escapeHtml(m.numero_acta)}</span></div>` : ''}
             </td>
             <td><span class="badge badge--primary">${m.clase}</span></td>
             <td><span class="badge ${tipoBadge}">${tipoStr}</span></td>

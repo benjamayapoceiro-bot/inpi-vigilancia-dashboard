@@ -27,11 +27,11 @@ const Detalle = (() => {
       try {
         const grilla = await fetchGrilla(acta, null);
         if (grilla) {
-          renderDetalle(body, { acta, grilla, denominacion: grilla.denominacion, titular: grilla.titulares, clase: grilla.clase, estado: grilla.estado, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${acta}`, fuente: 'INPI WS (solo grilla, detalle no disponible)', fetched_at: new Date().toISOString() }, false);
+          renderDetalle(body, { acta, grilla, denominacion: grilla.denominacion, titular: grilla.titulares, clase: grilla.clase, estado: grilla.estado, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${acta}`, fuente: 'INPI WS (solo grilla, detalle no disponible)', fetched_at: new Date().toISOString() }, false);
           return;
         }
       } catch {}
-      body.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle completo (INPI no respondió: ${UI.escapeHtml(e.message)}).<br>Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta <span class="mono">${UI.escapeHtml(acta)}</span> o reintentá en unos segundos.<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline; margin-top:6px; display:inline-block;">Abrir protección en INPI ↗</a></div>`;
+      body.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle completo (INPI no respondió: ${UI.escapeHtml(e.message)}).<br>Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta <span class="mono">${UI.escapeHtml(acta)}</span> o reintentá en unos segundos.<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline; margin-top:6px; display:inline-block;">Abrir protección en INPI ↗</a></div>`;
     }
   }
   async function fetchGrilla(acta, denominacion) {
@@ -79,7 +79,7 @@ const Detalle = (() => {
   function renderDetalle(el, d, cached) {
     if (!d || typeof d !== 'object' || !d.acta) {
       const actaSafe = (d && d.acta) ? String(d.acta) : '—';
-      el.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle para acta ${UI.escapeHtml(actaSafe)}. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(actaSafe)}" target="_blank" style="text-decoration:underline;">ver en INPI ↗</a> (Resultado completo).</div>`;
+      el.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle para acta ${UI.escapeHtml(actaSafe)}. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(actaSafe)}" target="_blank" style="text-decoration:underline;">ver en INPI ↗</a> (Resultado completo).</div>`;
       return;
     }
     const g = d.grilla || null;
@@ -134,7 +134,7 @@ const Detalle = (() => {
           </div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn--secondary btn--sm" onclick="Detalle.abrirEnINPI('${d.acta}', '${UI.escapeHtml(d.denominacion|| (g?g.denominacion:''))}')">Abrir grilla completa en INPI ↗</button>
-            <a href="${d.expediente_url || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${d.acta}`}" target="_blank" class="btn btn--ghost btn--sm">Ver protección INPI ↗</a>
+            <a href="${d.expediente_url || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${d.acta}`}" target="_blank" class="btn btn--ghost btn--sm">Ver protección INPI ↗</a>
             <button class="btn btn--ghost btn--sm" onclick="navigator.clipboard.writeText('${d.acta}');UI.toast('Acta copiada','success')">Copiar acta</button>
           </div>
           <div style="margin-top:8px;font-size:0.7rem;color:var(--text-tertiary);">Persistido: ${d.fetched_at ? new Date(d.fetched_at).toLocaleString('es-AR') : '—'} · Fuente: ${UI.escapeHtml(d.fuente || 'portaltramites.inpi.gob.ar + WS INPI')} · Cache 30 días en Supabase</div>
@@ -143,16 +143,12 @@ const Detalle = (() => {
     `;
   }
   function abrirEnINPI(acta, denominacion) {
-    // El portal no acepta GET ?acta= para mostrar la fila, hay que POST a GrillaMarcasPuntual.
-    // Como no podemos POST cross-origin y que el portal renderice, abrimos nuestra grilla local que SÍ tiene todo (Image 2) y dejamos el link directo como fallback.
-    // Si el usuario quiere verlo tal cual en el portal, le mostramos cómo buscar: MARCAS > CONSULTAS > CONSULTAS DE MARCAS > NRO ACTA
-    const w = window.open('', '_blank');
-    if (w) {
-      w.document.write(`<!doctype html><html><head><title>Grilla INPI - Acta ${UI.escapeHtml(acta)}</title><meta charset="utf-8"><style>body{font-family:system-ui, sans-serif; padding:20px;}</style></head><body><h3>Acta ${UI.escapeHtml(acta)} — Grilla INPI</h3><p>El portal del INPI no permite link directo a la fila. Usá: <b>MARCAS → CONSULTAS → CONSULTAS DE MARCAS → N° ACTA → ${UI.escapeHtml(acta)} → BUSCAR</b> para ver la grilla completa como en la Image 2.</p><p>O mirá la grilla completa acá mismo en el modal (ya la tenés). Para ir al portal:</p><p><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank">Abrir Grilla INPI (vacía, luego buscá el acta)</a> | <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank">Abrir Resultado (protección)</a></p><p style="font-size:0.8rem; color:#666;">Tip: nuestra grilla local ya es idéntica a la del portal (vía WS GrillaMarcasPuntual).</p></body></html>`);
-      w.document.close();
-    } else {
-      window.open('https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla', '_blank');
-    }
+    const directUrl = `${window.location.origin}${window.location.pathname}?acta=${encodeURIComponent(acta)}`;
+    const w = window.open(directUrl, '_blank');
+    if (!w) window.open(directUrl, '_blank');
+    navigator.clipboard.writeText(directUrl).catch(()=>{});
+    UI.toast(`Link directo copiado: ${directUrl} — abre la ficha completa con grilla (Image 2) + protección`, 'success');
+  }
     UI.toast('Grilla local ya tiene todo (Image 2) — el portal no permite link directo a la fila', 'info');
   }
   return { abrir, abrirEnINPI };

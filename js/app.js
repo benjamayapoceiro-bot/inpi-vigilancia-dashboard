@@ -168,6 +168,11 @@ const App = (() => {
         const logged = await initAuth();
         const banner = document.getElementById('banner-auth-warning');
         if (banner) banner.style.display = logged ? 'none' : 'block';
+        const params = new URLSearchParams(window.location.search);
+        const actaParam = params.get('acta') || window.location.hash.replace('#acta=','');
+        if (actaParam && /^\d+$/.test(actaParam)) {
+            setTimeout(()=> { if (typeof Detalle !== 'undefined') Detalle.abrir(actaParam); }, 600);
+        }
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', () => navigate(btn.dataset.view));
