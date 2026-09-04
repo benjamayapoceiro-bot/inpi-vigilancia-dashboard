@@ -118,6 +118,21 @@ const App = (() => {
         }
     }
 
+    function initDarkMode() {
+        const saved = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        const btn = document.getElementById('dark-mode-toggle');
+        if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        btn?.addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            btn.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+    }
     function initSupabase() {
         if (typeof Auth !== 'undefined' && Auth.sb) return Auth.sb();
         const cfg = window.APP_CONFIG?.supabase;
@@ -148,6 +163,7 @@ const App = (() => {
     }
     async function init() {
         applyConfig();
+        initDarkMode();
         initSupabase();
         const logged = await initAuth();
 

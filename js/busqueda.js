@@ -221,10 +221,26 @@ const Busqueda = (() => {
                 if (btn) { btn.disabled=false; btn.textContent='🔎 Sugerir clases'; }
                 return;
             }
-            cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:4px;">Click para agregar a "Clases elegidas" ${sugeridas[0].score ? '(vía Supabase FTS)' : '(local)'}:</div>` +
-                sugeridas.map(c =>
-                    `<div class="badge badge--info" style="margin-right:6px; margin-bottom:6px; padding:6px 10px; display:inline-block; cursor:pointer; max-width:320px;" onclick="Busqueda.agregarClase(${c.n})" title="${UI.escapeHtml(c.incluye)}">＋ Clase ${c.n} — ${c.titulo}${c.score ? ` (${(c.score*100).toFixed(0)}%)` : ''}</div>`
-                ).join('');
+            const fmtScore = (s) => {
+                if (!s) return '';
+                const pct = Math.min(100, Math.round(s * 1200));
+                if (pct >= 70) return `<span class="badge badge--success" style="margin-left:6px; font-size:0.7rem;">Alta ${pct}%</span>`;
+                if (pct >= 35) return `<span class="badge badge--warning" style="margin-left:6px; font-size:0.7rem;">Media ${pct}%</span>`;
+                return `<span class="badge badge--info" style="margin-left:6px; font-size:0.7rem;">Baja ${pct}%</span>`;
+            };
+            cont.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:8px;">Click para agregar a "Clases elegidas" ${sugeridas[0].score ? '(vía Supabase FTS)' : '(local)'}:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                ` + sugeridas.map(c => `
+                    <div class="card" style="flex:1 1 280px; max-width:360px; padding:12px; cursor:pointer; border:1px solid var(--border); transition:all 0.15s; hover:border-color:var(--primary);" onclick="Busqueda.agregarClase(${c.n})" title="${UI.escapeHtml(c.incluye)}">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <span style="font-weight:600; font-size:0.875rem; color:var(--primary);">Clase ${c.n}</span>
+                            ${fmtScore(c.score)}
+                        </div>
+                        <div style="font-weight:600; font-size:0.875rem; margin-top:4px; line-height:1.3;">${UI.escapeHtml(c.titulo)}</div>
+                        <div style="font-size:0.75rem; color:var(--text-tertiary); margin-top:4px; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${UI.escapeHtml(c.incluye)}</div>
+                        <div style="margin-top:8px; font-size:0.75rem; color:var(--primary); font-weight:500;">＋ Agregar</div>
+                    </div>
+                `).join('') + `</div>`;
             if (btn) { btn.disabled=false; btn.textContent='🔎 Sugerir clases'; }
         });
 
