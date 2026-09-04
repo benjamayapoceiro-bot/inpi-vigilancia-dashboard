@@ -85,7 +85,7 @@ const Busqueda = (() => {
         <div id="bq-inpi-vivo-resultado" style="display:none; margin-bottom: var(--space-md); padding: var(--space-md); background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.8125rem;"></div>
         <table class="data-table">
           <thead>
-            <tr><th>Marca similar encontrada</th><th>Clase</th><th>Titular</th><th>Riesgo</th><th></th></tr>
+            <tr><th>Marca similar encontrada</th><th>Clase</th><th>Titular</th><th>Riesgo</th><th>INPI</th><th></th></tr>
           </thead>
           <tbody id="bq-tbody-resultados"></tbody>
         </table>
@@ -177,7 +177,7 @@ const Busqueda = (() => {
         if (empty) empty.style.display = 'none';
         tbody.innerHTML = resultados.map((r, i) => `
       <tr>
-        <td><input type="text" class="form-input" value="${UI.escapeHtml(r.marca)}" onchange="Busqueda.editar(${i},'marca',this.value)"></td>
+        <td><input type="text" class="form-input" value="${UI.escapeHtml(r.marca)}" onchange="Busqueda.editar(${i},'marca',this.value)">${r._acta ? `<div style="margin-top:4px;"><button class="btn btn--ghost btn--sm" style="font-size:0.7rem; padding:2px 6px;" onclick="Detalle.abrir('${r._acta}')">Ver en INPI ↗</button></div>` : ''}</td>
         <td><input type="number" class="form-input" style="width:70px" value="${r.clase}" onchange="Busqueda.editar(${i},'clase',this.value)"></td>
         <td><input type="text" class="form-input" value="${UI.escapeHtml(r.titular)}" onchange="Busqueda.editar(${i},'titular',this.value)"></td>
         <td>
@@ -187,6 +187,7 @@ const Busqueda = (() => {
             <option value="Bajo" ${r.riesgo === 'Bajo' ? 'selected' : ''}>Bajo</option>
           </select>
         </td>
+        <td>${r._acta ? `<button class="btn btn--ghost btn--sm" style="font-size:0.7rem; padding:2px 6px;" onclick="Detalle.abrir('${r._acta}')">INPI ↗</button><div style="font-size:0.65rem; color:var(--text-tertiary);">${UI.escapeHtml(r._acta)}</div>` : '—'}</td>
         <td><button class="btn btn--danger btn--sm" onclick="Busqueda.borrar(${i})">✕</button></td>
       </tr>
     `).join('');
