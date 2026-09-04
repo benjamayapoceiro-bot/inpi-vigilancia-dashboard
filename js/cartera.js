@@ -398,7 +398,10 @@ const Cartera = (() => {
                 submitBtn.innerHTML = editingId ? '💾 Guardar cambios' : '＋ Agregar marca';
             }
         } catch (err) {
-            UI.toast('Error guardando la marca', 'error');
+            console.error('addMarca error', err, body);
+            UI.toast(`Error guardando: ${err.message || 'desconocido'}`, 'error');
+            const status = document.getElementById('acta-status');
+            if (status) { status.style.display = 'block'; status.textContent = `✗ Error: ${err.message}`; status.style.color = 'var(--danger)'; }
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = editingId ? '💾 Guardar cambios' : '＋ Agregar marca';
