@@ -131,12 +131,18 @@ const Cartera = (() => {
                 const estado = m.estado || 'Solicitada';
                 const estadoBadge = ESTADO_BADGE[estado] || 'badge--info';
                 const notaTitle = m.notas ? ` title="${UI.escapeHtml(m.notas)}"` : '';
+                const logoThumb = m.logo_url ? `<img src="${m.logo_url}" alt="logo" style="width:40px; height:40px; object-fit:contain; border:1px solid var(--border); border-radius:6px; background:#fff; padding:2px; vertical-align:middle; margin-right:8px;">` : (m.logo_phash ? `<div style="width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; background:var(--bg-main); border:1px solid var(--border); border-radius:6px; font-size:0.65rem; color:var(--text-tertiary); margin-right:8px; vertical-align:middle;">LOGO</div>` : '');
 
                 return `
           <tr>
             <td>
-              <div class="marca-name"${notaTitle}>${UI.escapeHtml(m.nombre) || '(logo sin texto)'}</div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                ${logoThumb}
+                <div>
+                  <div class="marca-name"${notaTitle}>${UI.escapeHtml(m.nombre) || '(logo sin texto)'}</div>
               ${m.numero_acta ? `<div style="margin-top:6px;"><button class="btn btn--sm btn--primary" onclick="Detalle.abrir('${m.numero_acta}')" style="padding:2px 6px;">Ver grilla 👁️</button> <a href="inpi-grilla.html?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline; margin-left:4px;">INPI ↗</a> <span style="font-size:0.75rem; color:var(--text-tertiary);">Acta ${UI.escapeHtml(m.numero_acta)}</span></div>` : ''}
+                </div>
+              </div>
             </td>
             <td><span class="badge badge--primary">${m.clase}</span></td>
             <td><span class="badge ${tipoBadge}">${tipoStr}</span></td>
@@ -248,8 +254,31 @@ const Cartera = (() => {
             }
             document.getElementById('f-estado').value = estado;
             if (titular) document.getElementById('f-cliente').value = titular.split('100%')[0].replace(/^\d+\s+/,'').trim().slice(0,60);
+            // Vencimiento desde INPI (fecha_vencimiento o Fecha_Vencimiento)
+            const vencRaw = data.fecha_vencimiento || data.Fecha_Vencimiento || g.fecha_vencimiento || g.Fecha_Vencimiento || g.vencimiento || null;
+            if (vencRaw) {
+                try {
+                    const d = new Date(vencRaw.includes('/') ? vencRaw.split('/').reverse().join('-') : vencRaw);
+                    if (!isNaN(d.getTime()) && d.getFullYear() > 2000 && d.getFullYear() < 2100) {
+                        document.getElementById('f-vencimiento').value = d.toISOString().slice(0,10);
+                    } else if (typeof vencRaw === 'string' && vencRaw.includes('/')) {
+                        const parts = vencRaw.split('/');
+                        if (parts.length === 3) document.getElementById('f-vencimiento').value = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                    }
+                } catch {}
+            }
+            // Si es Mixta/Figurativa y el INPI no trajo vencimiento, calcular +10 años desde presentación si hay
+            if (!document.getElementById('f-vencimiento').value && data.presentacion) {
+                try {
+                    const pres = new Date(data.presentacion.split(' ')[0].split('/').reverse().join('-'));
+                    if (!isNaN(pres.getTime())) {
+                        pres.setFullYear(pres.getFullYear() + 10);
+                        document.getElementById('f-vencimiento').value = pres.toISOString().slice(0,10);
+                    }
+                } catch {}
+            }
             document.getElementById('f-notas').value = `Titular INPI: ${titular} — Acta ${acta} — importado ${new Date().toLocaleDateString('es-AR')}`;
-            if (status) { status.textContent = `✓ Acta ${acta} encontrada: ${nombre || '(figurativa)'} — Clase ${clase} — Se rellenó con info exacta del INPI`; status.style.color = 'var(--success)'; }
+            if (status) { status.textContent = `✓ Acta ${acta} encontrada: ${nombre || '(figurativa)'} — Clase ${clase}${document.getElementById('f-vencimiento').value ? ' — Vence ' + document.getElementById('f-vencimiento').value : ''} — Se rellenó con info exacta del INPI`; status.style.color = 'var(--success)'; }
             UI.toast(`Acta ${acta} cargada desde INPI`, 'success');
         } catch(e) {
             if (status) { status.textContent = `✗ No se pudo traer acta ${acta}: ${e.message}`; status.style.color = 'var(--danger)'; }
