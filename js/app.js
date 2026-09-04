@@ -181,16 +181,17 @@ const App = (() => {
         initSupabase();
         const logged = await initAuth();
         const banner = document.getElementById('banner-auth-warning');
-        const appShell = document.querySelector('.app-shell');
-        const sidebar = document.querySelector('.sidebar');
+        const navLogin = document.getElementById('nav-login');
+        const navAdmin = document.getElementById('nav-admin');
+        // No bloqueamos el sidebar, solo mostramos/ocultamos navs según sesión
         if (!logged) {
             if (banner) { banner.style.display = 'block'; banner.textContent = '🔒 Sesión requerida — iniciá sesión para ver tu cartera, alertas y plazos. Nadie sin login ve nada.'; banner.style.background = '#fee2e2'; banner.style.borderColor = '#fecaca'; }
-            if (appShell) appShell.style.filter = 'blur(6px)';
-            if (sidebar) sidebar.style.pointerEvents = 'none';
+            if (navLogin) navLogin.style.display = 'flex';
+            if (navAdmin) navAdmin.style.display = 'none';
         } else {
             if (banner) banner.style.display = 'none';
-            if (appShell) appShell.style.filter = 'none';
-            if (sidebar) sidebar.style.pointerEvents = 'auto';
+            if (navLogin) navLogin.style.display = 'none';
+            // navAdmin se maneja en initAuth según rol
         }
         const params = new URLSearchParams(window.location.search);
         const actaParam = params.get('acta') || window.location.hash.replace('#acta=','');
