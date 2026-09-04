@@ -247,6 +247,11 @@ const App = (() => {
                 if (campoLogo) campoLogo.style.display = (e.target.value === 'M' || e.target.value === 'F') ? 'block' : 'none';
             });
         }
+        document.getElementById('btn-buscar-acta')?.addEventListener('click', Cartera.buscarActa);
+        document.getElementById('f-acta')?.addEventListener('blur', () => {
+            const v = document.getElementById('f-acta')?.value?.trim();
+            if (v && /^\d{5,}$/.test(v) && !document.getElementById('f-nombre')?.value) Cartera.buscarActa();
+        });
 
         document.getElementById('filtro-tipo')?.addEventListener('change', Alertas.render);
         document.getElementById('filtro-revisada')?.addEventListener('change', Alertas.render);

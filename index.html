@@ -321,8 +321,12 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="f-acta">N° Acta (opcional)</label>
-              <input type="text" class="form-input" id="f-acta" placeholder="ej. 4675974">
+              <label class="form-label" for="f-acta">N° Acta (si ya está registrada)</label>
+              <div style="display:flex; gap:6px;">
+                <input type="text" class="form-input" id="f-acta" placeholder="ej. 4675975" style="flex:1;">
+                <button type="button" class="btn btn--ghost btn--sm" id="btn-buscar-acta" title="Rellenar con datos exactos del INPI">🔍</button>
+              </div>
+              <div id="acta-status" style="font-size:0.7rem; color:var(--text-tertiary); margin-top:4px; display:none;"></div>
             </div>
             <div class="form-group" style="grid-column: 1 / -1;">
               <label class="form-label" for="f-notas">Notas (opcional)</label>
@@ -407,21 +411,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- Scripts (order matters) -->
-  <script src="config.js?v=20260911"></script>
-  <script src="js/api.js?v=20260911"></script>
-  <script src="js/ui.js?v=20260911"></script>
-  <script src="js/export.js?v=20260911"></script>
-  <script src="js/niza.js?v=20260911"></script>
-  <script src="js/busqueda.js?v=20260911"></script>
-  <script src="js/dashboard.js?v=20260911"></script>
-  <script src="js/alertas.js?v=20260911"></script>
-  <script src="js/cartera.js?v=20260911"></script>
-  <script src="js/crm.js?v=20260911"></script>
+  <script src="config.js?v=20260912"></script>
+  <script src="js/api.js?v=20260912"></script>
+  <script src="js/ui.js?v=20260912"></script>
+  <script src="js/export.js?v=20260912"></script>
+  <script src="js/niza.js?v=20260912"></script>
+  <script src="js/busqueda.js?v=20260912"></script>
+  <script src="js/dashboard.js?v=20260912"></script>
+  <script src="js/alertas.js?v=20260912"></script>
+  <script src="js/cartera.js?v=20260912"></script>
+  <script src="js/crm.js?v=20260912"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/auth.js?v=20260911"></script>
-  <script src="js/presentar.js?v=20260911"></script>
-  <script src="js/detalle.js?v=20260911"></script>
-  <script src="js/admin.js?v=20260911"></script>
-  <script src="js/app.js?v=20260911"></script>
+  <script src="js/auth.js?v=20260912"></script>
+  <script src="js/presentar.js?v=20260912"></script>
+  <script src="js/detalle.js?v=20260912"></script>
+  <script src="js/admin.js?v=20260912"></script>
+  <script src="js/app.js?v=20260912"></script>
 </body>
 </html>

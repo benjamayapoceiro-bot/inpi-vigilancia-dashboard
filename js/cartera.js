@@ -178,6 +178,68 @@ const Cartera = (() => {
         document.getElementById('form-alta')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
+    async function buscarActa() {
+        const actaInput = document.getElementById('f-acta');
+        const acta = actaInput?.value?.trim();
+        const status = document.getElementById('acta-status');
+        if (!acta || !/^\d{5,}$/.test(acta)) {
+            if (status) { status.style.display = 'block'; status.textContent = 'Ingresá un N° de acta válido (solo números)'; status.style.color = 'var(--danger)'; }
+            return;
+        }
+        const btn = document.getElementById('btn-buscar-acta');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+        if (status) { status.style.display = 'block'; status.textContent = `Buscando acta ${acta} en INPI...`; status.style.color = 'var(--text-tertiary)'; }
+        try {
+            const cfg = window.APP_CONFIG?.supabase;
+            // Intenta via edge inpi-detalle (que ya trae grilla + protección)
+            let data = null;
+            try {
+                const r = await fetch(`${cfg.url}/functions/v1/inpi-detalle`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey }, body: JSON.stringify({ acta }) });
+                const j = await r.json();
+                if (j.ok && j.data) data = j.data;
+            } catch {}
+            // Fallback a grilla directa si inpi-detalle no trae denominación
+            if (!data || !data.denominacion) {
+                const gr = await fetch(`${cfg.url}/functions/v1/inpi-consulta`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey }, body: JSON.stringify({ tipo: 'denominacion', valor: acta }) }).then(r=>r.json()).catch(()=>null);
+                // inpi-consulta con acta como valor no funciona, probamos con acta como número en grilla puntual via inpi-detalle ya lo hizo
+            }
+            if (!data || (!data.denominacion && !data.grilla)) {
+                // Último intento: usar grilla del modal (fetchGrilla) si está disponible
+                if (typeof Detalle !== 'undefined' && Detalle.abrir) {
+                    if (status) status.textContent = `No se encontró acta ${acta} como marca, probá con búsqueda por denominación.`;
+                    status.style.color = 'var(--warning)';
+                    return;
+                }
+            }
+            const g = data.grilla || {};
+            const nombre = data.denominacion || g.denominacion || g.Denominacion || '';
+            const clase = data.clase || g.clase || g.Clase || '';
+            const tipoRaw = data.tipo_marca || g.tipo_marca || g.Tipo_Marca || data.tipo || '';
+            let tipo = 'D';
+            if (String(tipoRaw).toLowerCase().includes('mixta') || String(tipoRaw) === '2') tipo = 'M';
+            else if (String(tipoRaw).toLowerCase().includes('figurativa') || String(tipoRaw) === '3' || String(tipoRaw) === '5') tipo = 'F';
+            const estadoRaw = data.estado || g.estado || g.Estado || '';
+            const estadoMap = { C: 'Registrada', R: 'Registrada', Concedida: 'Registrada', T: 'En trámite', D: 'Denegada', V: 'Vencida' };
+            const estado = estadoMap[estadoRaw] || estadoMap[String(estadoRaw).trim()] || 'Registrada';
+            const titular = data.titular || g.titulares || g.Titulares || '';
+
+            document.getElementById('f-nombre').value = nombre || '';
+            if (clase) document.getElementById('f-clase').value = String(clase).replace(/\D/g,'').slice(0,2);
+            document.getElementById('f-tipo').value = tipo;
+            const campoLogo = document.getElementById('campo-logo');
+            if (campoLogo) campoLogo.style.display = (tipo === 'M' || tipo === 'F') ? 'block' : 'none';
+            document.getElementById('f-estado').value = estado;
+            if (titular) document.getElementById('f-cliente').value = titular.split('100%')[0].replace(/^\d+\s+/,'').trim().slice(0,60);
+            document.getElementById('f-notas').value = `Titular INPI: ${titular} — Acta ${acta} — importado ${new Date().toLocaleDateString('es-AR')}`;
+            if (status) { status.textContent = `✓ Acta ${acta} encontrada: ${nombre || '(figurativa)'} — Clase ${clase} — Se rellenó con info exacta del INPI`; status.style.color = 'var(--success)'; }
+            UI.toast(`Acta ${acta} cargada desde INPI`, 'success');
+        } catch(e) {
+            if (status) { status.textContent = `✗ No se pudo traer acta ${acta}: ${e.message}`; status.style.color = 'var(--danger)'; }
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🔍'; }
+        }
+    }
+
     function cancelarEdicion() {
         editingId = null;
         document.getElementById('form-alta')?.reset();
@@ -185,6 +247,8 @@ const Cartera = (() => {
         document.getElementById('btn-cancelar-edicion').style.display = 'none';
         const campoLogo = document.getElementById('campo-logo');
         if (campoLogo) campoLogo.style.display = 'none';
+        const status = document.getElementById('acta-status');
+        if (status) status.style.display = 'none';
     }
 
     async function addMarca(e) {
@@ -287,7 +351,7 @@ const Cartera = (() => {
     function getCache() { return cache; }
 
     return {
-        load, render, addMarca, editMarca, cancelarEdicion, deleteMarca, getCache,
+        load, render, addMarca, editMarca, cancelarEdicion, deleteMarca, getCache, buscarActa,
         filtrarPorEstado, setFiltroTexto, setFiltroEstado,
     };
 })();
