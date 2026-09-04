@@ -312,6 +312,7 @@ const Busqueda = (() => {
                 const simFiltro = document.getElementById('filtro-inpi-sim')?.value || '';
                 const estadoFiltro = document.getElementById('filtro-inpi-estado')?.value || '';
                 const claseFiltro = document.getElementById('filtro-inpi-clase')?.value || '';
+                console.log('Filtro INPI', {simFiltro, estadoFiltro, claseFiltro, clasesElegidas: clasesElegidas.map(c=>c.n), total: ultimaBusquedaInpi.length});
                 ultimaBusquedaInpiFiltrada = ultimaBusquedaInpi.filter(r => {
                     if (simFiltro) {
                         if (simFiltro === 'exacto' && r._simCat !== 'exacto') return false;
@@ -328,11 +329,10 @@ const Busqueda = (() => {
                     }
                     if (claseFiltro) {
                         if (String(r.clase) !== String(claseFiltro)) return false;
-                    } else if (clasesElegidas.length) {
-                        if (!clasesElegidas.some(c=> String(c.n) === String(r.clase))) return false;
                     }
                     return true;
                 });
+                console.log('Filtrada', ultimaBusquedaInpiFiltrada.length, 'de', ultimaBusquedaInpi.length);
                 const tbody = document.getElementById('tbody-inpi-filtrada');
                 if (tbody) {
                     tbody.innerHTML = ultimaBusquedaInpiFiltrada.map((r) => {
