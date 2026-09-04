@@ -44,11 +44,20 @@ const Admin = (() => {
         <div id="adm-user-result" style="margin-top:10px; font-size:0.8125rem;"></div>
       </div>
       <div class="card">
-        <h3>Estudios existentes (${estudios.length})</h3>
+        <h3>Estudios existentes — click para editar plan/funciones (${estudios.length})</h3>
         <table class="data-table" style="margin-top:10px;">
-          <thead><tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Límite</th><th>Creado</th></tr></thead>
-          <tbody>${estudios.map(e=>`<tr><td>${UI.escapeHtml(e.nombre)}</td><td>${UI.escapeHtml(e.email_contacto||'—')}</td><td><span class="badge badge--info">${e.plan}</span></td><td>${e.limite_marcas}</td><td style="font-size:0.75rem;color:var(--text-tertiary)">${new Date(e.created_at).toLocaleDateString('es-AR')}</td></tr>`).join('')}</tbody>
+          <thead><tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Límite</th><th>INPI</th><th>Presentar</th><th>Alertas</th><th>Acción</th></tr></thead>
+          <tbody>${estudios.map(e=>`<tr>
+            <td>${UI.escapeHtml(e.nombre)}</td><td>${UI.escapeHtml(e.email_contacto||'—')}</td>
+            <td><span class="badge badge--info">${e.plan}</span></td>
+            <td><input type="number" class="form-input" style="width:60px; padding:4px;" value="${e.limite_marcas}" onchange="Admin.updateEstudio('${e.id}','limite_marcas',this.value)"></td>
+            <td><input type="checkbox" ${e.puede_conectar_inpi!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_conectar_inpi',this.checked)"></td>
+            <td><input type="checkbox" ${e.puede_presentar!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_presentar',this.checked)"></td>
+            <td><input type="checkbox" ${e.puede_ver_alertas!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_ver_alertas',this.checked)"></td>
+            <td><button class="btn btn--ghost btn--sm" onclick="Admin.updateEstudio('${e.id}','plan',prompt('Nuevo plan:', '${e.plan}'))">✎ plan</button></td>
+          </tr>`).join('')}</tbody>
         </table>
+        <div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:6px;">Ej: Básico 5 marcas solo monitoreo (desmarcá INPI y Presentar), Pro 20 con todo, Premium ilimitado. Cambios se guardan al tocar.</div>
       </div>
       <div class="card" style="margin-top:20px;">
         <h3>Bóveda CUIT/Clave por estudio</h3>
@@ -126,6 +135,16 @@ const Admin = (() => {
       UI.toast('Bóveda guardada (cifrada real)','success');
     } catch(e){ out.innerHTML = `<span style="color:var(--danger)">✗ ${UI.escapeHtml(e.message)}</span>`; }
   }
+  async function updateEstudio(id, campo, valor) {
+    try {
+      const body = {};
+      if (campo === 'limite_marcas') body[campo] = parseInt(valor) || 5;
+      else if (campo === 'plan') { if (!valor) return; body[campo] = valor; }
+      else body[campo] = !!valor;
+      await API.request(`/rest/v1/estudios?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(body) });
+      UI.toast('Estudio actualizado', 'success');
+    } catch(e){ UI.toast('Error: '+e.message, 'error'); }
+  }
   function mostrarLogin(){ if (typeof Auth !== 'undefined' && Auth.renderLogin) { App.navigate('login'); Auth.renderLogin('view-login'); } else { window.location.hash = '#login'; } }
-  return { render, loadEstudios, mostrarLogin };
+  return { render, loadEstudios, mostrarLogin, updateEstudio };
 })();
