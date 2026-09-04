@@ -8,13 +8,20 @@ const Admin = (() => {
   async function render() {
     const view = document.getElementById('view-admin');
     if (!view) return;
-    const user = await getCurrentUser();
-    const isAdmin = user && user.perfil && user.perfil.rol === 'admin';
-    if (!isAdmin) {
-      view.innerHTML = `<div class="card" style="text-align:center; padding:40px;"><h3>Acceso restringido</h3><p style="color:var(--text-tertiary)">Solo el admin (benjamayapoceiro@gmail.com) puede ver esta pestaña. Iniciá sesión con tu cuenta admin.</p><button class="btn btn--primary" onclick="Admin.mostrarLogin()">Iniciar sesión</button></div>`;
-      return;
-    }
-    await loadEstudios();
+    try {
+      if (typeof window.supabase === 'undefined' && typeof Auth === 'undefined') {
+        view.innerHTML = `<div class="card" style="text-align:center; padding:30px;"><h3>Cargando...</h3><p style="color:var(--text-tertiary)">Esperando Supabase CDN...</p></div>`;
+        setTimeout(()=>render(), 800);
+        return;
+      }
+      const user = await getCurrentUser();
+      const isAdmin = user && user.perfil && user.perfil.rol === 'admin';
+      if (!isAdmin) {
+        const email = user?.user?.email || 'no logueado';
+        view.innerHTML = `<div class="card" style="text-align:center; padding:40px;"><h3>Acceso restringido</h3><p style="color:var(--text-tertiary)">Solo el admin (benjamayapoceiro@gmail.com) puede ver esta pestaña.<br>Sesión actual: ${UI.escapeHtml(email)} ${user?.perfil ? `(${user.perfil.rol})` : '(sin perfil)'} </p><button class="btn btn--primary" onclick="Admin.mostrarLogin()">Iniciar sesión / Cambiar usuario</button><div style="margin-top:12px; font-size:0.75rem; color:var(--text-tertiary);">Si sos el admin y ves esto, hacé logout y volvé a entrar. Revisá consola F12 para debug.</div></div>`;
+        return;
+      }
+      try { await loadEstudios(); } catch(e){ console.warn('loadEstudios fail',e); estudios = []; }
     view.innerHTML = `
       <div class="card" style="margin-bottom:20px;">
         <h3 style="margin-bottom:8px;">Crear estudio jurídico</h3>
@@ -57,6 +64,10 @@ const Admin = (() => {
     document.getElementById('adm-btn-crear-estudio')?.addEventListener('click', crearEstudio);
     document.getElementById('adm-btn-crear-user')?.addEventListener('click', crearUsuario);
     document.getElementById('adm-btn-guardar-boveda')?.addEventListener('click', guardarBoveda);
+    } catch(e){
+      view.innerHTML = `<div class="card" style="text-align:center; padding:30px;"><h3>Error cargando Admin</h3><p style="color:var(--danger); font-size:0.8125rem;">${UI.escapeHtml(e.message)}</p><pre style="text-align:left; font-size:0.7rem; background:var(--bg-main); padding:8px; border-radius:6px; overflow:auto;">${UI.escapeHtml(e.stack||'')}</pre></div>`;
+      console.error('Admin render error',e);
+    }
   }
   async function getCurrentUser() {
     try {
