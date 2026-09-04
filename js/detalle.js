@@ -9,9 +9,11 @@ const Detalle = (() => {
     document.body.appendChild(modal);
     const body = modal.querySelector('#detalle-body');
     try {
-      const cached = await API.getDetalleActa(acta);
+      let cached = null;
+      try { cached = await API.getDetalleActa(acta); } catch(e){ console.warn('getDetalleActa fail',e); }
       if (cached) {
-        const grilla = await fetchGrilla(acta, cached.denominacion);
+        let grilla = null;
+        try { grilla = await fetchGrilla(acta, cached.denominacion); } catch(e){ console.warn('fetchGrilla cached fail',e); }
         const combinado = grilla ? { ...cached, grilla } : cached;
         renderDetalle(body, combinado, true);
         if (Date.now() - new Date(cached.fetched_at).getTime() > 30*24*3600*1000) {
@@ -21,7 +23,15 @@ const Detalle = (() => {
       }
       await fetchFresco(acta, body);
     } catch (e) {
-      body.innerHTML = `<div style="color:var(--danger)">Error cargando detalle: ${UI.escapeHtml(e.message)}<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline;">Abrir en INPI ↗</a></div>`;
+      console.error('abrir error', e);
+      try {
+        const grilla = await fetchGrilla(acta, null);
+        if (grilla) {
+          renderDetalle(body, { acta, grilla, denominacion: grilla.denominacion, titular: grilla.titulares, clase: grilla.clase, estado: grilla.estado, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${acta}`, fuente: 'INPI WS (solo grilla, detalle no disponible)', fetched_at: new Date().toISOString() }, false);
+          return;
+        }
+      } catch {}
+      body.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle completo (INPI no respondió: ${UI.escapeHtml(e.message)}).<br>Probá <a href="https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta <span class="mono">${UI.escapeHtml(acta)}</span> o reintentá en unos segundos.<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline; margin-top:6px; display:inline-block;">Abrir protección en INPI ↗</a></div>`;
     }
   }
   async function fetchGrilla(acta, denominacion) {
@@ -40,20 +50,39 @@ const Detalle = (() => {
   async function fetchFresco(acta, body) {
     body.innerHTML = `Consultando INPI para acta ${UI.escapeHtml(acta)}... <div style="font-size:0.75rem;color:var(--text-tertiary);margin-top:6px;">Buscando grilla completa (Búsqueda avanzada) + detalle de protección...</div>`;
     const cfg = window.APP_CONFIG.supabase;
-    const r = await fetch(`${cfg.url}/functions/v1/inpi-detalle`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey}, body: JSON.stringify({acta})});
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'error INPI');
-    const grilla = await fetchGrilla(acta, j.data.denominacion);
-    const combinado = { ...j.data, grilla };
-    renderDetalle(body, combinado, !!j.cached);
-    if (!j.cached) {
-      try { await API.saveDetalleActa(j.data); } catch {}
+    let detalle = null;
+    let cached = false;
+    try {
+      const r = await fetch(`${cfg.url}/functions/v1/inpi-detalle`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey}, body: JSON.stringify({acta})});
+      const j = await r.json();
+      if (j.ok && j.data) { detalle = j.data; cached = !!j.cached; }
+    } catch(e){ console.warn('inpi-detalle fetch fail, fallback a solo grilla', e); }
+    // Fallback: si inpi-detalle no está deployado o falla, igual mostramos grilla vía inpi-consulta
+    if (!detalle) {
+      detalle = { acta, denominacion: null, titular: null, clase: null, estado: null, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${acta}`, fuente: 'INPI WS (fallback sin scraping)', fetched_at: new Date().toISOString() };
+    }
+    const grilla = await fetchGrilla(acta, detalle.denominacion);
+    const combinado = { ...detalle, grilla };
+    renderDetalle(body, combinado, cached);
+    if (detalle && !cached && detalle.denominacion) {
+      try { await API.saveDetalleActa(detalle); } catch {}
+    }
+    if (!grilla) {
+      // No se pudo obtener ni grilla ni detalle completo, mostrar aviso pero no error bloqueante
+      const warn = document.createElement('div');
+      warn.style.cssText = 'margin-top:12px; padding:8px; background:#fff3cd; border:1px solid #ffe69c; border-radius:6px; font-size:0.75rem;';
+      warn.innerHTML = `No se pudo cargar la grilla completa desde el WS INPI para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta ${UI.escapeHtml(acta)}.`;
+      body.appendChild(warn);
     }
   }
   function renderDetalle(el, d, cached) {
-    const g = d.grilla;
+    if (!d) {
+      el.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta ${d?.acta ? UI.escapeHtml(d.acta) : '—'}.</div>`;
+      return;
+    }
+    const g = d.grilla || null;
     const estadoMap = { C: 'Concedida', R: 'Registrada', T: 'En trámite', D: 'Denegada', V: 'Vencida', A: 'Abandonada', O: 'En oposición', P: 'Publicada', S: 'Solicitada', E: 'En estudio', '': '—' };
-    const estadoLabel = (g && g.estado) ? (estadoMap[g.estado.trim()] || g.estado) : (d.estado || '—');
+    const estadoLabel = (g && g.estado) ? (estadoMap[String(g.estado).trim()] || g.estado) : (d.estado || '—');
     const venc = g ? '—' : '—';
     const grillaHtml = g ? `
       <div style="margin-bottom:16px;">
