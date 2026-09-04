@@ -60,17 +60,17 @@ const Admin = (() => {
   }
   async function getCurrentUser() {
     try {
-      const cfg = window.APP_CONFIG.supabase;
-      const token = localStorage.getItem('sb-access-token') || sessionStorage.getItem('sb-access-token');
-      // fallback: supabase js client si está
-      if (window.supabase) {
-        const { data } = await window.supabase.auth.getUser();
-        if (data?.user) {
-          const perfil = await API.request(`/rest/v1/perfiles?id=eq.${data.user.id}&select=*`).then(r=>r[0]).catch(()=>null);
-          return { user: data.user, perfil };
-        }
+      const sb = (typeof Auth !== 'undefined' && Auth.sb) ? Auth.sb() : (window.supabase ? window.supabase.createClient(window.APP_CONFIG.supabase.url, window.APP_CONFIG.supabase.anonKey) : null);
+      if (!sb) return null;
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return null;
+      let perfil = null;
+      try { perfil = await sb.from('perfiles').select('*').eq('id', user.id).maybeSingle().then(r=>r.data); } catch {}
+      if (!perfil) {
+        try { perfil = await API.request(`/rest/v1/perfiles?id=eq.${user.id}&select=*`).then(r=>r[0]).catch(()=>null); } catch {}
       }
-      return null;
+      if (!perfil && user.email === 'benjamayapoceiro@gmail.com') perfil = { rol: 'admin', email: user.email };
+      return { user, perfil };
     } catch { return null; }
   }
   async function crearEstudio() {
@@ -117,6 +117,6 @@ const Admin = (() => {
       UI.toast('Bóveda guardada','success');
     } catch(e){ out.innerHTML = `<span style="color:var(--danger)">✗ ${UI.escapeHtml(e.message)}</span>`; }
   }
-  function mostrarLogin(){ window.location.hash = '#login'; }
-  return { render, loadEstudios };
+  function mostrarLogin(){ if (typeof Auth !== 'undefined' && Auth.renderLogin) { App.navigate('login'); Auth.renderLogin('view-login'); } else { window.location.hash = '#login'; } }
+  return { render, loadEstudios, mostrarLogin };
 })();

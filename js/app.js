@@ -119,6 +119,7 @@ const App = (() => {
     }
 
     function initSupabase() {
+        if (typeof Auth !== 'undefined' && Auth.sb) return Auth.sb();
         const cfg = window.APP_CONFIG?.supabase;
         if (!cfg || !window.supabase) return null;
         if (window._sb) return window._sb;
