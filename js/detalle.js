@@ -27,11 +27,11 @@ const Detalle = (() => {
       try {
         const grilla = await fetchGrilla(acta, null);
         if (grilla) {
-          renderDetalle(body, { acta, grilla, denominacion: grilla.denominacion, titular: grilla.titulares, clase: grilla.clase, estado: grilla.estado, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${acta}`, fuente: 'INPI WS (solo grilla, detalle no disponible)', fetched_at: new Date().toISOString() }, false);
+          renderDetalle(body, { acta, grilla, denominacion: grilla.denominacion, titular: grilla.titulares, clase: grilla.clase, estado: grilla.estado, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${acta}`, fuente: 'INPI WS (solo grilla, detalle no disponible)', fetched_at: new Date().toISOString() }, false);
           return;
         }
       } catch {}
-      body.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle completo (INPI no respondió: ${UI.escapeHtml(e.message)}).<br>Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta <span class="mono">${UI.escapeHtml(acta)}</span> o reintentá en unos segundos.<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline; margin-top:6px; display:inline-block;">Abrir protección en INPI ↗</a></div>`;
+      body.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle completo (INPI no respondió: ${UI.escapeHtml(e.message)}).<br>Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta <span class="mono">${UI.escapeHtml(acta)}</span> o reintentá en unos segundos.<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline; margin-top:6px; display:inline-block;">Abrir protección en INPI ↗</a></div>`;
     }
   }
   async function fetchGrilla(acta, denominacion) {
@@ -59,7 +59,7 @@ const Detalle = (() => {
       if (j.ok && j.data) { detalle = j.data; cached = !!j.cached; grilla = j.data.grilla || null; }
     } catch(e){ console.warn('inpi-detalle fetch fail', e); }
     if (!detalle) {
-      detalle = { acta, denominacion: null, titular: null, clase: null, estado: null, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${acta}`, fuente: 'INPI WS (fallback)', fetched_at: new Date().toISOString() };
+      detalle = { acta, denominacion: null, titular: null, clase: null, estado: null, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${acta}`, fuente: 'INPI WS (fallback)', fetched_at: new Date().toISOString() };
     }
     if (!grilla) {
       grilla = await fetchGrilla(acta, detalle.denominacion);
@@ -72,14 +72,14 @@ const Detalle = (() => {
     if (!grilla) {
       const warn = document.createElement('div');
       warn.style.cssText = 'margin-top:12px; padding:8px; background:#fff3cd; border:1px solid #ffe69c; border-radius:6px; font-size:0.75rem;';
-      warn.innerHTML = `No se pudo cargar la grilla completa desde el INPI para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline;">ver grilla en INPI ↗</a> con acta ${UI.escapeHtml(acta)}.`;
+      warn.innerHTML = `No se pudo cargar la grilla completa desde el INPI para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline;">ver grilla en INPI ↗</a> con acta ${UI.escapeHtml(acta)}.`;
       body.appendChild(warn);
     }
   }
   function renderDetalle(el, d, cached) {
     if (!d || typeof d !== 'object' || !d.acta) {
       const actaSafe = (d && d.acta) ? String(d.acta) : '—';
-      el.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle para acta ${UI.escapeHtml(actaSafe)}. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(actaSafe)}" target="_blank" style="text-decoration:underline;">ver en INPI ↗</a> (Resultado completo).</div>`;
+      el.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle para acta ${UI.escapeHtml(actaSafe)}. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(actaSafe)}" target="_blank" style="text-decoration:underline;">ver en INPI ↗</a> (Resultado completo).</div>`;
       return;
     }
     const g = d.grilla || null;
@@ -152,7 +152,7 @@ const Detalle = (() => {
           </div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn--secondary btn--sm" onclick="Detalle.abrirEnINPI('${d.acta}', '${UI.escapeHtml(d.denominacion|| (g?g.denominacion:''))}')">Abrir grilla completa en INPI ↗</button>
-            <a href="${d.expediente_url || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${d.acta}`}" target="_blank" class="btn btn--ghost btn--sm">Ver protección INPI ↗</a>
+            <a href="${d.expediente_url || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${d.acta}`}" target="_blank" class="btn btn--ghost btn--sm">Ver protección INPI ↗</a>
             <button class="btn btn--ghost btn--sm" onclick="navigator.clipboard.writeText('${d.acta}');UI.toast('Acta copiada','success')">Copiar acta</button>
           </div>
           <div style="margin-top:8px;font-size:0.7rem;color:var(--text-tertiary);">Persistido: ${d.fetched_at ? new Date(d.fetched_at).toLocaleString('es-AR') : '—'} · Fuente: ${UI.escapeHtml(d.fuente || 'portaltramites.inpi.gob.ar + WS INPI')} · Cache 30 días en Supabase</div>
