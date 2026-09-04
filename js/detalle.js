@@ -99,7 +99,8 @@ const Detalle = (() => {
             ${d.reivindicaciones ? `<div style="margin-top:8px;font-size:0.8125rem;"><strong>PROTECCION:</strong> <span style="color:#c0392b; font-weight:600;">Solamente</span><div style="margin-top:4px; font-size:0.75rem; color:var(--text-secondary);">LIMITACION:</div><div style="margin-top:4px;white-space:pre-wrap;background:var(--bg-main);padding:10px;border-radius:6px;border:1px solid var(--border);line-height:1.4; font-size:0.75rem;">${UI.escapeHtml(d.reivindicaciones)}</div></div>` : '<div style="margin-top:8px;font-size:0.8125rem;color:var(--text-tertiary);">Sin reivindicaciones cargadas (puede ser acta antigua o figurativa sin texto). Ver grilla arriba para datos principales.</div>'}
           </div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="${d.expediente_url || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${d.acta}`}" target="_blank" class="btn btn--secondary btn--sm">Abrir en INPI ↗</a>
+            <button class="btn btn--secondary btn--sm" onclick="Detalle.abrirEnINPI('${d.acta}', '${UI.escapeHtml(d.denominacion|| (g?g.denominacion:''))}')">Abrir grilla completa en INPI ↗</button>
+            <a href="${d.expediente_url || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${d.acta}`}" target="_blank" class="btn btn--ghost btn--sm">Ver protección INPI ↗</a>
             <button class="btn btn--ghost btn--sm" onclick="navigator.clipboard.writeText('${d.acta}');UI.toast('Acta copiada','success')">Copiar acta</button>
           </div>
           <div style="margin-top:8px;font-size:0.7rem;color:var(--text-tertiary);">Persistido: ${d.fetched_at ? new Date(d.fetched_at).toLocaleString('es-AR') : '—'} · Fuente: ${UI.escapeHtml(d.fuente || 'portaltramites.inpi.gob.ar + WS INPI')} · Cache 30 días en Supabase</div>
@@ -107,5 +108,26 @@ const Detalle = (() => {
       </div>
     `;
   }
-  return { abrir };
+  function abrirEnINPI(acta, denominacion) {
+    const g = { acta, denominacion };
+    // Intenta abrir la grilla real del INPI vía POST form, fallback a ventana con grilla local
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=' + encodeURIComponent(acta);
+    form.target = '_blank';
+    form.style.display = 'none';
+    const inp = document.createElement('input');
+    inp.name = 'acta'; inp.value = acta;
+    form.appendChild(inp);
+    document.body.appendChild(form);
+    const win = window.open('', '_blank');
+    if (win) {
+      try { form.submit(); } catch(e){ win.location.href = 'https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=' + encodeURIComponent(acta); }
+    } else {
+      window.open('https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda', '_blank');
+    }
+    setTimeout(()=>{ try{ document.body.removeChild(form); }catch{} }, 2000);
+    UI.toast('Abriendo grilla INPI en nueva pestaña — si ves solo protección, usá la grilla de arriba que ya tiene todo (Image 2)', 'info');
+  }
+  return { abrir, abrirEnINPI };
 })();
