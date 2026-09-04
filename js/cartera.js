@@ -254,16 +254,23 @@ const Cartera = (() => {
             }
             document.getElementById('f-estado').value = estado;
             if (titular) document.getElementById('f-cliente').value = titular.split('100%')[0].replace(/^\d+\s+/,'').trim().slice(0,60);
-            // Vencimiento desde INPI (fecha_vencimiento o Fecha_Vencimiento)
-            const vencRaw = data.fecha_vencimiento || data.Fecha_Vencimiento || g.fecha_vencimiento || g.Fecha_Vencimiento || g.vencimiento || null;
+            // Vencimiento desde INPI (maneja /Date(...)/, ISO y dd/mm/yyyy)
+            const vencRaw = data.fecha_vencimiento || data.Fecha_Vencimiento || g.fecha_vencimiento || g.Fecha_Vencimiento || g.vencimiento || g.Fecha_Vencimiento || g.Fecha_Vencimiento || null;
             if (vencRaw) {
                 try {
-                    const d = new Date(vencRaw.includes('/') ? vencRaw.split('/').reverse().join('-') : vencRaw);
-                    if (!isNaN(d.getTime()) && d.getFullYear() > 2000 && d.getFullYear() < 2100) {
-                        document.getElementById('f-vencimiento').value = d.toISOString().slice(0,10);
+                    let d = null;
+                    if (typeof vencRaw === 'string' && vencRaw.includes('/Date(')) {
+                        const ms = parseInt(vencRaw.replace(/\D/g, ''));
+                        if (!isNaN(ms)) d = new Date(ms);
                     } else if (typeof vencRaw === 'string' && vencRaw.includes('/')) {
                         const parts = vencRaw.split('/');
-                        if (parts.length === 3) document.getElementById('f-vencimiento').value = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                        if (parts.length === 3) d = new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+                        else d = new Date(vencRaw);
+                    } else {
+                        d = new Date(vencRaw);
+                    }
+                    if (d && !isNaN(d.getTime()) && d.getFullYear() > 2000 && d.getFullYear() < 2100) {
+                        document.getElementById('f-vencimiento').value = d.toISOString().slice(0,10);
                     }
                 } catch {}
             }
