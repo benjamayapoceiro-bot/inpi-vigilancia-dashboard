@@ -31,7 +31,7 @@ const Detalle = (() => {
           return;
         }
       } catch {}
-      body.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle completo (INPI no respondió: ${UI.escapeHtml(e.message)}).<br>Probá <a href="https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta <span class="mono">${UI.escapeHtml(acta)}</span> o reintentá en unos segundos.<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline; margin-top:6px; display:inline-block;">Abrir protección en INPI ↗</a></div>`;
+      body.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle completo (INPI no respondió: ${UI.escapeHtml(e.message)}).<br>Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta <span class="mono">${UI.escapeHtml(acta)}</span> o reintentá en unos segundos.<br><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline; margin-top:6px; display:inline-block;">Abrir protección en INPI ↗</a></div>`;
     }
   }
   async function fetchGrilla(acta, denominacion) {
@@ -71,13 +71,14 @@ const Detalle = (() => {
       // No se pudo obtener ni grilla ni detalle completo, mostrar aviso pero no error bloqueante
       const warn = document.createElement('div');
       warn.style.cssText = 'margin-top:12px; padding:8px; background:#fff3cd; border:1px solid #ffe69c; border-radius:6px; font-size:0.75rem;';
-      warn.innerHTML = `No se pudo cargar la grilla completa desde el WS INPI para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta ${UI.escapeHtml(acta)}.`;
+      warn.innerHTML = `No se pudo cargar la grilla completa desde el WS INPI para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta ${UI.escapeHtml(acta)}.`;
       body.appendChild(warn);
     }
   }
   function renderDetalle(el, d, cached) {
-    if (!d) {
-      el.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta ${d?.acta ? UI.escapeHtml(d.acta) : '—'}.</div>`;
+    if (!d || typeof d !== 'object' || !d.acta) {
+      const actaSafe = (d && d.acta) ? String(d.acta) : '—';
+      el.innerHTML = `<div style="color:var(--danger); padding:12px; border:1px solid var(--danger-border); border-radius:6px; background:var(--danger-bg);">No se pudo cargar el detalle para acta ${UI.escapeHtml(actaSafe)}. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(actaSafe)}" target="_blank" style="text-decoration:underline;">ver en INPI ↗</a> (Resultado completo).</div>`;
       return;
     }
     const g = d.grilla || null;
@@ -116,8 +117,11 @@ const Detalle = (() => {
           <table class="data-table" style="font-size:0.8125rem; margin-top:8px;">
             <tbody>
               <tr><th style="width:140px; text-align:left; background:var(--bg-main);">Titular</th><td>${UI.escapeHtml(d.titular || (g ? g.titulares : '—') || '—')}</td></tr>
-              <tr><th style="text-align:left; background:var(--bg-main);">Clase / Tipo</th><td>${d.clase || (g?g.clase:'—') ? `Clase ${UI.escapeHtml(d.clase||g.clase)}` : '—'}${d.tipo||g?.tipo_marca ? ` · ${UI.escapeHtml(d.tipo||g.tipo_marca)}` : ''}</td></tr>
+              <tr><th style="text-align:left; background:var(--bg-main);">Clase / Tipo</th><td>${d.clase || (g?g.clase:'—') ? `Clase ${UI.escapeHtml(d.clase||g.clase)}` : '—'}${d.tipo||g?.tipo_marca||d.tipo_marca ? ` · ${UI.escapeHtml(d.tipo||g.tipo_marca||d.tipo_marca)}` : ''}</td></tr>
               <tr><th style="text-align:left; background:var(--bg-main);">Estado INPI</th><td>${UI.escapeHtml(estadoLabel)}</td></tr>
+              <tr><th style="text-align:left; background:var(--bg-main);">Presentación</th><td>${UI.escapeHtml(d.presentacion || '—')}</td></tr>
+              <tr><th style="text-align:left; background:var(--bg-main);">Domicilio Legal / Real</th><td>${UI.escapeHtml(d.domicilio_legal || '—')} ${d.domicilio_real ? `<br><span style="font-size:0.75rem; color:var(--text-tertiary);">Real: ${UI.escapeHtml(d.domicilio_real)}</span>` : ''}</td></tr>
+              <tr><th style="text-align:left; background:var(--bg-main);">CUIT / DNI</th><td>${UI.escapeHtml(d.cuit || '—')} ${d.dni ? ` · DNI ${UI.escapeHtml(d.dni)}` : ''}</td></tr>
               <tr><th style="text-align:left; background:var(--bg-main);">Acta / Expediente</th><td class="mono">${UI.escapeHtml(d.acta)}${d.expediente_url ? ` · <a href="${d.expediente_url}" target="_blank" style="text-decoration:underline;">Ver en INPI ↗</a>` : ''}</td></tr>
             </tbody>
           </table>
@@ -153,7 +157,7 @@ const Detalle = (() => {
     if (win) {
       try { form.submit(); } catch(e){ win.location.href = 'https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=' + encodeURIComponent(acta); }
     } else {
-      window.open('https://portaltramites.inpi.gob.ar/marcasconsultas/busqueda', '_blank');
+      window.open('https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla', '_blank');
     }
     setTimeout(()=>{ try{ document.body.removeChild(form); }catch{} }, 2000);
     UI.toast('Abriendo grilla INPI en nueva pestaña — si ves solo protección, usá la grilla de arriba que ya tiene todo (Image 2)', 'info');

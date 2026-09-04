@@ -8,9 +8,33 @@ const INPI_ESTADO_MAP = { C: 'Concedida', R: 'Registrada', T: 'En trámite', D: 
 function inpiEstadoLabel(cod) { if (!cod) return '—'; return INPI_ESTADO_MAP[String(cod).trim().toUpperCase()] || String(cod).trim(); }
 function inpiLink(acta) { return acta ? `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}` : '#'; }
 
+function calcularSimilitudJS(a, b) {
+  if (!a || !b) return 0;
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+  const ca = norm(a), cb = norm(b);
+  if (!ca || !cb) return 0;
+  if (ca === cb) return 1;
+  // Contención: si uno contiene al otro, bonus
+  if (ca.includes(cb) || cb.includes(ca)) {
+    const longer = Math.max(ca.length, cb.length), shorter = Math.min(ca.length, cb.length);
+    return Math.min(0.99, 0.72 + 0.2 * (shorter/longer));
+  }
+  // Levenshtein simplificado via difflib-like: ratio de caracteres comunes
+  const lev = (s,t) => {
+    const m=s.length, n=t.length, d=Array.from({length:m+1},()=>Array(n+1).fill(0));
+    for(let i=0;i<=m;i++) d[i][0]=i; for(let j=0;j<=n;j++) d[0][j]=j;
+    for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) d[i][j]= s[i-1]===t[j-1] ? d[i-1][j-1] : Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+1);
+    return d[m][n];
+  };
+  const dist = lev(ca, cb);
+  const maxLen = Math.max(ca.length, cb.length);
+  return Math.max(0, 1 - dist / maxLen);
+}
 const Busqueda = (() => {
     let resultados = [];
     let clasesElegidas = [];
+    let ultimaBusquedaInpi = [];
+    let ultimaBusquedaInpiFiltrada = [];
 
     function render() {
         const view = document.getElementById('view-busqueda');
@@ -252,8 +276,6 @@ const Busqueda = (() => {
         document.getElementById('bq-consultar-inpi')?.addEventListener('click', consultarInpiEnVivo);
     }
 
-    let ultimaBusquedaInpi = [];
-
     async function consultarInpiEnVivo() {
         const marca = document.getElementById('bq-marca')?.value?.trim();
         if (!marca) { UI.toast('Escribí la marca a buscar primero', 'error'); return; }
@@ -280,34 +302,87 @@ const Busqueda = (() => {
                 return;
             }
 
-            ultimaBusquedaInpi = data.resultados || [];
+            ultimaBusquedaInpi = (data.resultados || []).map(r => {
+                const sim = calcularSimilitudJS(marca, r.denominacion || '');
+                return { ...r, _sim: sim, _simCat: sim >= 0.97 ? 'exacto' : sim >= 0.85 ? 'muy' : sim >= 0.65 ? 'medio' : 'poco' };
+            }).sort((a,b)=> b._sim - a._sim);
+            ultimaBusquedaInpiFiltrada = [...ultimaBusquedaInpi];
+
+            function renderInpiFiltrada() {
+                const simFiltro = document.getElementById('filtro-inpi-sim')?.value || '';
+                const estadoFiltro = document.getElementById('filtro-inpi-estado')?.value || '';
+                const claseFiltro = document.getElementById('filtro-inpi-clase')?.value || '';
+                ultimaBusquedaInpiFiltrada = ultimaBusquedaInpi.filter(r => {
+                    if (simFiltro) {
+                        if (simFiltro === 'exacto' && r._simCat !== 'exacto') return false;
+                        if (simFiltro === 'muy' && !['exacto','muy'].includes(r._simCat)) return false;
+                        if (simFiltro === 'medio' && r._simCat !== 'medio') return false;
+                        if (simFiltro === 'poco' && r._simCat !== 'poco') return false;
+                        if (simFiltro === 'muy+medio' && !['exacto','muy','medio'].includes(r._simCat)) return false;
+                    }
+                    if (estadoFiltro) {
+                        const est = String(r.estado||'').trim().toUpperCase();
+                        if (estadoFiltro === 'concedidas' && est !== 'C') return false;
+                        if (estadoFiltro === 'no-concedidas' && est === 'C') return false;
+                        if (estadoFiltro === 'en-tramite' && est !== 'T') return false;
+                    }
+                    if (claseFiltro) {
+                        if (String(r.clase) !== String(claseFiltro)) return false;
+                    } else if (clasesElegidas.length) {
+                        if (!clasesElegidas.some(c=> String(c.n) === String(r.clase))) return false;
+                    }
+                    return true;
+                });
+                const tbody = document.getElementById('tbody-inpi-filtrada');
+                if (tbody) {
+                    tbody.innerHTML = ultimaBusquedaInpiFiltrada.map((r) => {
+                        const origIdx = ultimaBusquedaInpi.indexOf(r);
+                        const pct = Math.round(r._sim*100);
+                        const badge = r._simCat==='exacto' ? 'badge--danger' : r._simCat==='muy' ? 'badge--warning' : r._simCat==='medio' ? 'badge--info' : 'badge--primary';
+                        return `<tr>
+                    <td><button class="btn btn--ghost btn--sm" style="font-weight:600; padding:2px 6px;" onclick="Detalle.abrir('${r.acta}')">${UI.escapeHtml(r.acta || '—')} 👁️</button> <a href="${inpiLink(r.acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline;">INPI ↗</a></td>
+                    <td>${UI.escapeHtml(r.denominacion || '—')} ${r.tipo_marca === 'Mixta' ? '<span class="badge badge--info">Mixta</span>' : ''}<br><span class="badge ${badge}" style="font-size:0.65rem; margin-top:2px;">${r._simCat==='exacto'?'IDÉNTICA':r._simCat==='muy'?'Muy parecida':r._simCat==='medio'?'Parecida':'Poco parecida'} ${pct}%</span></td>
+                    <td><span class="badge badge--primary">${UI.escapeHtml(r.clase || '—')}</span></td>
+                    <td>${UI.escapeHtml((r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, ''))}</td>
+                    <td><span class="badge badge--primary" title="${UI.escapeHtml(r.estado||'')}">${UI.escapeHtml(inpiEstadoLabel(r.estado))}</span></td>
+                    <td><button class="btn btn--ghost btn--sm" onclick="Busqueda.agregarDesdeInpi(${origIdx})" title="Agregar a coincidencias">＋</button></td>
+                  </tr>`;
+                    }).join('');
+                    document.getElementById('inpi-filtrada-count').textContent = `${ultimaBusquedaInpiFiltrada.length} de ${ultimaBusquedaInpi.length} mostradas`;
+                }
+            }
 
             if (panel) {
                 panel.style.display = 'block';
                 if (!ultimaBusquedaInpi.length) {
                     panel.innerHTML = `<div style="color:var(--success)">✓ Sin coincidencias en el INPI para "${UI.escapeHtml(marca)}".</div>`;
                 } else {
+                    const clasesOpts = [...new Set(ultimaBusquedaInpi.map(r=>r.clase))].sort((a,b)=>a-b).map(c=>`<option value="${c}">Clase ${c}</option>`).join('');
                     panel.innerHTML = `
-            <div style="margin-bottom:8px;"><strong>${data.total} coincidencia(s) en el INPI para "${UI.escapeHtml(marca)}":</strong></div>
+            <div style="margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <strong>${data.total} coincidencia(s) en el INPI para "${UI.escapeHtml(marca)}":</strong>
+              <span id="inpi-filtrada-count" style="font-size:0.75rem; color:var(--text-tertiary);"></span>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:8px; background:var(--bg-main); border:1px solid var(--border); border-radius:6px;">
+              <select class="form-select" id="filtro-inpi-sim" style="max-width:190px;"><option value="">Similitud: Todas</option><option value="exacto">IDÉNTICA (100%)</option><option value="muy">Muy parecida (≥85%)</option><option value="muy+medio">Muy + Parecida</option><option value="medio">Parecida (65-85%)</option><option value="poco">Poco parecida (&lt;65%)</option></select>
+              <select class="form-select" id="filtro-inpi-estado" style="max-width:190px;"><option value="">Estado: Todos</option><option value="concedidas">Solo Concedidas</option><option value="no-concedidas">Solo No concedidas</option><option value="en-tramite">Solo En trámite</option></select>
+              <select class="form-select" id="filtro-inpi-clase" style="max-width:150px;"><option value="">Clase: Todas</option>${clasesOpts}</select>
+              <button class="btn btn--ghost btn--sm" onclick="document.getElementById('filtro-inpi-sim').value='';document.getElementById('filtro-inpi-estado').value='';document.getElementById('filtro-inpi-clase').value=''; renderInpiFiltrada && renderInpiFiltrada();">Limpiar</button>
+            </div>
             <table class="data-table" style="font-size:0.75rem;">
-              <thead><tr><th>Acta</th><th>Denominación</th><th>Clase</th><th>Titular</th><th>Estado</th><th></th></tr></thead>
-              <tbody>
-                ${ultimaBusquedaInpi.map((r, i) => `
-                  <tr>
-                    <td><button class="btn btn--ghost btn--sm" style="font-weight:600; padding:2px 6px;" onclick="Detalle.abrir('${r.acta}')">${UI.escapeHtml(r.acta || '—')} 👁️</button> <a href="${inpiLink(r.acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline;">INPI ↗</a></td>
-                    <td>${UI.escapeHtml(r.denominacion || '—')} ${r.tipo_marca === 'Mixta' ? '<span class="badge badge--info">Mixta</span>' : ''}</td>
-                    <td>${UI.escapeHtml(r.clase || '—')}</td>
-                    <td>${UI.escapeHtml((r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, ''))}</td>
-                    <td><span class="badge badge--primary" title="${UI.escapeHtml(r.estado||'')}">${UI.escapeHtml(inpiEstadoLabel(r.estado))}</span></td>
-                    <td><button class="btn btn--ghost btn--sm" onclick="Busqueda.agregarDesdeInpi(${i})" title="Agregar a coincidencias">＋</button></td>
-                  </tr>
-                `).join('')}
-              </tbody>
+              <thead><tr><th>Acta</th><th>Denominación + Similitud</th><th>Clase</th><th>Titular</th><th>Estado</th><th></th></tr></thead>
+              <tbody id="tbody-inpi-filtrada"></tbody>
             </table>
           `;
+                    // exponer para los onchange
+                    window.renderInpiFiltrada = renderInpiFiltrada;
+                    document.getElementById('filtro-inpi-sim')?.addEventListener('change', renderInpiFiltrada);
+                    document.getElementById('filtro-inpi-estado')?.addEventListener('change', renderInpiFiltrada);
+                    document.getElementById('filtro-inpi-clase')?.addEventListener('change', renderInpiFiltrada);
+                    renderInpiFiltrada();
                 }
             }
-            UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI`, 'success');
+            UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI (ordenadas por parecido)`, 'success');
         } catch (err) {
             if (panel) {
                 panel.style.display = 'block';
