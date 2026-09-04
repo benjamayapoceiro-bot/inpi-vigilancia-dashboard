@@ -166,6 +166,8 @@ const App = (() => {
         initDarkMode();
         initSupabase();
         const logged = await initAuth();
+        const banner = document.getElementById('banner-auth-warning');
+        if (banner) banner.style.display = logged ? 'none' : 'block';
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', () => navigate(btn.dataset.view));

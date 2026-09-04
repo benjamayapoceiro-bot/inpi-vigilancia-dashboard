@@ -294,7 +294,7 @@ const Busqueda = (() => {
               <tbody>
                 ${ultimaBusquedaInpi.map((r, i) => `
                   <tr>
-                    <td><a class="data-table acta-link" href="${inpiLink(r.acta)}" target="_blank" rel="noopener" style="text-decoration:underline;font-weight:600;">${UI.escapeHtml(r.acta || '—')} ↗</a></td>
+                    <td><button class="btn btn--ghost btn--sm" style="font-weight:600; padding:2px 6px;" onclick="Detalle.abrir('${r.acta}')">${UI.escapeHtml(r.acta || '—')} 👁️</button> <a href="${inpiLink(r.acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline;">INPI ↗</a></td>
                     <td>${UI.escapeHtml(r.denominacion || '—')} ${r.tipo_marca === 'Mixta' ? '<span class="badge badge--info">Mixta</span>' : ''}</td>
                     <td>${UI.escapeHtml(r.clase || '—')}</td>
                     <td>${UI.escapeHtml((r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, ''))}</td>
