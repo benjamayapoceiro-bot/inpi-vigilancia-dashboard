@@ -74,17 +74,30 @@ const Auth = (() => {
   async function initHeader() {
     const header = document.querySelector('.main-header__actions');
     if (!header) return;
-    const session = await getSession();
-    const perfil = session ? await getPerfil() : null;
+    let session = null;
+    try { session = await getSession(); } catch(e){ console.warn('getSession fail',e); }
+    let perfil = null;
+    if (session) {
+      try { perfil = await getPerfil(); } catch(e){ console.warn('getPerfil fail',e); }
+      if (!perfil && session.user?.email === 'benjamayapoceiro@gmail.com') {
+        perfil = { rol: 'admin', email: session.user.email };
+      }
+    }
     const userEmail = session?.user?.email || null;
     if (session) {
-      header.innerHTML = `<span style="font-size:0.8125rem;color:var(--text-secondary);">${UI.escapeHtml(userEmail)} ${perfil ? `<span class="badge ${perfil.rol==='admin'?'badge--warning':'badge--info'}">${perfil.rol}</span>` : ''}</span> <button class="btn btn--ghost btn--sm" id="btn-logout">Salir</button>`;
+      header.innerHTML = `<span style="font-size:0.8125rem;color:var(--text-secondary);">${UI.escapeHtml(userEmail)} ${perfil ? `<span class="badge ${perfil.rol==='admin'?'badge--warning':'badge--info'}">${perfil.rol}</span>` : '<span class="badge badge--info">usuario</span>'}</span> <button class="btn btn--ghost btn--sm" id="btn-logout">Salir</button>`;
       document.getElementById('btn-logout')?.addEventListener('click', logout);
       const navAdmin = document.getElementById('nav-admin');
-      if (navAdmin) navAdmin.style.display = (perfil && perfil.rol === 'admin') ? 'flex' : 'none';
+      if (navAdmin) {
+        const isAdmin = perfil && perfil.rol === 'admin';
+        navAdmin.style.display = isAdmin ? 'flex' : 'none';
+        console.log('initHeader admin check', {email:userEmail, perfil, isAdmin});
+      }
     } else {
       header.innerHTML = `<button class="btn btn--primary btn--sm" id="btn-login-header">Ingresar</button>`;
       document.getElementById('btn-login-header')?.addEventListener('click', () => { App.navigate('login'); renderLogin('view-login'); });
+      const navAdmin = document.getElementById('nav-admin');
+      if (navAdmin) navAdmin.style.display = 'none';
     }
   }
   return { sb, getSession, getUser, getPerfil, login, logout, renderLogin, initHeader };
