@@ -52,26 +52,27 @@ const Detalle = (() => {
     const cfg = window.APP_CONFIG.supabase;
     let detalle = null;
     let cached = false;
+    let grilla = null;
     try {
       const r = await fetch(`${cfg.url}/functions/v1/inpi-detalle`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey}, body: JSON.stringify({acta})});
       const j = await r.json();
-      if (j.ok && j.data) { detalle = j.data; cached = !!j.cached; }
-    } catch(e){ console.warn('inpi-detalle fetch fail, fallback a solo grilla', e); }
-    // Fallback: si inpi-detalle no está deployado o falla, igual mostramos grilla vía inpi-consulta
+      if (j.ok && j.data) { detalle = j.data; cached = !!j.cached; grilla = j.data.grilla || null; }
+    } catch(e){ console.warn('inpi-detalle fetch fail', e); }
     if (!detalle) {
-      detalle = { acta, denominacion: null, titular: null, clase: null, estado: null, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${acta}`, fuente: 'INPI WS (fallback sin scraping)', fetched_at: new Date().toISOString() };
+      detalle = { acta, denominacion: null, titular: null, clase: null, estado: null, reivindicaciones: null, logo_url: null, expediente_url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${acta}`, fuente: 'INPI WS (fallback)', fetched_at: new Date().toISOString() };
     }
-    const grilla = await fetchGrilla(acta, detalle.denominacion);
+    if (!grilla) {
+      grilla = await fetchGrilla(acta, detalle.denominacion);
+    }
     const combinado = { ...detalle, grilla };
     renderDetalle(body, combinado, cached);
     if (detalle && !cached && detalle.denominacion) {
       try { await API.saveDetalleActa(detalle); } catch {}
     }
     if (!grilla) {
-      // No se pudo obtener ni grilla ni detalle completo, mostrar aviso pero no error bloqueante
       const warn = document.createElement('div');
       warn.style.cssText = 'margin-top:12px; padding:8px; background:#fff3cd; border:1px solid #ffe69c; border-radius:6px; font-size:0.75rem;';
-      warn.innerHTML = `No se pudo cargar la grilla completa desde el WS INPI para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank" style="text-decoration:underline;">buscar directo en el INPI</a> con acta ${UI.escapeHtml(acta)}.`;
+      warn.innerHTML = `No se pudo cargar la grilla completa desde el INPI para esta acta. Probá <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline;">ver grilla en INPI ↗</a> con acta ${UI.escapeHtml(acta)}.`;
       body.appendChild(warn);
     }
   }
