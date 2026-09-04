@@ -279,6 +279,12 @@ const Cartera = (() => {
         const tipo = form.querySelector('#f-tipo').value;
         const logoFile = form.querySelector('#f-logo')?.files[0];
 
+        const perfil = await (async()=>{ try{ const sb=(typeof Auth!=='undefined'&&Auth.sb)?Auth.sb():null; if(!sb) return null; const {data:{user}}=await sb.auth.getUser(); if(!user) return null; const {data}=await sb.from('perfiles').select('estudio_id, rol').eq('id', user.id).maybeSingle(); return data; }catch{ return null; } })();
+        const estudioId = perfil?.estudio_id || null;
+        if (!estudioId) {
+            UI.toast('No se pudo determinar tu estudio (perfil sin estudio_id) — contactá al admin', 'error');
+            return;
+        }
         const body = {
             nombre: form.querySelector('#f-nombre').value || null,
             clase: parseInt(form.querySelector('#f-clase').value),
@@ -288,6 +294,7 @@ const Cartera = (() => {
             estado: form.querySelector('#f-estado').value || 'Solicitada',
             numero_acta: form.querySelector('#f-acta').value || null,
             notas: form.querySelector('#f-notas').value || null,
+            estudio_id: estudioId,
         };
 
         if (!body.clase || body.clase < 1 || body.clase > 45) {
