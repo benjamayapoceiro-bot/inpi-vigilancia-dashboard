@@ -85,33 +85,51 @@ const Detalle = (() => {
     const g = d.grilla || null;
     const estadoMap = { C: 'Concedida', R: 'Registrada', T: 'En trámite', D: 'Denegada', V: 'Vencida', A: 'Abandonada', O: 'En oposición', P: 'Publicada', S: 'Solicitada', E: 'En estudio', '': '—' };
     const estadoLabel = (g && g.estado) ? (estadoMap[String(g.estado).trim()] || g.estado) : (d.estado || '—');
-    const venc = g ? '—' : '—';
-    const grillaHtml = g ? `
+    const logoOk = d.logo_url && !d.logo_url.includes('logon.png') && !d.logo_url.includes('assets/img/logon');
+    const vencFmt = (() => {
+      if (!g || !g.fecha_vencimiento) return '—';
+      const d = new Date(g.fecha_vencimiento);
+      if (isNaN(d.getTime()) || d.getFullYear() > 2100) return '—';
+      return d.toLocaleDateString('es-AR');
+    })();
+    const venc2 = (() => {
+      if (g && g.vencimiento) {
+        const d2 = new Date(g.vencimiento);
+        if (!isNaN(d2.getTime()) && d2.getFullYear() <= 2100) return d2.toLocaleDateString('es-AR');
+      }
+      return vencFmt;
+    })();
+    const logoHtml = logoOk ? `<img src="${d.logo_url}" alt="logo marca" style="max-width:220px;max-height:220px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff;padding:8px;box-shadow:var(--shadow-sm);" onerror="this.style.display='none'">` : '<div style="width:220px;height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-main);border:1px dashed var(--border);border-radius:8px;color:var(--text-tertiary);font-size:0.75rem; text-align:center; padding:10px;"><span style="font-size:1.2rem;">🖼️</span>Sin logo<br><span style="font-size:0.7rem;">Marca denominativa</span></div>';
+    // helper para no mostrar filas vacías
+    const row = (label, val) => {
+      if (!val || val === '—' || String(val).trim() === '') return '';
+      return `<tr><th style="width:140px; text-align:left; background:var(--bg-main); font-size:0.75rem;">${label}</th><td style="font-size:0.8125rem;">${val}</td></tr>`;
+    };
+    const grillaHtml2 = g ? `
       <div style="margin-bottom:16px;">
-        <div style="background:#0f3a5f; color:#fff; padding:8px 12px; font-weight:600; font-size:0.8125rem; border-radius:6px 6px 0 0;">Búsqueda avanzada de marcas — Grilla completa INPI</div>
-        <div style="overflow:auto; border:1px solid #0f3a5f; border-top:none; border-radius:0 0 6px 6px;">
-          <table class="data-table" style="font-size:0.75rem; min-width:720px;">
-            <thead><tr style="background:#f0f4f8; font-size:0.7rem;"><th>NRO ACTA</th><th>TITULARES ASIGNADOS</th><th>FECHA INGRESO</th><th>CLASE</th><th>DENOMINACION</th><th>TIPO DE MARCA</th><th>NRO RESOLUCION</th><th>ESTADO</th><th>VENCIMIENTO</th></tr></thead>
-            <tbody><tr>
-              <td class="mono" style="font-weight:600;">${UI.escapeHtml(g.acta)}</td>
-              <td>${UI.escapeHtml((g.titulares||'').replace(/\s+/g,' ').trim())}</td>
+        <div style="background:#0f3a5f; color:#fff; padding:8px 12px; font-weight:600; font-size:0.8125rem; border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center;"><span>Búsqueda avanzada — Grilla INPI</span><span style="font-weight:400; font-size:0.7rem; opacity:0.9;">${g.fecha_ingreso ? new Date(g.fecha_ingreso).toLocaleDateString('es-AR') : ''}</span></div>
+        <div style="overflow:auto; border:1px solid #0f3a5f; border-top:none; border-radius:0 0 6px 6px; background:#fff;">
+          <table class="data-table" style="font-size:0.75rem; min-width:720px; margin:0;">
+            <thead><tr style="background:#f0f4f8; font-size:0.68rem; color:var(--text-secondary);"><th style="padding:8px;">NRO ACTA</th><th>TITULARES</th><th>FECHA INGRESO</th><th>CLASE</th><th>DENOMINACION</th><th>TIPO</th><th>RESOLUCION</th><th>ESTADO</th><th>VENCIMIENTO</th></tr></thead>
+            <tbody><tr style="background:#fff;">
+              <td class="mono" style="font-weight:700; color:var(--primary);">${UI.escapeHtml(g.acta)}</td>
+              <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${UI.escapeHtml((g.titulares||'').replace(/\s+/g,' ').trim() || '—')}</td>
               <td>${g.fecha_ingreso ? new Date(g.fecha_ingreso).toLocaleDateString('es-AR') : '—'}</td>
-              <td><span class="badge badge--primary">${UI.escapeHtml(g.clase||'')}</span></td>
-              <td style="font-weight:600;">${UI.escapeHtml(g.denominacion||'')}</td>
-              <td>${UI.escapeHtml(g.tipo_marca||'')}</td>
+              <td><span class="badge badge--primary" style="font-weight:700;">${UI.escapeHtml(String(g.clase||'—'))}</span></td>
+              <td style="font-weight:600; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${UI.escapeHtml(g.denominacion||'—')}</td>
+              <td><span class="badge badge--info">${UI.escapeHtml(g.tipo_marca||'—')}</span></td>
               <td>${UI.escapeHtml(g.numero_resolucion||'—')}</td>
-              <td><span class="badge badge--success">${UI.escapeHtml(estadoLabel)}</span></td>
-              <td>${UI.escapeHtml(venc)}</td>
+              <td><span class="badge ${estadoLabel==='Concedida'?'badge--success':estadoLabel==='En trámite'?'badge--warning':'badge--primary'}">${UI.escapeHtml(estadoLabel)}</span></td>
+              <td>${UI.escapeHtml(venc2)}</td>
             </tr></tbody>
           </table>
         </div>
-        <div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:4px;">Mostrando 1 a 1 de 1 filas · Fuente: INPI WS ConsultaDenominacion (tiempo real)</div>
       </div>
-    ` : `<div style="font-size:0.8125rem; color:var(--text-tertiary); margin-bottom:12px; padding:8px; background:#fff3cd; border:1px solid #ffe69c; border-radius:6px;">Grilla no disponible para esta acta (puede ser muy reciente o no indexada). Mostrando solo detalle de protección.</div>`;
+    ` : `<div style="font-size:0.8125rem; color:var(--text-tertiary); margin-bottom:12px; padding:10px; background:var(--bg-main); border:1px solid var(--border); border-radius:6px; text-align:center;">Grilla no disponible para esta acta. Mostrando solo detalle de protección.</div>`;
     el.innerHTML = `
-      ${grillaHtml}
-      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start; border-top:2px solid #0f3a5f; padding-top:16px;">
-        ${d.logo_url ? `<img src="${d.logo_url}" alt="logo" style="max-width:220px;max-height:220px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff;padding:8px;" onerror="this.style.display='none'">` : '<div style="width:220px;height:140px;display:flex;align-items:center;justify-content:center;background:var(--bg-main);border:1px dashed var(--border);border-radius:8px;color:var(--text-tertiary);font-size:0.75rem;">Sin logo (figurativa sin imagen o denominativa)</div>'}
+      ${grillaHtml2}
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start; border-top:1px solid var(--border); padding-top:16px;">
+        ${logoHtml}
         <div style="flex:1;min-width:280px;">
           <div style="font-size:0.75rem;color:var(--text-tertiary);">Acta ${UI.escapeHtml(d.acta)} ${cached ? '<span class="badge badge--info">cache 30d</span>' : '<span class="badge badge--success">fresco INPI</span>'} ${d.clase ? `<span class="badge badge--primary">Clase ${d.clase}</span>` : ''} ${d.estado ? `<span class="badge">${UI.escapeHtml(d.estado)}</span>` : ''}</div>
           <div style="font-weight:700;font-size:1.15rem;margin:8px 0;">${UI.escapeHtml(d.denominacion || (g ? g.denominacion : '(marca figurativa / sin denominación)'))}</div>
@@ -148,8 +166,6 @@ const Detalle = (() => {
     if (!w) window.open(directUrl, '_blank');
     navigator.clipboard.writeText(directUrl).catch(()=>{});
     UI.toast(`Link directo copiado: ${directUrl} — abre la ficha completa con grilla (Image 2) + protección`, 'success');
-  }
-    UI.toast('Grilla local ya tiene todo (Image 2) — el portal no permite link directo a la fila', 'info');
   }
   return { abrir, abrirEnINPI };
 })();
