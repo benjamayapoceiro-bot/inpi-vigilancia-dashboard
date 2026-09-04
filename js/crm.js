@@ -179,7 +179,7 @@ const CRM = (() => {
                   <td>${UI.escapeHtml(m.cliente) || '—'}</td>
                   <td><span class="mono">${m.clase}</span></td>
                   <td>${m.tipo === 'M' ? 'Mixta' : 'Denominativa'}</td>
-                  <td>${m.numero_acta ? `<button class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:2px 6px;" onclick="Detalle.abrir('${m.numero_acta}')" title="Ver grilla completa INPI">${UI.escapeHtml(m.numero_acta)} 👁️</button> <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline;">INPI ↗</a>` : '<span class="mono">—</span>'}</td>
+                  <td>${m.numero_acta ? `<button class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:2px 6px;" onclick="Detalle.abrir('${m.numero_acta}')" title="Ver grilla completa INPI">${UI.escapeHtml(m.numero_acta)} 👁️</button> <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline;">INPI ↗</a>` : '<span class="mono">—</span>'}</td>
                   <td>
                     <select class="form-select" style="font-size:0.75rem; padding:4px 8px;" onchange="CRM.cambiarEstadoRapido('${m.id}', this.value)">
                       ${ESTADOS.map(e => `<option value="${e}" ${e === (m.estado || 'Solicitada') ? 'selected' : ''}>${e}</option>`).join('')}
@@ -290,7 +290,7 @@ const CRM = (() => {
         <div><div class="form-label">Cliente</div><div style="font-size:0.875rem;">${UI.escapeHtml(m.cliente) || '—'}</div></div>
         <div><div class="form-label">Clase</div><div class="mono" style="font-size:0.875rem;">${m.clase}</div></div>
         <div><div class="form-label">Tipo</div><div style="font-size:0.875rem;">${m.tipo === 'M' ? 'Mixta' : 'Denominativa'}</div></div>
-        <div><div class="form-label">N° Acta</div><div style="font-size:0.875rem;">${m.numero_acta ? `<button class="btn btn--ghost btn--sm" onclick="Detalle.abrir('${m.numero_acta}')" style="padding:2px 6px;">${UI.escapeHtml(m.numero_acta)} 👁️ grilla</button> <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.75rem; text-decoration:underline;">INPI ↗</a>` : '—'}</div></div>
+        <div><div class="form-label">N° Acta</div><div style="font-size:0.875rem;">${m.numero_acta ? `<button class="btn btn--ghost btn--sm" onclick="Detalle.abrir('${m.numero_acta}')" style="padding:2px 6px;">${UI.escapeHtml(m.numero_acta)} 👁️ grilla</button> <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.75rem; text-decoration:underline;">INPI ↗</a>` : '—'}</div></div>
         <div><div class="form-label">Vencimiento</div><div style="font-size:0.875rem;">${UI.formatDate(m.fecha_vencimiento)}</div></div>
         <div>
           <div class="form-label">Estado</div>
