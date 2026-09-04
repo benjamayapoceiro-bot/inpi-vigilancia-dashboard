@@ -143,25 +143,17 @@ const Detalle = (() => {
     `;
   }
   function abrirEnINPI(acta, denominacion) {
-    const g = { acta, denominacion };
-    // Intenta abrir la grilla real del INPI vía POST form, fallback a ventana con grilla local
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=' + encodeURIComponent(acta);
-    form.target = '_blank';
-    form.style.display = 'none';
-    const inp = document.createElement('input');
-    inp.name = 'acta'; inp.value = acta;
-    form.appendChild(inp);
-    document.body.appendChild(form);
-    const win = window.open('', '_blank');
-    if (win) {
-      try { form.submit(); } catch(e){ win.location.href = 'https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=' + encodeURIComponent(acta); }
+    // El portal no acepta GET ?acta= para mostrar la fila, hay que POST a GrillaMarcasPuntual.
+    // Como no podemos POST cross-origin y que el portal renderice, abrimos nuestra grilla local que SÍ tiene todo (Image 2) y dejamos el link directo como fallback.
+    // Si el usuario quiere verlo tal cual en el portal, le mostramos cómo buscar: MARCAS > CONSULTAS > CONSULTAS DE MARCAS > NRO ACTA
+    const w = window.open('', '_blank');
+    if (w) {
+      w.document.write(`<!doctype html><html><head><title>Grilla INPI - Acta ${UI.escapeHtml(acta)}</title><meta charset="utf-8"><style>body{font-family:system-ui, sans-serif; padding:20px;}</style></head><body><h3>Acta ${UI.escapeHtml(acta)} — Grilla INPI</h3><p>El portal del INPI no permite link directo a la fila. Usá: <b>MARCAS → CONSULTAS → CONSULTAS DE MARCAS → N° ACTA → ${UI.escapeHtml(acta)} → BUSCAR</b> para ver la grilla completa como en la Image 2.</p><p>O mirá la grilla completa acá mismo en el modal (ya la tenés). Para ir al portal:</p><p><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank">Abrir Grilla INPI (vacía, luego buscá el acta)</a> | <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank">Abrir Resultado (protección)</a></p><p style="font-size:0.8rem; color:#666;">Tip: nuestra grilla local ya es idéntica a la del portal (vía WS GrillaMarcasPuntual).</p></body></html>`);
+      w.document.close();
     } else {
       window.open('https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla', '_blank');
     }
-    setTimeout(()=>{ try{ document.body.removeChild(form); }catch{} }, 2000);
-    UI.toast('Abriendo grilla INPI en nueva pestaña — si ves solo protección, usá la grilla de arriba que ya tiene todo (Image 2)', 'info');
+    UI.toast('Grilla local ya tiene todo (Image 2) — el portal no permite link directo a la fila', 'info');
   }
   return { abrir, abrirEnINPI };
 })();
