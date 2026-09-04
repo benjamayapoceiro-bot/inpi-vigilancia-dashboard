@@ -7,10 +7,30 @@
 
 const API = (() => {
     const cfg = () => window.APP_CONFIG.supabase;
-    const headers = () => ({
-        apikey: cfg().anonKey,
-        Authorization: `Bearer ${cfg().anonKey}`
-    });
+    const getAuthToken = () => {
+        try {
+            const raw = localStorage.getItem('sb-oomczohvjqycpuhhmotv-auth-token');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed.access_token) return parsed.access_token;
+            }
+        } catch {}
+        try {
+            const raw2 = localStorage.getItem('supabase.auth.token');
+            if (raw2) {
+                const p = JSON.parse(raw2);
+                if (p.currentSession?.access_token) return p.currentSession.access_token;
+            }
+        } catch {}
+        return null;
+    };
+    const headers = () => {
+        const token = getAuthToken();
+        return {
+            apikey: cfg().anonKey,
+            Authorization: `Bearer ${token || cfg().anonKey}`
+        };
+    };
     const jsonHeaders = () => ({
         ...headers(),
         'Content-Type': 'application/json',
