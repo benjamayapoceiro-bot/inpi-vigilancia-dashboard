@@ -228,6 +228,24 @@ const Cartera = (() => {
             document.getElementById('f-tipo').value = tipo;
             const campoLogo = document.getElementById('campo-logo');
             if (campoLogo) campoLogo.style.display = (tipo === 'M' || tipo === 'F') ? 'block' : 'none';
+            // Logo para Mixta/Figurativa: si INPI trae logo_url, mostrar preview y guardar como pendiente
+            const logoUrl = data.logo_url || g.logo_url || g.Logo || null;
+            const logoOk = logoUrl && !logoUrl.includes('logon.png') && !logoUrl.includes('assets/img/logon');
+            if ((tipo === 'M' || tipo === 'F') && logoOk) {
+                let preview = document.getElementById('f-logo-preview');
+                if (!preview) {
+                    preview = document.createElement('div');
+                    preview.id = 'f-logo-preview';
+                    preview.style.cssText = 'margin-top:8px;';
+                    document.getElementById('campo-logo')?.appendChild(preview);
+                }
+                preview.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary);">Logo INPI:</div><img src="${logoUrl}" style="max-width:120px; max-height:120px; border:1px solid var(--border); border-radius:6px; margin-top:4px; background:#fff; padding:4px;" onerror="this.style.display='none'"><div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:2px;">Se guardará al agregar (si querés cambiarlo, elegí otro archivo)</div>`;
+                // Guardar para enviar al crear: fetch y convertir a base64 en addMarca si no hay archivo elegido
+                window._logoFromInpi = logoUrl;
+            } else if (tipo === 'M' || tipo === 'F') {
+                const p = document.getElementById('f-logo-preview');
+                if (p) p.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary);">Sin logo en INPI para esta acta — subí el archivo si es Mixta/Figurativa</div>`;
+            }
             document.getElementById('f-estado').value = estado;
             if (titular) document.getElementById('f-cliente').value = titular.split('100%')[0].replace(/^\d+\s+/,'').trim().slice(0,60);
             document.getElementById('f-notas').value = `Titular INPI: ${titular} — Acta ${acta} — importado ${new Date().toLocaleDateString('es-AR')}`;
@@ -247,6 +265,9 @@ const Cartera = (() => {
         document.getElementById('btn-cancelar-edicion').style.display = 'none';
         const campoLogo = document.getElementById('campo-logo');
         if (campoLogo) campoLogo.style.display = 'none';
+        const p = document.getElementById('f-logo-preview');
+        if (p) p.remove();
+        window._logoFromInpi = null;
         const status = document.getElementById('acta-status');
         if (status) status.style.display = 'none';
     }
@@ -297,6 +318,17 @@ const Cartera = (() => {
         try {
             if ((tipo === 'M' || tipo === 'F') && logoFile) {
                 body.logo_pendiente = await UI.fileToBase64(logoFile);
+            } else if ((tipo === 'M' || tipo === 'F') && window._logoFromInpi && !logoFile) {
+                try {
+                    const resp = await fetch(window._logoFromInpi);
+                    const blob = await resp.blob();
+                    body.logo_pendiente = await new Promise((res, rej) => {
+                        const r = new FileReader();
+                        r.onload = () => res(r.result);
+                        r.onerror = rej;
+                        r.readAsDataURL(blob);
+                    });
+                } catch {}
             }
             if (tipo === 'F' && !body.nombre) {
                 body.nombre = null;
