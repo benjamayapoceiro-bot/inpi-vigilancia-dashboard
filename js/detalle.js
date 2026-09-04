@@ -141,7 +141,7 @@ const Detalle = (() => {
               <tr><th style="text-align:left; background:var(--bg-main);">Presentación</th><td>${UI.escapeHtml(d.presentacion || '—')}</td></tr>
               <tr><th style="text-align:left; background:var(--bg-main);">Domicilio Legal / Real</th><td>${UI.escapeHtml(d.domicilio_legal || '—')} ${d.domicilio_real ? `<br><span style="font-size:0.75rem; color:var(--text-tertiary);">Real: ${UI.escapeHtml(d.domicilio_real)}</span>` : ''}</td></tr>
               <tr><th style="text-align:left; background:var(--bg-main);">CUIT / DNI</th><td>${UI.escapeHtml(d.cuit || '—')} ${d.dni ? ` · DNI ${UI.escapeHtml(d.dni)}` : ''}</td></tr>
-              <tr><th style="text-align:left; background:var(--bg-main);">Acta / Expediente</th><td class="mono">${UI.escapeHtml(d.acta)}${d.expediente_url ? ` · <a href="${d.expediente_url}" target="_blank" style="text-decoration:underline;">Ver en INPI ↗</a>` : ''}</td></tr>
+              <tr><th style="text-align:left; background:var(--bg-main);">Acta / Expediente</th><td class="mono">${UI.escapeHtml(d.acta)}${d.expediente_url ? ` · <button class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:2px 6px;" onclick="Detalle.irAInpi('${d.acta}')">Ver en INPI ↗</button>` : ''}</td></tr>
             </tbody>
           </table>
           <div style="background:#0f3a5f; color:#fff; padding:6px 10px; font-weight:600; font-size:0.75rem; margin-top:14px; border-radius:6px 6px 0 0;">PROTECCION</div>
@@ -152,13 +152,26 @@ const Detalle = (() => {
           </div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn--secondary btn--sm" onclick="Detalle.abrirEnINPI('${d.acta}', '${UI.escapeHtml(d.denominacion|| (g?g.denominacion:''))}')">Abrir grilla completa en INPI ↗</button>
-            <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(d.acta)}" target="_blank" class="btn btn--ghost btn--sm">Ver protección INPI ↗</a>
+            <button class="btn btn--ghost btn--sm" onclick="Detalle.irAInpi('${d.acta}')">Ver protección INPI ↗</button>
             <button class="btn btn--ghost btn--sm" onclick="navigator.clipboard.writeText('${d.acta}');UI.toast('Acta copiada','success')">Copiar acta</button>
           </div>
           <div style="margin-top:8px;font-size:0.7rem;color:var(--text-tertiary);">Persistido: ${d.fetched_at ? new Date(d.fetched_at).toLocaleString('es-AR') : '—'} · Fuente: ${UI.escapeHtml(d.fuente || 'portaltramites.inpi.gob.ar + WS INPI')} · Cache 30 días en Supabase</div>
         </div>
       </div>
     `;
+  }
+  function irAInpi(acta) {
+    const f = document.createElement('form');
+    f.method = 'POST';
+    f.action = 'https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado';
+    f.target = '_blank';
+    f.style.display = 'none';
+    const i = document.createElement('input');
+    i.name = 'acta'; i.value = acta;
+    f.appendChild(i);
+    document.body.appendChild(f);
+    f.submit();
+    setTimeout(()=>{ try{ document.body.removeChild(f); }catch{} }, 1500);
   }
   function abrirEnINPI(acta, denominacion) {
     const directUrl = `${window.location.origin}${window.location.pathname}?acta=${encodeURIComponent(acta)}`;
@@ -167,5 +180,5 @@ const Detalle = (() => {
     navigator.clipboard.writeText(directUrl).catch(()=>{});
     UI.toast(`Link directo copiado: ${directUrl} — abre la ficha completa con grilla (Image 2) + protección`, 'success');
   }
-  return { abrir, abrirEnINPI };
+  return { abrir, abrirEnINPI, irAInpi };
 })();
