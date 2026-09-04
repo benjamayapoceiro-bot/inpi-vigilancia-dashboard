@@ -59,6 +59,20 @@ const App = (() => {
     }
 
     function navigate(viewName) {
+        const sb = (typeof Auth !== 'undefined' && Auth.sb) ? Auth.sb() : window._sb;
+        const isLogged = !!sb;
+        // Traba real: si no hay sesión, solo login es accesible
+        let hasSession = false;
+        try { hasSession = !!sb?.auth?.getSession; } catch {}
+        // Chequeo sincrónico rápido: si no hay sb o no hay session, bloquea
+        if (viewName !== 'login') {
+            const token = localStorage.getItem('sb-oomczohvjqycpuhhmotv-auth-token') || sessionStorage.getItem('sb-oomczohvjqycpuhhmotv-auth-token');
+            const hasToken = !!token;
+            if (!hasToken) {
+                viewName = 'login';
+                if (typeof Auth !== 'undefined') setTimeout(()=> Auth.renderLogin('view-login'), 50);
+            }
+        }
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.view === viewName);
         });
@@ -167,7 +181,17 @@ const App = (() => {
         initSupabase();
         const logged = await initAuth();
         const banner = document.getElementById('banner-auth-warning');
-        if (banner) banner.style.display = logged ? 'none' : 'block';
+        const appShell = document.querySelector('.app-shell');
+        const sidebar = document.querySelector('.sidebar');
+        if (!logged) {
+            if (banner) { banner.style.display = 'block'; banner.textContent = '🔒 Sesión requerida — iniciá sesión para ver tu cartera, alertas y plazos. Nadie sin login ve nada.'; banner.style.background = '#fee2e2'; banner.style.borderColor = '#fecaca'; }
+            if (appShell) appShell.style.filter = 'blur(6px)';
+            if (sidebar) sidebar.style.pointerEvents = 'none';
+        } else {
+            if (banner) banner.style.display = 'none';
+            if (appShell) appShell.style.filter = 'none';
+            if (sidebar) sidebar.style.pointerEvents = 'auto';
+        }
         const params = new URLSearchParams(window.location.search);
         const actaParam = params.get('acta') || window.location.hash.replace('#acta=','');
         if (actaParam && /^\d+$/.test(actaParam)) {

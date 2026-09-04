@@ -121,11 +121,9 @@ const Admin = (() => {
     const out = document.getElementById('adm-boveda-result');
     if (!estudio_id || !cuit || !clave) { UI.toast('Faltan CUIT/clave','error'); return; }
     try {
-      // cifrado simple base64 con pgp_sym_encrypt en backend sería ideal; por ahora guardamos con encode (service_role)
-      const encrypted = btoa(clave); // placeholder, edge lo cifraría con Vault
-      await API.request('/rest/v1/credenciales_inpi', { method:'POST', headers:{Prefer:'resolution=merge-duplicates'}, body: JSON.stringify({ estudio_id, cuit, clave_encrypted: encrypted }) });
-      out.innerHTML = `<span style="color:var(--success)">✓ Bóveda guardada para estudio (cifrada)</span>`;
-      UI.toast('Bóveda guardada','success');
+      const res = await API.request('/rest/v1/rpc/guardar_credencial', { method:'POST', body: JSON.stringify({ p_estudio: estudio_id, p_cuit: cuit, p_clave: clave }) });
+      out.innerHTML = `<span style="color:var(--success)">✓ Bóveda guardada con pgp_sym_encrypt (solo dueño+admin pueden leer)</span>`;
+      UI.toast('Bóveda guardada (cifrada real)','success');
     } catch(e){ out.innerHTML = `<span style="color:var(--danger)">✗ ${UI.escapeHtml(e.message)}</span>`; }
   }
   function mostrarLogin(){ if (typeof Auth !== 'undefined' && Auth.renderLogin) { App.navigate('login'); Auth.renderLogin('view-login'); } else { window.location.hash = '#login'; } }
