@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>INPI Grilla — Acta</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:system-ui, sans-serif; margin:0; padding:20px; background:#f8fafc; color:#1e293b;}
+.card{background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:16px; max-width:960px; margin:0 auto; box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+h1{font-size:1.25rem; margin:0 0 8px; color:#0f3a5f;}
+table{width:100%; border-collapse:collapse; font-size:0.8125rem; margin-top:12px;}
+th,td{border:1px solid #0f3a5f; padding:8px; text-align:left;}
+th{background:#0f3a5f; color:#fff; font-size:0.7rem;}
+.badge{display:inline-block; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:600;}
+.badge--primary{background:#0f3a5f; color:#fff;}
+.badge--success{background:#16a34a; color:#fff;}
+</style>
+</head>
+<body>
+<div class="card" id="app">Cargando acta...</div>
+<script>
+const params = new URLSearchParams(location.search);
+const acta = params.get('acta');
+const app = document.getElementById('app');
+if (!acta || !/^\d+$/.test(acta)) {
+  app.innerHTML = '<p>Acta no válida. Usá ?acta=4675975</p>';
+} else {
+  app.innerHTML = `<h1>Grilla INPI — Acta ${acta}</h1><p>Buscando en INPI (GrillaMarcasPuntual + Resultado)...</p>`;
+  // Usa el mismo WS que el dashboard: intenta primero GrillaMarcasPuntual, luego Resultado
+  Promise.all([
+    fetch('https://portaltramites.inpi.gob.ar/MarcasConsultas/GrillaMarcasPuntual', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`search=&sort=&order=asc&offset=0&limit=10&acta=${encodeURIComponent(acta)}`}).then(r=>r.json()).catch(()=>null),
+    fetch(`https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}`).then(r=>r.text()).catch(()=>null)
+  ]).then(async ([grillaJson, html]) => {
+    let grilla = null;
+    if (grillaJson && grillaJson.rows && grillaJson.rows[0]) grilla = grillaJson.rows[0];
+    // Fallback al WS de supabase si el directo falla por CORS
+    if (!grilla) {
+      try {
+        const cfg = { url: 'https://oomczohvjqycpuhhmotv.supabase.co', anon: 'sb_publishable_OwKVJX834gmqXdjT8o3DGg_Tdz5YZpa' };
+        const r = await fetch(cfg.url + '/functions/v1/inpi-consulta', {method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anon}, body: JSON.stringify({tipo:'denominacion', valor: acta})});
+        const j = await r.json();
+        if (j.ok && j.resultados && j.resultados[0]) grilla = j.resultados[0];
+      } catch {}
+    }
+    if (!grilla) {
+      // Intenta con supabase inpi-detalle
+      try {
+        const r = await fetch('https://oomczohvjqycpuhhmotv.supabase.co/functions/v1/inpi-detalle', {method:'POST', headers:{'Content-Type':'application/json', apikey: 'sb_publishable_OwKVJX834gmqXdjT8o3DGg_Tdz5YZpa'}, body: JSON.stringify({acta})});
+        const j = await r.json();
+        if (j.ok && j.data && j.data.grilla) grilla = j.data.grilla;
+        else if (j.ok && j.data) grilla = j.data;
+      } catch {}
+    }
+    if (!grilla) {
+      app.innerHTML += `<p style="color:#dc2626;">No se pudo cargar la grilla para acta ${acta}. <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank">Abrir Grilla INPI y buscar manualmente</a> con N° ACTA ${acta}.</p>`;
+      return;
+    }
+    const fecha = grilla.Fecha_Ingreso ? new Date(parseInt(String(grilla.Fecha_Ingreso).replace(/\D/g,''))).toLocaleDateString('es-AR') : (grilla.fecha_ingreso ? new Date(grilla.fecha_ingreso).toLocaleDateString('es-AR') : '—');
+    const estado = grilla.Estado || grilla.estado || '—';
+    const venc = grilla.Fecha_Vencimiento ? new Date(parseInt(String(grilla.Fecha_Vencimiento).replace(/\D/g,''))).toLocaleDateString('es-AR') : '—';
+    app.innerHTML = `
+      <h1>Resultado de Acta ${grilla.Acta || acta} — Grilla INPI</h1>
+      <table><thead><tr><th>NRO ACTA</th><th>TITULARES ASIGNADOS</th><th>FECHA INGRESO</th><th>CLASE</th><th>DENOMINACION</th><th>TIPO DE MARCA</th><th>NRO RESOLUCION</th><th>ESTADO</th><th>VENCIMIENTO</th></tr></thead>
+      <tbody><tr><td>${grilla.Acta||acta}</td><td>${grilla.Titulares||grilla.titulares||'—'}</td><td>${fecha}</td><td><span class="badge badge--primary">${grilla.Clase||grilla.clase||'—'}</span></td><td><b>${grilla.Denominacion||grilla.denominacion||'—'}</b></td><td>${grilla.Tipo_Marca||grilla.tipo_marca||'—'}</td><td>${grilla.Numero_Resolucion||grilla.numero_resolucion||'—'}</td><td><span class="badge badge--success">${estado}</span></td><td>${venc}</td></tr></tbody></table>
+      <p style="margin-top:12px; font-size:0.8rem;"><a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}" target="_blank">Ver protección INPI (Resultado) ↗</a> · <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla" target="_blank">Grilla INPI (vacía, luego buscá)</a></p>
+      <p style="font-size:0.7rem; color:#64748b;">Fuente: portaltramites.inpi.gob.ar/MarcasConsultas/GrillaMarcasPuntual (POST acta) + WS INPI</p>
+    `;
+  });
+}
+</script>
+</body>
+</html>

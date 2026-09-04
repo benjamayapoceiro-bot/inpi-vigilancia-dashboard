@@ -6,7 +6,7 @@
 
 const INPI_ESTADO_MAP = { C: 'Concedida', R: 'Registrada', T: 'En trámite', D: 'Denegada', V: 'Vencida', A: 'Abandonada', O: 'En oposición', P: 'Publicada', S: 'Solicitada', E: 'En estudio' };
 function inpiEstadoLabel(cod) { if (!cod) return '—'; return INPI_ESTADO_MAP[String(cod).trim().toUpperCase()] || String(cod).trim(); }
-function inpiLink(acta) { return acta ? `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(acta)}` : '#'; }
+function inpiLink(acta) { return acta ? `inpi-grilla.html?acta=${encodeURIComponent(acta)}` : '#'; }
 
 function calcularSimilitudJS(a, b) {
   if (!a || !b) return 0;

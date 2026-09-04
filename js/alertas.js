@@ -66,7 +66,7 @@ const Alertas = (() => {
         const reviewed = a.revisada ? 'checked' : '';
         const opPresentada = a.oposicion_presentada ? 'checked' : '';
         const necesitaOposicion = a.requiere_oposicion || hasDraft;
-        const enlace = a.enlace_inpi || `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${a.acta_nueva}`;
+        const enlace = a.enlace_inpi || `inpi-grilla.html?acta=${a.acta_nueva}`;
 
         return `
           <tr class="${a.revisada ? 'row-reviewed' : ''}">
@@ -89,7 +89,7 @@ const Alertas = (() => {
                 <div style="margin-top:8px; font-size:0.75rem; color:var(--text-secondary); background: rgba(0,0,0,0.02); padding: 4px; border-radius: 4px;">
                   ⚠️ Conflicto con nuestra marca:<br>
                   <strong>${UI.escapeHtml(a.marcas_vigiladas.nombre)}</strong>
-                  ${a.marcas_vigiladas.numero_acta ? `<br><button class="btn btn--ghost btn--sm" style="font-size:0.7rem; padding:2px 6px;" onclick="Detalle.abrir('${a.marcas_vigiladas.numero_acta}')">Ver Acta ${UI.escapeHtml(a.marcas_vigiladas.numero_acta)} 👁️</button> <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(a.marcas_vigiladas.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline;">INPI ↗</a>` : ''}
+                  ${a.marcas_vigiladas.numero_acta ? `<br><button class="btn btn--ghost btn--sm" style="font-size:0.7rem; padding:2px 6px;" onclick="Detalle.abrir('${a.marcas_vigiladas.numero_acta}')">Ver Acta ${UI.escapeHtml(a.marcas_vigiladas.numero_acta)} 👁️</button> <a href="inpi-grilla.html?acta=${encodeURIComponent(a.marcas_vigiladas.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline;">INPI ↗</a>` : ''}
                 </div>
               ` : ''}
             </td>

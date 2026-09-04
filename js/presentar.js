@@ -87,7 +87,7 @@ const Presentar = (() => {
         const resp=await fetch(`${cfg.url}/functions/v1/inpi-presentar`,{method:'POST', headers:{'Content-Type':'application/json', apikey:cfg.anonKey, Authorization: `Bearer ${token}`}, body:JSON.stringify({denominacion:val('p-denominacion'), clase:parseInt(val('p-clase')), titular:val('p-titular'), cuit:val('p-cuit'), email:val('p-email'), domicilio:val('p-dom'), localidad:val('p-loc'), observaciones:val('p-obs'), tipo:val('p-tipo'), cuitInpi:val('p-cuit-inpi'), claveInpi:val('p-clave-inpi'), logoBase64:logoB64, poderBase64: poderList[0]?.base64 || null, poderNombre: poderList[0]?.nombre || null, docs: docsList})});
         const data=await resp.json();
         const out=document.getElementById('p-result');
-        if(data.ok){ out.innerHTML=`<span style="color:var(--success)">✓ Presentada: Acta ${UI.escapeHtml(data.acta||'—')} — <a href="https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(data.acta)}" target="_blank" style="text-decoration:underline;">Ver en INPI ↗</a></span>`; UI.toast('Marca presentada','success'); }
+        if(data.ok){ out.innerHTML=`<span style="color:var(--success)">✓ Presentada: Acta ${UI.escapeHtml(data.acta||'—')} — <a href="inpi-grilla.html?acta=${encodeURIComponent(data.acta)}" target="_blank" style="text-decoration:underline;">Ver en INPI ↗</a></span>`; UI.toast('Marca presentada','success'); }
         else{ out.innerHTML=`<span style="color:var(--danger)">✗ Error: ${UI.escapeHtml(data.error||'desconocido')}</span>`; UI.toast('Error presentando','error'); }
       } catch(e){ UI.toast('Error: '+e.message,'error'); } finally{ const b=document.getElementById('p-enviar-directo'); if(b){b.disabled=false; b.textContent='📨 Enviar directo al INPI';} }
     });
