@@ -381,6 +381,14 @@ const Busqueda = (() => {
                     document.getElementById('filtro-inpi-estado')?.addEventListener('change', renderInpiFiltrada);
                     document.getElementById('filtro-inpi-clase')?.addEventListener('change', renderInpiFiltrada);
                     renderInpiFiltrada();
+                    // Paginación: si el WS dice que hay más, mostrar Cargar más (portal tiene más que 19)
+                    const totalReal = data.total || ultimaBusquedaInpi.length;
+                    if (totalReal > ultimaBusquedaInpi.length) {
+                        const moreDiv = document.createElement('div');
+                        moreDiv.style.cssText = 'margin-top:10px; text-align:center;';
+                        moreDiv.innerHTML = `<div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:6px;">Mostrando ${ultimaBusquedaInpi.length} de ${totalReal} — el INPI tiene más (paginado). Para ver todas, buscá directo en el portal con "${UI.escapeHtml(marca)}".</div><button class="btn btn--secondary btn--sm" onclick="window.open('https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla','_blank')">Ver resto en INPI ↗</button>`;
+                        panel.appendChild(moreDiv);
+                    }
                 }
             }
             UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI (ordenadas por parecido)`, 'success');
