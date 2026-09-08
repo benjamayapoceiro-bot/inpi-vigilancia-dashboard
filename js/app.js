@@ -179,11 +179,13 @@ const App = (() => {
         applyConfig();
         initDarkMode();
         initSupabase();
-        const logged = await initAuth();
+        const isDemo = new URLSearchParams(window.location.search).has('demo');
+        let logged = await initAuth();
+        if (isDemo) logged = true;
         const banner = document.getElementById('banner-auth-warning');
         const navLogin = document.getElementById('nav-login');
         const navAdmin = document.getElementById('nav-admin');
-        // No bloqueamos el sidebar, solo mostramos/ocultamos navs según sesión
+        // No bloqueamos el sidebar, solo mostramos/ocultamos navs según sesión (demo bypass)
         if (!logged) {
             if (banner) { banner.style.display = 'block'; banner.textContent = '🔒 Sesión requerida — iniciá sesión para ver tu cartera, alertas y plazos. Nadie sin login ve nada.'; banner.style.background = '#fee2e2'; banner.style.borderColor = '#fecaca'; }
             if (navLogin) navLogin.style.display = 'flex';
