@@ -35,13 +35,14 @@ const Admin = (() => {
       <div class="card" style="margin-bottom:20px;">
         <h3 style="margin-bottom:8px;">Crear usuario para estudio</h3>
         <div class="form-alta" style="grid-template-columns: 1fr 1fr 1fr 100px;">
-          <div class="form-group"><label class="form-label">Email usuario *</label><input class="form-input" id="adm-user-email" placeholder="abogado@estudio.com"></div>
+          <div class="form-group"><label class="form-label">Email o usuario *</label><input class="form-input" id="adm-user-email" placeholder="abogado@estudio.com o demo123"></div>
           <div class="form-group"><label class="form-label">Contraseña *</label><input type="password" class="form-input" id="adm-user-pass" placeholder="mín 6 caracteres"></div>
           <div class="form-group"><label class="form-label">Estudio *</label><select class="form-select" id="adm-user-estudio">${estudios.map(e=>`<option value="${e.id}">${UI.escapeHtml(e.nombre)} (${e.limite_marcas} marcas)</option>`).join('')}</select></div>
           <div class="form-group"><label class="form-label">Límite override</label><input type="number" class="form-input" id="adm-user-limite" placeholder="opcional"></div>
         </div>
-        <div style="margin-top:12px;"><button class="btn btn--primary" id="adm-btn-crear-user">＋ Crear usuario</button></div>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn--primary" id="adm-btn-crear-user">＋ Crear usuario</button><button class="btn btn--secondary" id="adm-btn-crear-demo">✨ Crear demo (sin correo, 1 marca)</button></div>
         <div id="adm-user-result" style="margin-top:10px; font-size:0.8125rem;"></div>
+        <div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:6px;">Tip: para demo con correo de mentira usá demo@demo.test — si ponés solo usuario (ej. demo1) se crea demo@demo.fons.legal automáticamente.</div>
       </div>
       <div class="card">
         <h3>Estudios existentes — click para editar plan/funciones (${estudios.length})</h3>
@@ -72,6 +73,7 @@ const Admin = (() => {
     `;
     document.getElementById('adm-btn-crear-estudio')?.addEventListener('click', crearEstudio);
     document.getElementById('adm-btn-crear-user')?.addEventListener('click', crearUsuario);
+    document.getElementById('adm-btn-crear-demo')?.addEventListener('click', crearDemo);
     document.getElementById('adm-btn-guardar-boveda')?.addEventListener('click', guardarBoveda);
     } catch(e){
       view.innerHTML = `<div class="card" style="text-align:center; padding:30px;"><h3>Error cargando Admin</h3><p style="color:var(--danger); font-size:0.8125rem;">${UI.escapeHtml(e.message)}</p><pre style="text-align:left; font-size:0.7rem; background:var(--bg-main); padding:8px; border-radius:6px; overflow:auto;">${UI.escapeHtml(e.stack||'')}</pre></div>`;
@@ -104,23 +106,51 @@ const Admin = (() => {
     } catch(e){ UI.toast('Error: '+e.message,'error'); }
   }
   async function crearUsuario() {
-    const email = document.getElementById('adm-user-email')?.value.trim();
+    const raw = document.getElementById('adm-user-email')?.value.trim();
     const password = document.getElementById('adm-user-pass')?.value;
     const estudio_id = document.getElementById('adm-user-estudio')?.value;
     const limite = document.getElementById('adm-user-limite')?.value ? parseInt(document.getElementById('adm-user-limite').value) : null;
     const out = document.getElementById('adm-user-result');
-    if (!email || !password || !estudio_id) { UI.toast('Faltan campos','error'); return; }
+    if (!raw || !password || !estudio_id) { UI.toast('Faltan campos','error'); return; }
+    const isEmail = raw.includes('@');
+    const email = isEmail ? raw : null;
+    const username = isEmail ? null : raw;
     out.textContent = 'Creando...';
     try {
       const cfg = window.APP_CONFIG.supabase;
       const token = localStorage.getItem('sb-oomczohvjqycpuhhmotv-auth-token');
       let accessToken = null;
       try { const parsed = JSON.parse(token); accessToken = parsed.access_token; } catch {}
-      const r = await fetch(`${cfg.url}/functions/v1/admin-create-user`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${accessToken || cfg.anonKey}`}, body: JSON.stringify({ email, password, estudio_id, limite_marcas: limite })});
+      const r = await fetch(`${cfg.url}/functions/v1/admin-create-user`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${accessToken || cfg.anonKey}`}, body: JSON.stringify({ email, username, password, estudio_id, limite_marcas: limite, isDemo: !isEmail })});
       const j = await r.json();
       if (!j.ok) throw new Error(j.error);
-      out.innerHTML = `<span style="color:var(--success)">✓ Usuario ${UI.escapeHtml(email)} creado (id ${j.user_id.slice(0,8)}...)</span>`;
+      out.innerHTML = `<span style="color:var(--success)">✓ Usuario ${UI.escapeHtml(raw)} creado (id ${j.user_id.slice(0,8)}...)</span>`;
       UI.toast('Usuario creado','success');
+    } catch(e){ out.innerHTML = `<span style="color:var(--danger)">✗ ${UI.escapeHtml(e.message)}</span>`; }
+  }
+  async function crearDemo() {
+    const out = document.getElementById('adm-user-result');
+    out.textContent = 'Creando demo...';
+    try {
+      const nombre = `DEMO ${new Date().toISOString().slice(0,10)} ${Math.floor(Math.random()*1000)}`;
+      const username = `demo${Date.now().toString().slice(-6)}`;
+      const password = Math.random().toString(36).slice(2,10);
+      // Crear estudio demo con 1 marca
+      const estudioRes = await API.request('/rest/v1/estudios', { method:'POST', body: JSON.stringify({ nombre, email_contacto: `${username}@demo.fons.legal`, limite_marcas: 1, plan: 'demo', puede_conectar_inpi: false, puede_presentar: false, puede_ver_alertas: true }) });
+      const estudioId = estudioRes[0].id;
+      // Crear usuario demo
+      const cfg = window.APP_CONFIG.supabase;
+      const token = localStorage.getItem('sb-oomczohvjqycpuhhmotv-auth-token');
+      let accessToken = null;
+      try { const parsed = JSON.parse(token); accessToken = parsed.access_token; } catch {}
+      const r = await fetch(`${cfg.url}/functions/v1/admin-create-user`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${accessToken || cfg.anonKey}`}, body: JSON.stringify({ username, password, estudio_id: estudioId, limite_marcas: 1, isDemo: true })});
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error);
+      // Crear una marca demo
+      await API.request('/rest/v1/marcas_vigiladas', { method:'POST', body: JSON.stringify({ nombre: 'MARCA DEMO', clase: 25, tipo: 'D', cliente: 'Cliente Demo', estado: 'Solicitada', estudio_id: estudioId }) });
+      out.innerHTML = `<span style="color:var(--success)">✓ Demo creado: estudio ${UI.escapeHtml(nombre)} (1 marca) — usuario <b>${UI.escapeHtml(username)}</b> / pass <b>${password}</b> (login con ${username}@demo.fons.legal)</span>`;
+      UI.toast('Demo creado','success');
+      render();
     } catch(e){ out.innerHTML = `<span style="color:var(--danger)">✗ ${UI.escapeHtml(e.message)}</span>`; }
   }
   async function guardarBoveda() {
