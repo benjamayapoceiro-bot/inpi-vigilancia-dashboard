@@ -462,10 +462,60 @@ const Cartera = (() => {
         }
     }
 
+    function exportarCSV() {
+        if (!cache.length) { UI.toast('No hay marcas para exportar', 'error'); return; }
+        const cols = ['nombre','clase','tipo','cliente','estado','numero_acta','fecha_vencimiento','notas'];
+        const esc = v => `"${String(v||'').replace(/"/g,'""')}"`;
+        const header = cols.join(',');
+        const rows = cache.map(m => cols.map(c => esc(m[c])).join(','));
+        const csv = [header, ...rows].join('\n');
+        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `cartera_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+        UI.toast(`Exportadas ${cache.length} marcas`, 'success');
+    }
+    async function importarCSV(file) {
+        if (!file) return;
+        const text = await file.text();
+        const lines = text.split(/\r?\n/).filter(l=>l.trim());
+        if (lines.length < 2) { UI.toast('CSV vacío', 'error'); return; }
+        const headers = lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+        const idx = {}; headers.forEach((h,i)=> idx[h]=i);
+        const required = ['nombre','clase'];
+        for (const r of required) if (!(r in idx)) { UI.toast(`Falta columna ${r}`, 'error'); return; }
+        const parseCsvLine = (line) => {
+            const out=[]; let cur='', inQ=false;
+            for(let i=0;i<line.length;i++){ const ch=line[i]; if(ch==='"'){ if(inQ && line[i+1]==='"'){cur+='"'; i++;} else inQ=!inQ; } else if(ch===',' && !inQ){ out.push(cur); cur=''; } else cur+=ch; }
+            out.push(cur); return out.map(v=>v.replace(/^"|"$/g,'').trim());
+        };
+        let ok=0, fail=0;
+        for (let i=1;i<lines.length;i++) {
+            const cols = parseCsvLine(lines[i]);
+            if (!cols.length || !cols[idx['nombre']] && !cols[idx['numero_acta']]) continue;
+            const body = {
+                nombre: cols[idx['nombre']] || null,
+                clase: parseInt(cols[idx['clase']]||'0') || null,
+                tipo: (cols[idx['tipo']]||'D').toUpperCase().slice(0,1),
+                cliente: cols[idx['cliente']] || null,
+                estado: cols[idx['estado']] || 'Solicitada',
+                numero_acta: cols[idx['numero_acta']] || null,
+                fecha_vencimiento: cols[idx['fecha_vencimiento']] || null,
+                notas: cols[idx['notas']] || null,
+            };
+            if (!body.clase || body.clase<1 || body.clase>45) { fail++; continue; }
+            try {
+                const perfil = await (async()=>{ try{ const sb=(typeof Auth!=='undefined'&&Auth.sb)?Auth.sb():null; if(!sb) return null; const {data:{user}}=await sb.auth.getUser(); if(!user) return null; const {data}=await sb.from('perfiles').select('estudio_id').eq('id', user.id).maybeSingle(); return data; }catch{ return null; }})();
+                if (perfil?.estudio_id) body.estudio_id = perfil.estudio_id;
+                await API.addMarca(body);
+                ok++;
+            } catch{ fail++; }
+        }
+        UI.toast(`Importadas ${ok} marcas${fail?`, ${fail} fallidas`:''}`, ok?'success':'error');
+        await load();
+    }
     function getCache() { return cache; }
 
     return {
-        load, render, addMarca, editMarca, cancelarEdicion, deleteMarca, getCache, buscarActa,
+        load, render, addMarca, editMarca, cancelarEdicion, deleteMarca, getCache, buscarActa, exportarCSV, importarCSV,
         filtrarPorEstado, setFiltroTexto, setFiltroEstado,
     };
 })();

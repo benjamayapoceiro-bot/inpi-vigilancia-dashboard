@@ -338,6 +338,12 @@
             </div>
           </form>
 
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+            <button class="btn btn--secondary btn--sm" id="btn-exportar-cartera">📤 Exportar cartera (CSV)</button>
+            <label class="btn btn--secondary btn--sm" for="input-importar-cartera" style="cursor:pointer;">📥 Importar cartera (CSV)</label>
+            <input type="file" id="input-importar-cartera" accept=".csv" style="display:none;">
+            <span style="font-size:0.7rem; color:var(--text-tertiary); align-self:center;">Para estudios con muchas marcas/clientes — CSV con columnas nombre,clase,tipo,cliente,estado,numero_acta,fecha_vencimiento,notas</span>
+          </div>
           <!-- Table -->
           <div class="card" style="padding: 0; overflow: hidden;">
             <table class="data-table" id="table-cartera">

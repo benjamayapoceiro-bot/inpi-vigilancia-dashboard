@@ -270,6 +270,12 @@ const App = (() => {
         document.getElementById('btn-export-alertas')?.addEventListener('click', () => {
             Export.exportAlertasCSV(Alertas.getCache());
         });
+        document.getElementById('btn-exportar-cartera')?.addEventListener('click', Cartera.exportarCSV);
+        document.getElementById('input-importar-cartera')?.addEventListener('change', e => {
+            const f = e.target.files[0];
+            if (f) Cartera.importarCSV(f);
+            e.target.value = '';
+        });
         document.getElementById('btn-export-cartera')?.addEventListener('click', () => {
             Export.exportCarteraCSV(Cartera.getCache());
         });
