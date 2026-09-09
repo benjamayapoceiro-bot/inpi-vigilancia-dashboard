@@ -149,7 +149,7 @@ const Cartera = (() => {
                 ${logoThumb}
                 <div>
                   <div class="marca-name"${notaTitle}>${UI.escapeHtml(m.nombre) || '(logo sin texto)'}</div>
-              ${m.numero_acta ? `<div style="margin-top:6px;"><button class="btn btn--sm btn--primary" onclick="Detalle.abrir('${m.numero_acta}')" style="padding:2px 6px;">Ver grilla 👁️</button> <a href="inpi-grilla.html?acta=${encodeURIComponent(m.numero_acta)}" target="_blank" style="font-size:0.7rem; text-decoration:underline; margin-left:4px;">INPI ↗</a> <span style="font-size:0.75rem; color:var(--text-tertiary);">Acta ${UI.escapeHtml(m.numero_acta)}</span></div>` : ''}
+              ${m.numero_acta ? `<div style="margin-top:6px; display:flex; gap:4px; flex-wrap:wrap; align-items:center;"><button class="btn btn--sm btn--primary" onclick="Detalle.abrir('${m.numero_acta}')" style="padding:4px 8px; font-weight:600;">🔍 Ver en INPI</button><button class="btn btn--sm btn--secondary" onclick="Detalle.irAInpi('${m.numero_acta}')" style="padding:4px 8px;">INPI ↗</button><span style="font-size:0.7rem; color:var(--text-tertiary);">Acta ${UI.escapeHtml(m.numero_acta)}</span></div>` : `<div style="margin-top:6px;"><button class="btn btn--sm btn--secondary" onclick="if(confirm('Buscar \\'${m.nombre||''}\\' en INPI?')) window.open('https://portaltramites.inpi.gob.ar/MarcasConsultas/Grilla','_blank')" style="padding:2px 6px; font-size:0.7rem;">Buscar en INPI</button></div>`}
                 </div>
               </div>
             </td>

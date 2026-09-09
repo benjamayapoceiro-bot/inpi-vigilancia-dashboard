@@ -8,18 +8,25 @@ const INPI_ESTADO_MAP = { C: 'Concedida', R: 'Registrada', T: 'En trámite', D: 
 function inpiEstadoLabel(cod) { if (!cod) return '—'; return INPI_ESTADO_MAP[String(cod).trim().toUpperCase()] || String(cod).trim(); }
 function inpiLink(acta) { return acta ? `inpi-grilla.html?acta=${encodeURIComponent(acta)}` : '#'; }
 
+function normalizarFoneticoJS(s){
+  s = String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const reps = [["QU","K"],["CU","K"],["C","K"],["Z","S"],["V","B"],["LL","Y"],["H",""],["Ñ","N"],["PH","F"],["W","V"]];
+  for(const [a,b] of reps) s = s.split(a).join(b);
+  s = s.replace(/(.)\1+/g,'$1').replace(/[^A-Z]/g,'');
+  return s;
+}
 function calcularSimilitudJS(a, b) {
   if (!a || !b) return 0;
   const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
   const ca = norm(a), cb = norm(b);
   if (!ca || !cb) return 0;
   if (ca === cb) return 1;
-  // Contención: si uno contiene al otro, bonus
+  const fa = normalizarFoneticoJS(a), fb = normalizarFoneticoJS(b);
+  if (fa === fb) return 0.92;
   if (ca.includes(cb) || cb.includes(ca)) {
     const longer = Math.max(ca.length, cb.length), shorter = Math.min(ca.length, cb.length);
     return Math.min(0.99, 0.72 + 0.2 * (shorter/longer));
   }
-  // Levenshtein simplificado via difflib-like: ratio de caracteres comunes
   const lev = (s,t) => {
     const m=s.length, n=t.length, d=Array.from({length:m+1},()=>Array(n+1).fill(0));
     for(let i=0;i<=m;i++) d[i][0]=i; for(let j=0;j<=n;j++) d[0][j]=j;
@@ -28,7 +35,9 @@ function calcularSimilitudJS(a, b) {
   };
   const dist = lev(ca, cb);
   const maxLen = Math.max(ca.length, cb.length);
-  return Math.max(0, 1 - dist / maxLen);
+  let score = Math.max(0, 1 - dist / maxLen);
+  if (fa.slice(0,3) === fb.slice(0,3)) score = Math.min(0.89, score + 0.08);
+  return score;
 }
 const Busqueda = (() => {
     let resultados = [];
