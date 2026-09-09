@@ -138,6 +138,10 @@
           <span class="nav-item__icon">🗂️</span>
           Todas las carteras
         </button>
+        <button class="nav-item" data-view="calendario" id="nav-calendario">
+          <span class="nav-item__icon">📅</span>
+          Calendario
+        </button>
         <button class="nav-item" data-view="login" id="nav-login">
           <span class="nav-item__icon">🔐</span>
           Ingresar
@@ -408,6 +412,36 @@
           </div>
         </div>
 
+        <!-- ═══ VIEW: CALENDARIO ═══ -->
+        <div class="view" id="view-calendario">
+          <div class="card">
+            <h3>Calendario — plazos y eventos</h3>
+            <p style="font-size:0.8125rem; color:var(--text-tertiary); margin-top:4px;">Plazos legales automáticos (vencimientos, renovaciones, contestaciones) + eventos manuales que creás vos. Todo filtrado por tu estudio.</p>
+            <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <button class="btn btn--primary btn--sm" id="btn-nuevo-evento">＋ Nuevo evento</button>
+              <span id="calendario-count" style="font-size:0.8125rem; color:var(--text-tertiary);"></span>
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px; min-height:400px;">
+            <div id="calendar"></div>
+            <div id="calendar-list" style="margin-top:12px;"></div>
+          </div>
+          <div id="calendario-form" style="display:none; margin-top:12px;" class="card">
+            <h4>Nuevo evento manual</h4>
+            <div class="form-alta" style="grid-template-columns: 1fr 1fr;">
+              <div class="form-group"><label class="form-label">Título *</label><input class="form-input" id="calendario-titulo" placeholder="Reunión con cliente"></div>
+              <div class="form-group"><label class="form-label">Fecha *</label><input type="date" class="form-input" id="calendario-fecha"></div>
+              <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="calendario-tipo"><option value="reunión">Reunión</option><option value="vencimiento">Vencimiento</option><option value="presentación">Presentación</option><option value="otro">Otro</option></select></div>
+              <div class="form-group"><label class="form-label">Marca/Cliente (opcional)</label><input class="form-input" id="calendario-marca" placeholder="ID de marca o cliente"></div>
+              <div class="form-group" style="grid-column:1 / -1;"><label class="form-label">Notas</label><input class="form-input" id="calendario-notas" placeholder="Detalles"></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:10px; justify-content:flex-end;">
+              <button class="btn btn--secondary btn--sm" id="btn-cancelar-evento">Cancelar</button>
+              <button class="btn btn--primary btn--sm" id="btn-guardar-evento">Guardar</button>
+            </div>
+          </div>
+        </div>
+
         <!-- ═══ VIEW: CRM ═══ -->
         <div class="view" id="view-crm">
           <div style="display:flex; gap: var(--space-sm); margin-bottom: var(--space-lg); flex-wrap: wrap; align-items:center; justify-content: space-between;">
@@ -459,6 +493,7 @@
   <script src="js/admin.js?v=20260913"></script>
   <script src="js/carteras-admin.js?v=20260913"></script>
   <script src="js/tour.js?v=20260913"></script>
+  <script src="js/calendario.js?v=20260913"></script>
   <script src="js/app.js?v=20260913"></script>
 </body>
 </html>

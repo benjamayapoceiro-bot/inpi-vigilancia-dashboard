@@ -294,25 +294,55 @@ const Busqueda = (() => {
         const panel = document.getElementById('bq-inpi-vivo-resultado');
         if (btn) { btn.disabled = true; btn.textContent = 'Consultando...'; }
 
+        function variantesFoneticas(q) {
+            const base = String(q||'').trim();
+            if (!base) return [base];
+            const vars = new Set([base]);
+            const lower = base.toLowerCase();
+            // S<->Z, C<->K, V<->B, Y<->LL, SH<->Y, etc. — generar 1-2 variantes simples
+            const rep = (s, a, b) => s.split(a).join(b);
+            const v1 = rep(lower, 'z', 's'); if (v1!==lower) vars.add(v1);
+            const v2 = rep(lower, 's', 'z'); if (v2!==lower) vars.add(v2);
+            const v3 = rep(lower, 'c', 'k'); if (v3!==lower) vars.add(v3);
+            const v4 = rep(lower, 'v', 'b'); if (v4!==lower) vars.add(v4);
+            const v5 = rep(lower, 'sh', 'y'); if (v5!==lower) vars.add(v5);
+            const v6 = rep(lower, 'y', 'i'); if (v6!==lower) vars.add(v6);
+            // Caso suria/zuria: si empieza con s, probar con z y viceversa
+            if (lower.startsWith('s')) vars.add('z'+lower.slice(1));
+            if (lower.startsWith('z')) vars.add('s'+lower.slice(1));
+            return Array.from(vars).slice(0,4);
+          }
         try {
             const cfg = window.APP_CONFIG.supabase;
-            const resp = await fetch(`${cfg.url}/functions/v1/inpi-consulta`, {
+            const variantes = variantesFoneticas(marca);
+            const fetches = variantes.map(v => fetch(`${cfg.url}/functions/v1/inpi-consulta`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey },
-                body: JSON.stringify({ tipo: 'denominacion', valor: marca }),
-            });
-            const data = await resp.json();
-
-            if (!data.ok) {
+                body: JSON.stringify({ tipo: 'denominacion', valor: v }),
+            }).then(r=>r.json()).catch(()=>({ok:false,resultados:[]})));
+            const datas = await Promise.all(fetches);
+            const mergedMap = new Map();
+            for (const data of datas) {
+              if (!data.ok || !Array.isArray(data.resultados)) continue;
+              for (const r of data.resultados) {
+                const key = String(r.acta);
+                if (!mergedMap.has(key)) mergedMap.set(key, r);
+              }
+            }
+            const merged = Array.from(mergedMap.values());
+            // Si variantes no aportaron nada extra, usar el primero
+            const data0 = datas[0];
+            if (!merged.length && data0 && !data0.ok) {
                 if (panel) {
                     panel.style.display = 'block';
-                    panel.innerHTML = `<strong style="color:var(--danger)">Error consultando INPI:</strong> ${UI.escapeHtml(data.error || 'desconocido')}`;
+                    panel.innerHTML = `<strong style="color:var(--danger)">Error consultando INPI:</strong> ${UI.escapeHtml(data0.error || 'desconocido')}`;
                 }
                 UI.toast('Error consultando al INPI', 'error');
                 return;
             }
+            const fuente = merged.length ? { resultados: merged, total: merged.length } : (datas[0] || { resultados: [], total: 0 });
 
-            ultimaBusquedaInpi = (data.resultados || []).map(r => {
+            ultimaBusquedaInpi = (fuente.resultados || []).map(r => {
                 const sim = calcularSimilitudJS(marca, r.denominacion || '');
                 return { ...r, _sim: sim, _simCat: sim >= 0.97 ? 'exacto' : sim >= 0.85 ? 'muy' : sim >= 0.65 ? 'medio' : 'poco' };
             }).sort((a,b)=> b._sim - a._sim);
@@ -370,7 +400,7 @@ const Busqueda = (() => {
                     const clasesOpts = Array.from({length:45},(_,i)=>String(i+1)).map(c=>`<option value="${c}">Clase ${c}</option>`).join('');
                     panel.innerHTML = `
             <div style="margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-              <strong>${data.total} coincidencia(s) en el INPI para "${UI.escapeHtml(marca)}":</strong>
+              <strong>${fuente.total} coincidencia(s) en el INPI para "${UI.escapeHtml(marca)}" (con fonética):</strong>
               <span id="inpi-filtrada-count" style="font-size:0.75rem; color:var(--text-tertiary);"></span>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:8px; background:var(--bg-main); border:1px solid var(--border); border-radius:6px;">

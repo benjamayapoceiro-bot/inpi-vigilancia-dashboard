@@ -113,6 +113,9 @@ const App = (() => {
         if (viewName === 'carteras-admin') {
             if (typeof CarterasAdmin !== 'undefined') { CarterasAdmin.init(); CarterasAdmin.load(); }
         }
+        if (viewName === 'calendario') {
+            if (typeof Calendario !== 'undefined') { Calendario.init(); Calendario.load(); }
+        }
         if (viewName === 'login') {
             Auth.renderLogin('view-login');
         }

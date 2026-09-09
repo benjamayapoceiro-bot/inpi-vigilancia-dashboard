@@ -1,15 +1,25 @@
 const Tour = (() => {
   const STORAGE_KEY = 'tour-completado';
   const pasos = [
-    { view: 'dashboard', selector: '#header-title', titulo: 'Panel de Control', texto: 'Acá ves el panorama general: cuántas alertas tenés, cuántas requieren atención y cuándo es el próximo escaneo automático del Boletín.' },
-    { view: 'alertas', selector: '#tbody-alertas', titulo: 'Alertas', texto: 'Acá aparecen las marcas nuevas del INPI parecidas a tu cartera. El color y el % te dicen el riesgo, y el borrador es solo un borrador — siempre revisalo antes de presentar nada.' },
-    { view: 'cartera', selector: '#form-alta', titulo: 'Mi Cartera', texto: 'Cargá las marcas que querés vigilar: nombre, clase, tipo, cliente y estado. Respetá el límite de tu plan.' },
-    { view: 'cartera', selector: '#table-cartera', titulo: 'Tu cartera', texto: 'Tu lista de marcas vigiladas. Podés filtrar, editar o borrar. Cada fila es una marca que el sistema cruza cada jueves.' },
-    { view: 'busqueda', selector: '#bq-marca', titulo: 'Búsqueda Previa', texto: 'Antes de registrar una marca nueva, buscá antecedentes. Te sugerimos clases de Niza y generás un PDF para mandarle al cliente.' },
-    { view: 'busqueda', selector: '#btn-buscar-historico', titulo: 'Histórico vs INPI en vivo', texto: 'Buscá en las 44k actas ya procesadas o consultá directo al INPI en vivo. Después agregás las coincidencias al informe.' },
-    { view: 'crm', selector: '#crm-board', titulo: 'CRM', texto: 'Seguimiento de cada expediente: en qué estado está y su historial. Acá ves si pasó a Registrada, En oposición, etc.' },
-    { view: 'admin', selector: '#view-admin', titulo: 'Admin (solo vos)', texto: 'Acá creás estudios y usuarios, ves estudios existentes y guardás las credenciales del INPI de cada estudio.', adminOnly: true },
-    { view: 'carteras-admin', selector: '#table-carteras-admin', titulo: 'Todas las carteras (admin)', texto: 'Vista de auditoría: todas las marcas de todos los estudios, con columna Estudio. Solo lectura.', adminOnly: true },
+    { view: 'dashboard', selector: '#header-title', titulo: 'Panel de Control', texto: 'Acá ves el panorama: alertas, vencimientos y próximos escaneos. El botón 🌙/☀️ cambia a modo oscuro.' },
+    { view: 'dashboard', selector: '.stats-grid', titulo: 'Stats', texto: '4 tarjetas con total de marcas, alertas sin revisar, plazos por vencer y cartera por cliente.' },
+    { view: 'alertas', selector: '#alertas-filtros', titulo: 'Filtros de Alertas', texto: 'Filtrá por Similitud (IDÉNTICA/Muy/Parecida), Estado (Concedidas/No) y Clase 1..45. Todo ordenado por riesgo.' },
+    { view: 'alertas', selector: '#tbody-alertas', titulo: 'Alertas', texto: 'Cada fila es una marca nueva parecida a la tuya. El % y el badge Riesgo te dicen qué tan grave. El 📄 es el borrador de oposición — siempre revisalo, nunca se manda solo.' },
+    { view: 'alertas', selector: '#btn-export-alertas', titulo: 'Exportar', texto: 'Botón para bajar las alertas a CSV y mandar al cliente.' },
+    { view: 'cartera', selector: '#form-alta', titulo: 'Alta de marca', texto: 'Cargá nombre, clase, tipo (D/M/F), cliente, estado, N° Acta con 🔍 que autocompleta desde INPI, vencimiento, logo y notas. Respetá el límite de tu plan.' },
+    { view: 'cartera', selector: '#table-cartera', titulo: 'Tu cartera', texto: 'Tu lista con logo, nombre, clase, tipo, cliente, estado, vencimiento y botones Ver grilla 👁️ / INPI ↗. Filtrá por texto/estado.' },
+    { view: 'cartera', selector: '#btn-exportar-cartera', titulo: 'Importar/Exportar', texto: 'Para estudios grandes: Exportar CSV con toda la cartera y volver a importar (ideal para migrar clientes).' },
+    { view: 'busqueda', selector: '#bq-marca', titulo: 'Búsqueda Previa', texto: 'Acá armás el informe para el cliente: Cliente, Marca a registrar, Descripción. Te sugerimos clases con Supabase FTS.' },
+    { view: 'busqueda', selector: '#bq-sugerir-clases', titulo: 'Sugerir clases', texto: 'Escribí la descripción y dale a Sugerir clases: te trae Clase 30 para panes con 77% (vía Niza FTS con weights).' },
+    { view: 'busqueda', selector: '#btn-buscar-historico', titulo: 'Histórico', texto: 'Buscá en las 44k actas ya procesadas localmente (rápido, con Niza).' },
+    { view: 'busqueda', selector: '#bq-consultar-inpi', titulo: 'INPI en vivo', texto: 'Consultá directo al INPI en vivo (consulta real, no histórico) con filtros por similitud fonética (zuria↔suria) y paginación.' },
+    { view: 'busqueda', selector: '#btn-generar-pdf', titulo: 'Generar PDF', texto: 'Con las coincidencias armás el informe PDF con el membrete de tu estudio (logo, teléfono, gmail del panel Configuración).' },
+    { view: 'crm', selector: '#crm-board', titulo: 'CRM Kanban', texto: 'Tus marcas por estado (Solicitada, En trámite, Registrada...). Arrastrá o cambiá el estado y queda el historial.' },
+    { view: 'crm', selector: '#crm-filtro-cliente', titulo: 'Filtro Cliente + WhatsApp', texto: 'Filtrá por cliente y dale al botón WhatsApp para mandarle el recordatorio (solo link wa.me).' },
+    { view: 'presentar', selector: '#form-presentar', titulo: 'Presentar Marca', texto: 'Form con CUIT/Clave INPI por envío (no se guarda), poder y docs múltiples (base64), preview del XML y doble confirmación antes de mandar.' },
+    { view: 'admin', selector: '#view-admin', titulo: 'Admin (solo vos)', texto: 'Creás estudios/usuarios con o sin correo (demo), editás límite/plan/INPI/Presentar/Alertas por estudio, y guardás la bóveda CUIT/Clave cifrada con Vault.' },
+    { view: 'carteras-admin', selector: '#table-carteras-admin', titulo: 'Todas las carteras', texto: 'Auditoría: todas las marcas de todos los estudios con columna Estudio. Solo lectura, no se edita cartera ajena.' },
+    { view: 'calendario', selector: '#calendar', titulo: 'Calendario', texto: 'Vista de plazos legales (vencimientos, renovaciones, contestaciones) + eventos manuales que creás vos. Todo filtrado por estudio.' },
   ];
   let idx = 0;
   let overlay = null;
@@ -44,18 +54,29 @@ const Tour = (() => {
   function resaltar(selector) {
     const el = document.querySelector(selector);
     if (!el) return;
+    if (!el.dataset.tourOrigPosition) el.dataset.tourOrigPosition = el.style.position;
     el.style.position = 'relative';
     el.style.zIndex = '9999';
     el.style.boxShadow = '0 0 0 3px #0f3a5f, 0 0 20px rgba(15,58,95,0.5)';
     el.style.borderRadius = '6px';
+    el.classList.add('tour-highlight');
     setTimeout(()=> { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
   }
   function quitarResaltado() {
     document.querySelectorAll('[style*="box-shadow: 0 0 0 3px"]').forEach(el => {
       el.style.boxShadow = '';
       el.style.zIndex = '';
-      el.style.position = '';
+      if (el.dataset.tourOrigPosition !== undefined) {
+        el.style.position = el.dataset.tourOrigPosition;
+        delete el.dataset.tourOrigPosition;
+      } else {
+        el.style.position = '';
+      }
+      el.classList.remove('tour-highlight');
     });
+    // Acomodar panel: quitar blur del app-shell si quedó
+    const appShell = document.querySelector('.app-shell');
+    if (appShell) appShell.style.filter = 'none';
   }
   async function mostrarPaso(i) {
     const esAdmin = await esAdminReal();
