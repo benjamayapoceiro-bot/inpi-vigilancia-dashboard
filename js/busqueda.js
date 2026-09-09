@@ -10,7 +10,7 @@ function inpiLink(acta) { return acta ? `inpi-grilla.html?acta=${encodeURICompon
 
 function normalizarFoneticoJS(s){
   s = String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const reps = [["QU","K"],["CU","K"],["C","K"],["Z","S"],["V","B"],["LL","Y"],["H",""],["Ñ","N"],["PH","F"],["W","V"]];
+  const reps = [["SHISHA","YIYA"],["QU","K"],["CU","K"],["C","K"],["Z","S"],["S","S"],["V","B"],["B","B"],["LL","Y"],["H",""],["Ñ","N"],["PH","F"],["W","V"],["SH","Y"],["CH","Y"],["Y","I"],["I","I"],["J","Y"],["G","Y"],["R","L"],["L","L"],["E","I"],["O","U"]];
   for(const [a,b] of reps) s = s.split(a).join(b);
   s = s.replace(/(.)\1+/g,'$1').replace(/[^A-Z]/g,'');
   return s;
