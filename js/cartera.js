@@ -32,7 +32,16 @@ const Cartera = (() => {
         if (tbody) tbody.innerHTML = UI.skeletonRows(3, 7);
 
         try {
-            cache = await API.getMarcas();
+            const { estudioId } = await (typeof Auth !== 'undefined' && Auth.getPerfilConEstudio ? Auth.getPerfilConEstudio() : Promise.resolve({ estudioId: null }));
+            if (!estudioId) {
+                cache = [];
+                if (tbody) tbody.innerHTML = '';
+                UI.toast('No se pudo determinar tu estudio', 'error');
+                renderStats();
+                render();
+                return;
+            }
+            cache = await API.getMarcasPorEstudio(estudioId);
             if (!Array.isArray(cache)) cache = [];
         } catch (err) {
             cache = [];

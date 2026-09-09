@@ -134,6 +134,10 @@
           <span class="nav-item__icon">👑</span>
           Admin
         </button>
+        <button class="nav-item" data-view="carteras-admin" id="nav-carteras-admin" style="display:none">
+          <span class="nav-item__icon">🗂️</span>
+          Todas las carteras
+        </button>
         <button class="nav-item" data-view="login" id="nav-login">
           <span class="nav-item__icon">🔐</span>
           Ingresar
@@ -160,6 +164,7 @@
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
+          <button class="btn btn--ghost btn--sm" id="btn-tour" title="Ver tutorial guiado" style="font-size:1rem; padding:6px 10px;">❓ Tutorial</button>
           <button class="btn btn--ghost btn--sm" id="dark-mode-toggle" title="Cambiar a modo oscuro/claro" style="font-size:1.1rem; padding:6px 10px;">🌙</button>
           <div class="main-header__actions">
             <!-- Dynamic actions per view -->
@@ -384,6 +389,25 @@
         <!-- ═══ VIEW: ADMIN ═══ -->
         <div class="view" id="view-admin"></div>
 
+        <!-- ═══ VIEW: TODAS LAS CARTERAS (admin) ═══ -->
+        <div class="view" id="view-carteras-admin">
+          <div class="card">
+            <h3>Todas las carteras (auditoría admin)</h3>
+            <p style="font-size:0.8125rem; color:var(--text-tertiary); margin-top:4px;">Vista de solo lectura — todas las marcas de todos los estudios, con columna Estudio. No se edita cartera ajena desde acá.</p>
+            <div style="margin-top:12px; display:flex; gap:8px;">
+              <input class="form-input" id="carteras-admin-search" placeholder="Filtrar por estudio o marca..." style="max-width:320px;">
+              <span id="carteras-admin-count" style="font-size:0.8125rem; color:var(--text-tertiary); align-self:center;"></span>
+            </div>
+          </div>
+          <div class="card" style="padding:0; overflow:hidden; margin-top:12px;">
+            <table class="data-table" id="table-carteras-admin">
+              <thead><tr><th>Estudio</th><th>Marca</th><th>Clase</th><th>Tipo</th><th>Cliente</th><th>Estado</th><th>Vencimiento</th><th>Acta</th></tr></thead>
+              <tbody id="tbody-carteras-admin"></tbody>
+            </table>
+            <div class="empty-state" id="empty-carteras-admin" style="display:none;"><div class="empty-state__title">Sin marcas</div></div>
+          </div>
+        </div>
+
         <!-- ═══ VIEW: CRM ═══ -->
         <div class="view" id="view-crm">
           <div style="display:flex; gap: var(--space-sm); margin-bottom: var(--space-lg); flex-wrap: wrap; align-items:center; justify-content: space-between;">
@@ -433,6 +457,8 @@
   <script src="js/presentar.js?v=20260913"></script>
   <script src="js/detalle.js?v=20260913"></script>
   <script src="js/admin.js?v=20260913"></script>
+  <script src="js/carteras-admin.js?v=20260913"></script>
+  <script src="js/tour.js?v=20260913"></script>
   <script src="js/app.js?v=20260913"></script>
 </body>
 </html>

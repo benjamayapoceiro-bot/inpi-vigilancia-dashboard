@@ -89,6 +89,7 @@ const App = (() => {
             crm: ['CRM', 'Estado y seguimiento de cada expediente'],
             presentar: ['Presentar Marca', 'Generar XML o enviar directo al INPI'],
             admin: ['Admin', 'Gestión de estudios y usuarios'],
+            'carteras-admin': ['Todas las carteras', 'Vista auditoría admin — todas las marcas de todos los estudios'],
             login: ['Ingresar', 'Accedé a tu estudio']
         };
         const [title, sub] = titles[viewName] || ['', ''];
@@ -108,6 +109,9 @@ const App = (() => {
         }
         if (viewName === 'admin') {
             Admin.render();
+        }
+        if (viewName === 'carteras-admin') {
+            if (typeof CarterasAdmin !== 'undefined') { CarterasAdmin.init(); CarterasAdmin.load(); }
         }
         if (viewName === 'login') {
             Auth.renderLogin('view-login');
@@ -279,6 +283,9 @@ const App = (() => {
         document.getElementById('btn-export-cartera')?.addEventListener('click', () => {
             Export.exportCarteraCSV(Cartera.getCache());
         });
+        document.getElementById('btn-tour')?.addEventListener('click', () => {
+            if (typeof Tour !== 'undefined') Tour.iniciar();
+        });
 
         if (!logged) {
             navigate('login');
@@ -291,6 +298,12 @@ const App = (() => {
             Dashboard.render(alertas, marcas);
             updateAlertBadge();
             navigate('dashboard');
+            // Tour solo una vez al iniciar por primera vez
+            setTimeout(() => {
+                if (typeof Tour !== 'undefined' && Tour.debeMostrarAuto()) {
+                    Tour.iniciar();
+                }
+            }, 1200);
         }
     }
 

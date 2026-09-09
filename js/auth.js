@@ -29,6 +29,13 @@ const Auth = (() => {
       return data;
     } catch { return null; }
   }
+  async function getPerfilConEstudio() {
+    const user = await getUser();
+    if (!user) return { user: null, perfil: null, estudioId: null, rol: null };
+    const perfil = await getPerfil();
+    if (!perfil) return { user, perfil: null, estudioId: null, rol: null };
+    return { user, perfil, estudioId: perfil.estudio_id, rol: perfil.rol };
+  }
   async function login(email, password) {
     const { data, error } = await sb().auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -122,16 +129,20 @@ const Auth = (() => {
       header.innerHTML = `<span style="font-size:0.8125rem;color:var(--text-secondary);">${UI.escapeHtml(userEmail)} ${perfil ? `<span class="badge ${perfil.rol==='admin'?'badge--warning':'badge--info'}">${perfil.rol}</span>` : '<span class="badge badge--info">usuario</span>'}</span> <button class="btn btn--ghost btn--sm" id="btn-logout">Salir</button>`;
       document.getElementById('btn-logout')?.addEventListener('click', logout);
       const navAdmin = document.getElementById('nav-admin');
+      const navCarterasAdmin = document.getElementById('nav-carteras-admin');
       if (navAdmin) {
         const isAdmin = perfil && perfil.rol === 'admin';
         navAdmin.style.display = isAdmin ? 'flex' : 'none';
+        if (navCarterasAdmin) navCarterasAdmin.style.display = isAdmin ? 'flex' : 'none';
         console.log('initHeader admin check', {email:userEmail, perfil, isAdmin});
       }
     } else {
       header.innerHTML = `<button class="btn btn--primary btn--sm" id="btn-login-header">Ingresar</button>`;
       document.getElementById('btn-login-header')?.addEventListener('click', () => { App.navigate('login'); renderLogin('view-login'); });
       const navAdmin = document.getElementById('nav-admin');
+      const navCarterasAdmin = document.getElementById('nav-carteras-admin');
       if (navAdmin) navAdmin.style.display = 'none';
+      if (navCarterasAdmin) navCarterasAdmin.style.display = 'none';
     }
   }
   return { sb, getSession, getUser, getPerfil, login, logout, renderLogin, initHeader };

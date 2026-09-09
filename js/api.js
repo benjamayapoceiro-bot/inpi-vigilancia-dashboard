@@ -131,6 +131,13 @@ const API = (() => {
         async getMarcas() {
             return request('/rest/v1/marcas_vigiladas?select=*&order=created_at.desc');
         },
+        async getMarcasPorEstudio(estudioId) {
+            if (!estudioId) throw new Error('estudioId requerido');
+            return request(`/rest/v1/marcas_vigiladas?select=*&estudio_id=eq.${estudioId}&order=created_at.desc`);
+        },
+        async getMarcasTodas() {
+            return request('/rest/v1/marcas_vigiladas?select=*,estudios!inner(nombre)&order=created_at.desc');
+        },
 
         async addMarca(marca) {
             return request('/rest/v1/marcas_vigiladas', {
