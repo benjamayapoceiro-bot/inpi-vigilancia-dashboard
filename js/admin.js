@@ -146,10 +146,8 @@ const Admin = (() => {
       const r = await fetch(`${cfg.url}/functions/v1/admin-create-user`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${accessToken || cfg.anonKey}`}, body: JSON.stringify({ username, password, estudio_id: estudioId, limite_marcas: 1, isDemo: true })});
       const j = await r.json();
       if (!j.ok) throw new Error(j.error);
-      // Crear una marca demo
-      await API.request('/rest/v1/marcas_vigiladas', { method:'POST', body: JSON.stringify({ nombre: 'MARCA DEMO', clase: 25, tipo: 'D', cliente: 'Cliente Demo', estado: 'Solicitada', estudio_id: estudioId }) });
-      out.innerHTML = `<span style="color:var(--success)">✓ Demo creado: estudio ${UI.escapeHtml(nombre)} (1 marca) — usuario <b>${UI.escapeHtml(username)}</b> / pass <b>${password}</b> (login con ${username}@demo.fons.legal)</span>`;
-      UI.toast('Demo creado','success');
+      out.innerHTML = `<span style="color:var(--success)">✓ Demo creado: estudio ${UI.escapeHtml(nombre)} (vacío, 1 marca permitida) — usuario <b>${UI.escapeHtml(username)}</b> / pass <b>${password}</b> (login con ${username}@demo.fons.legal) — que agregue su única marca en Cartera</span>`;
+      UI.toast('Demo creado (vacío, 1 marca)','success');
       render();
     } catch(e){ out.innerHTML = `<span style="color:var(--danger)">✗ ${UI.escapeHtml(e.message)}</span>`; }
   }
