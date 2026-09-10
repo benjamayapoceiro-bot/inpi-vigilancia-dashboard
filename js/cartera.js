@@ -234,8 +234,7 @@ const Cartera = (() => {
             if (String(tipoRaw).toLowerCase().includes('mixta') || String(tipoRaw) === '2') tipo = 'M';
             else if (String(tipoRaw).toLowerCase().includes('figurativa') || String(tipoRaw) === '3' || String(tipoRaw) === '5') tipo = 'F';
             const estadoRaw = data.estado || g.estado || g.Estado || '';
-            const estadoMap = { C: 'Registrada', R: 'Registrada', Concedida: 'Registrada', T: 'En trámite', D: 'Denegada', V: 'Vencida' };
-            const estado = estadoMap[estadoRaw] || estadoMap[String(estadoRaw).trim()] || 'Registrada';
+            const estado = Inpi.parseEstado(estadoRaw) === '—' ? 'Registrada' : Inpi.parseEstado(estadoRaw);
             const titular = data.titular || g.titulares || g.Titulares || '';
 
             document.getElementById('f-nombre').value = nombre || '';
@@ -245,7 +244,7 @@ const Cartera = (() => {
             if (campoLogo) campoLogo.style.display = (tipo === 'M' || tipo === 'F') ? 'block' : 'none';
             // Logo para Mixta/Figurativa: si INPI trae logo_url, mostrar preview y guardar como pendiente
             const logoUrl = data.logo_url || g.logo_url || g.Logo || null;
-            const logoOk = logoUrl && !logoUrl.includes('logon.png') && !logoUrl.includes('assets/img/logon');
+            const logoOk = Inpi.isLogoReal(logoUrl);
             if ((tipo === 'M' || tipo === 'F') && logoOk) {
                 let preview = document.getElementById('f-logo-preview');
                 if (!preview) {

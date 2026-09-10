@@ -47,18 +47,22 @@ const Admin = (() => {
       <div class="card">
         <h3>Estudios existentes — click para editar plan/funciones (${estudios.length})</h3>
         <table class="data-table" style="margin-top:10px;">
-          <thead><tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Límite</th><th>INPI</th><th>Presentar</th><th>Alertas</th><th>Acción</th></tr></thead>
-          <tbody>${estudios.map(e=>`<tr>
-            <td>${UI.escapeHtml(e.nombre)}</td><td>${UI.escapeHtml(e.email_contacto||'—')}</td>
+          <thead><tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Límite</th><th>INPI</th><th>Presentar</th><th>Alertas</th><th>Uso</th><th>Acción</th></tr></thead>
+          <tbody>${estudios.map(e=>{
+            const uso = e._uso || { marcas: 0, alertas: 0, ultimo: null };
+            const activo = uso.ultimo && (Date.now() - new Date(uso.ultimo).getTime()) < 14*24*3600*1000;
+            return `<tr>
+            <td>${UI.escapeHtml(e.nombre)} ${e.notificado===false?'<span class="badge badge--warning" style="font-size:0.6rem;">Nuevo</span>':''}</td><td>${UI.escapeHtml(e.email_contacto||'—')}</td>
             <td><span class="badge badge--info">${e.plan}</span></td>
             <td><input type="number" class="form-input" style="width:60px; padding:4px;" value="${e.limite_marcas}" onchange="Admin.updateEstudio('${e.id}','limite_marcas',this.value)"></td>
             <td><input type="checkbox" ${e.puede_conectar_inpi!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_conectar_inpi',this.checked)"></td>
             <td><input type="checkbox" ${e.puede_presentar!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_presentar',this.checked)"></td>
             <td><input type="checkbox" ${e.puede_ver_alertas!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_ver_alertas',this.checked)"></td>
+            <td><span class="badge ${activo?'badge--success':'badge--primary'}" style="font-size:0.65rem;">${uso.marcas} marcas · ${uso.alertas} alertas<br>${uso.ultimo ? new Date(uso.ultimo).toLocaleDateString('es-AR') : 'sin uso'} ${activo?'● activo':'○ inactivo'}</span> ${e.notificado===false?'<button class="btn btn--ghost btn--sm" style="font-size:0.65rem; padding:2px 4px;" onclick="Admin.marcarNotificado(\''+e.id+'\')">✓ visto</button>':''}</td>
             <td><button class="btn btn--ghost btn--sm" onclick="Admin.updateEstudio('${e.id}','plan',prompt('Nuevo plan:', '${e.plan}'))">✎ plan</button></td>
-          </tr>`).join('')}</tbody>
+          </tr>`}).join('')}</tbody>
         </table>
-        <div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:6px;">Ej: Básico 5 marcas solo monitoreo (desmarcá INPI y Presentar), Pro 20 con todo, Premium ilimitado. Cambios se guardan al tocar.</div>
+        <div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:6px;">Ej: Básico 5 marcas solo monitoreo (desmarcá INPI y Presentar), Pro 20 con todo, Premium ilimitado. Cambios se guardan al tocar. Uso: marcas/alertas y último acceso (14 días = activo).</div>
       </div>
       <div class="card" style="margin-top:20px;">
         <h3>Bóveda CUIT/Clave por estudio</h3>

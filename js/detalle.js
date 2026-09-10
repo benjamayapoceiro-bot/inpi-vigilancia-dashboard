@@ -83,22 +83,9 @@ const Detalle = (() => {
       return;
     }
     const g = d.grilla || null;
-    const estadoMap = { C: 'Concedida', R: 'Registrada', T: 'En trámite', D: 'Denegada', V: 'Vencida', A: 'Abandonada', O: 'En oposición', P: 'Publicada', S: 'Solicitada', E: 'En estudio', '': '—' };
-    const estadoLabel = (g && g.estado) ? (estadoMap[String(g.estado).trim()] || g.estado) : (d.estado || '—');
-    const logoOk = d.logo_url && !d.logo_url.includes('logon.png') && !d.logo_url.includes('assets/img/logon');
-    const vencFmt = (() => {
-      if (!g || !g.fecha_vencimiento) return '—';
-      const d = new Date(g.fecha_vencimiento);
-      if (isNaN(d.getTime()) || d.getFullYear() > 2100) return '—';
-      return d.toLocaleDateString('es-AR');
-    })();
-    const venc2 = (() => {
-      if (g && g.vencimiento) {
-        const d2 = new Date(g.vencimiento);
-        if (!isNaN(d2.getTime()) && d2.getFullYear() <= 2100) return d2.toLocaleDateString('es-AR');
-      }
-      return vencFmt;
-    })();
+    const estadoLabel = Inpi.parseEstado(g?.estado || d.estado);
+    const logoOk = Inpi.isLogoReal(d.logo_url);
+    const venc2 = Inpi.parseVencimiento(g?.fecha_vencimiento || g?.vencimiento) || Inpi.parseVencimiento(g?.fecha_vencimiento) || '—';
     const logoHtml = logoOk ? `<img src="${d.logo_url}" alt="logo marca" style="max-width:220px;max-height:220px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff;padding:8px;box-shadow:var(--shadow-sm);" onerror="this.style.display='none'">` : '<div style="width:220px;height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-main);border:1px dashed var(--border);border-radius:8px;color:var(--text-tertiary);font-size:0.75rem; text-align:center; padding:10px;"><span style="font-size:1.2rem;">🖼️</span>Sin logo<br><span style="font-size:0.7rem;">Marca denominativa</span></div>';
     // helper para no mostrar filas vacías
     const row = (label, val) => {

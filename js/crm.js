@@ -124,14 +124,18 @@ const CRM = (() => {
         cont.innerHTML = clientesOrdenados.map(cliente => {
             const marcas = porCliente[cliente];
             const clienteData = marcas[0]?.cliente || cliente;
+            // Buscar datos del cliente extendidos si existen
+            const marcasConPago = marcas.filter(m=> m.dia_cobro || m.estado_pago || m.cuotas);
+            const pagoInfo = marcasConPago.length ? `<span class="badge badge--warning" style="font-size:0.65rem;">💰 Día ${marcas[0].dia_cobro||'—'} · ${marcas[0].estado_pago||'al día'}${marcas[0].cuotas?` · ${UI.escapeHtml(marcas[0].cuotas)}`:''}</span>` : '';
             return `
         <div class="card" style="margin-bottom: var(--space-md);">
           <div class="section-header" style="margin-bottom: var(--space-sm);">
             <h3 style="font-size: 0.9375rem;">${UI.escapeHtml(cliente)}</h3>
-            <div style="display:flex; gap:6px; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
               <span class="badge badge--primary">${marcas.length} marca${marcas.length !== 1 ? 's' : ''}</span>
+              ${pagoInfo}
               <button class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:4px 8px;" onclick="CRM.verCliente('${UI.escapeHtml(cliente).replace(/'/g,"\\'")}')">👤 Datos del cliente</button>
-              <a href="https://wa.me/${String(clienteData).replace(/\D/g,'')}" target="_blank" class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:4px 8px; background:#25D366; color:#fff; text-decoration:none;">WhatsApp</a>
+              <a href="https://wa.me/${String(clienteData).replace(/\D/g,'').slice(-12) || '54911'}" target="_blank" class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:4px 8px; background:#25D366; color:#fff; text-decoration:none;" title="WhatsApp del cliente (solo link)">WhatsApp</a>
             </div>
           </div>
           <table class="data-table">
