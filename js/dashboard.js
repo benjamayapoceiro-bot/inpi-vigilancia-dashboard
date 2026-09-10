@@ -8,6 +8,8 @@ const Dashboard = (() => {
     function render(alertas, marcas) {
         const view = document.getElementById('view-dashboard');
         if (!view) return;
+        alertas = Array.isArray(alertas) ? alertas : [];
+        marcas = Array.isArray(marcas) ? marcas : [];
 
         const totalAlertas = alertas.length;
         const alertasAltas = alertas.filter(a => (a.similitud_score || 0) >= 0.85).length;
