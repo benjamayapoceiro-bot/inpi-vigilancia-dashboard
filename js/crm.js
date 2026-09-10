@@ -123,11 +123,16 @@ const CRM = (() => {
 
         cont.innerHTML = clientesOrdenados.map(cliente => {
             const marcas = porCliente[cliente];
+            const clienteData = marcas[0]?.cliente || cliente;
             return `
         <div class="card" style="margin-bottom: var(--space-md);">
           <div class="section-header" style="margin-bottom: var(--space-sm);">
             <h3 style="font-size: 0.9375rem;">${UI.escapeHtml(cliente)}</h3>
-            <span class="badge badge--primary">${marcas.length} marca${marcas.length !== 1 ? 's' : ''}</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span class="badge badge--primary">${marcas.length} marca${marcas.length !== 1 ? 's' : ''}</span>
+              <button class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:4px 8px;" onclick="CRM.verCliente('${UI.escapeHtml(cliente).replace(/'/g,"\\'")}')">👤 Datos del cliente</button>
+              <a href="https://wa.me/${String(clienteData).replace(/\D/g,'')}" target="_blank" class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:4px 8px; background:#25D366; color:#fff; text-decoration:none;">WhatsApp</a>
+            </div>
           </div>
           <table class="data-table">
             <tbody>
