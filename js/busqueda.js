@@ -312,6 +312,8 @@ const Busqueda = (() => {
             if (lower.startsWith('z')) vars.add('s'+lower.slice(1));
             return Array.from(vars).slice(0,4);
           }
+        let fuente = { resultados: [], total: 0 };
+        let lastError = null;
         try {
             const cfg = window.APP_CONFIG.supabase;
             const variantes = variantesFoneticas(marca);
@@ -319,28 +321,56 @@ const Busqueda = (() => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey },
                 body: JSON.stringify({ tipo: 'denominacion', valor: v }),
-            }).then(r=>r.json()).catch(()=>({ok:false,resultados:[]})));
+            }).then(async r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            }).catch(e => { lastError = e; return {ok:false, error: e.message, resultados:[]}; }));
             const datas = await Promise.all(fetches);
             const mergedMap = new Map();
+            let anyOk = false;
             for (const data of datas) {
-              if (!data.ok || !Array.isArray(data.resultados)) continue;
-              for (const r of data.resultados) {
-                const key = String(r.acta);
-                if (!mergedMap.has(key)) mergedMap.set(key, r);
+              if (data.ok && Array.isArray(data.resultados)) {
+                anyOk = true;
+                for (const r of data.resultados) {
+                  const key = String(r.acta);
+                  if (!mergedMap.has(key)) mergedMap.set(key, r);
+                }
               }
             }
             const merged = Array.from(mergedMap.values());
-            // Si variantes no aportaron nada extra, usar el primero
-            const data0 = datas[0];
-            if (!merged.length && data0 && !data0.ok) {
-                if (panel) {
-                    panel.style.display = 'block';
-                    panel.innerHTML = `<strong style="color:var(--danger)">Error consultando INPI:</strong> ${UI.escapeHtml(data0.error || 'desconocido')}`;
-                }
-                UI.toast('Error consultando al INPI', 'error');
-                return;
+            if (merged.length) {
+              fuente = { resultados: merged, total: merged.length };
+            } else if (!anyOk) {
+              throw lastError || new Error('No se pudo conectar con el proxy INPI');
+            } else {
+              fuente = { resultados: [], total: 0 };
             }
-            const fuente = merged.length ? { resultados: merged, total: merged.length } : (datas[0] || { resultados: [], total: 0 });
+        } catch (err) {
+            console.error('inpi-consulta fetch error', err);
+            if (panel) {
+                panel.style.display = 'block';
+                panel.innerHTML = `<div style="padding:12px; border:1px solid var(--warning-border); background:var(--warning-bg); border-radius:6px;">
+                  <strong style="color:var(--warning)">No se pudo consultar el INPI en vivo (${UI.escapeHtml(err.message||'error de conexión')})</strong><br>
+                  <span style="font-size:0.8125rem;">Mostrando <b>búsqueda en histórico local (44k actas)</b> como fallback. Probá con <b>Buscar en histórico</b> para “${UI.escapeHtml(marca)}” o reintentá en unos segundos.</span>
+                  <button class="btn btn--ghost btn--sm" style="margin-top:8px;" onclick="document.getElementById('bq-buscar-historico')?.click()">Buscar en histórico</button>
+                </div>`;
+            }
+            // Fallback automático a histórico
+            try {
+              const hist = await API.buscarHistorico(marca);
+              if (hist && hist.length) {
+                fuente = { resultados: hist.slice(0,30).map(r=> ({ acta: r.acta, denominacion: r.denominacion, clase: r.clase, titulares: (r.titulares||[]).map(t=>t.nombre).join(', '), estado: r.estado || '—', tipo_marca: r.tipo || '—' })), total: hist.length };
+              } else {
+                UI.toast('Sin resultados en histórico para "'+marca+'"', 'error');
+                return;
+              }
+            } catch(e2){
+              UI.toast('Error de conexión con el proxy y sin histórico', 'error');
+              return;
+            }
+        }
+        // a partir de acá fuente.resultados está listo (sea del vivo o del fallback histórico)
+        try {
 
             ultimaBusquedaInpi = (fuente.resultados || []).map(r => {
                 const sim = calcularSimilitudJS(marca, r.denominacion || '');
@@ -421,7 +451,7 @@ const Busqueda = (() => {
                     document.getElementById('filtro-inpi-clase')?.addEventListener('change', renderInpiFiltrada);
                     renderInpiFiltrada();
                     // Paginación: si el WS dice que hay más, mostrar Cargar más (portal tiene más que 19)
-                    const totalReal = data.total || ultimaBusquedaInpi.length;
+                    const totalReal = fuente.total || ultimaBusquedaInpi.length;
                     if (totalReal > ultimaBusquedaInpi.length) {
                         const moreDiv = document.createElement('div');
                         moreDiv.style.cssText = 'margin-top:10px; text-align:center;';
@@ -430,7 +460,7 @@ const Busqueda = (() => {
                     }
                 }
             }
-            UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI (ordenadas por parecido)`, 'success');
+            UI.toast(`${ultimaBusquedaInpi.length} coincidencia(s) del INPI (ordenadas por parecido, con fonética)`, 'success');
         } catch (err) {
             if (panel) {
                 panel.style.display = 'block';
