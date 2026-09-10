@@ -48,7 +48,7 @@ const Tour = (() => {
   }
   function crearCard() {
     card = document.createElement('div');
-    card.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; max-width:420px; width:90%; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.2);';
+    card.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--bg-surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px; max-width:420px; width:90%; z-index:9999; box-shadow:var(--shadow-lg); color:var(--text-primary);';
     document.body.appendChild(card);
   }
   function resaltar(selector) {
