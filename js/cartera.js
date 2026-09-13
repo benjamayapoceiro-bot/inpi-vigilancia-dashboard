@@ -325,26 +325,20 @@ const Cartera = (() => {
 
         let perfil = null;
         try {
-            const sb=(typeof Auth!=='undefined'&&Auth.sb)?Auth.sb():null;
-            if (sb) {
-                const {data:{user}}=await sb.auth.getUser();
-                if (user) {
-                    const {data}=await sb.from('perfiles').select('estudio_id, rol, email').eq('id', user.id).maybeSingle();
-                    perfil = data;
-                    // Fallback hardcoded para admin principal si RLS falla
-                    if (!perfil && user.email === 'benjamayapoceiro@gmail.com') {
-                        perfil = { estudio_id: 'a3245063-f7ba-403a-a45e-2dc11417645b', rol: 'admin', email: user.email };
+            if (typeof Auth !== 'undefined' && Auth.getPerfilConEstudio) {
+                const ctx = await Auth.getPerfilConEstudio();
+                perfil = ctx.perfil;
+            } else {
+                const sb=(typeof Auth!=='undefined'&&Auth.sb)?Auth.sb():null;
+                if (sb) {
+                    const {data:{user}}=await sb.auth.getUser();
+                    if (user) {
+                        const {data}=await sb.from('perfiles').select('estudio_id, rol, email').eq('id', user.id).maybeSingle();
+                        perfil = data;
                     }
                 }
             }
         } catch(e){ console.warn('perfil fetch fail',e); }
-        // Último fallback para admin
-        if (!perfil?.estudio_id) {
-            try {
-                const r = await API.request('/rest/v1/estudios?select=id&limit=1');
-                if (r && r[0] && perfil?.rol === 'admin') perfil = { ...perfil, estudio_id: r[0].id };
-            } catch {}
-        }
         const estudioId = perfil?.estudio_id || null;
         if (!estudioId) {
             UI.toast('No se pudo determinar tu estudio (perfil sin estudio_id) — contactá al admin', 'error');
