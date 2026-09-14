@@ -3,7 +3,43 @@ const Admin = (() => {
   async function loadEstudios() {
     const r = await API.request('/rest/v1/estudios?select=*&order=created_at.desc');
     estudios = r || [];
+    try {
+      const marcas = await API.request('/rest/v1/marcas_vigiladas?select=id,estudio_id,created_at');
+      const porEstudio = {};
+      (marcas || []).forEach(m => {
+        if (!m.estudio_id) return;
+        if (!porEstudio[m.estudio_id]) porEstudio[m.estudio_id] = { marcas: 0, ultimo: null };
+        porEstudio[m.estudio_id].marcas++;
+        if (!porEstudio[m.estudio_id].ultimo || (m.created_at && m.created_at > porEstudio[m.estudio_id].ultimo)) {
+          porEstudio[m.estudio_id].ultimo = m.created_at;
+        }
+      });
+      let alertasPorEstudio = {};
+      try {
+        const alertas = await API.request('/rest/v1/alertas?select=id,marcas_vigiladas!inner(estudio_id)');
+        (alertas || []).forEach(a => {
+          const eid = a.marcas_vigiladas?.estudio_id;
+          if (!eid) return;
+          alertasPorEstudio[eid] = (alertasPorEstudio[eid] || 0) + 1;
+        });
+      } catch {}
+      estudios = estudios.map(e => ({
+        ...e,
+        _uso: {
+          marcas: porEstudio[e.id]?.marcas || 0,
+          alertas: alertasPorEstudio[e.id] || 0,
+          ultimo: porEstudio[e.id]?.ultimo || e.created_at || null,
+        },
+      }));
+    } catch(e){ console.warn('uso fetch fail', e); }
     return estudios;
+  }
+  async function marcarNotificado(id) {
+    try {
+      await API.request(`/rest/v1/estudios?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ notificado: true }) });
+      UI.toast('Marcado como visto', 'success');
+      render();
+    } catch(e){ UI.toast('Error: '+e.message, 'error'); }
   }
   async function render() {
     const view = document.getElementById('view-admin');
@@ -178,5 +214,5 @@ const Admin = (() => {
     } catch(e){ UI.toast('Error: '+e.message, 'error'); }
   }
   function mostrarLogin(){ if (typeof Auth !== 'undefined' && Auth.renderLogin) { App.navigate('login'); Auth.renderLogin('view-login'); } else { window.location.hash = '#login'; } }
-  return { render, loadEstudios, mostrarLogin, updateEstudio };
+  return { render, loadEstudios, mostrarLogin, updateEstudio, marcarNotificado };
 })();
