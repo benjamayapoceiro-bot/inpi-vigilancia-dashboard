@@ -145,5 +145,5 @@ const Auth = (() => {
       if (navCarterasAdmin) navCarterasAdmin.style.display = 'none';
     }
   }
-  return { sb, getSession, getUser, getPerfil, login, logout, renderLogin, initHeader };
+  return { sb, getSession, getUser, getPerfil, getPerfilConEstudio, login, logout, renderLogin, initHeader };
 })();

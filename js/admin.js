@@ -95,7 +95,7 @@ const Admin = (() => {
             <td><input type="checkbox" ${e.puede_presentar!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_presentar',this.checked)"></td>
             <td><input type="checkbox" ${e.puede_ver_alertas!==false?'checked':''} onchange="Admin.updateEstudio('${e.id}','puede_ver_alertas',this.checked)"></td>
             <td><span class="badge ${activo?'badge--success':'badge--primary'}" style="font-size:0.65rem;">${uso.marcas} marcas · ${uso.alertas} alertas<br>${uso.ultimo ? new Date(uso.ultimo).toLocaleDateString('es-AR') : 'sin uso'} ${activo?'● activo':'○ inactivo'}</span> ${e.notificado===false?'<button class="btn btn--ghost btn--sm" style="font-size:0.65rem; padding:2px 4px;" onclick="Admin.marcarNotificado(\''+e.id+'\')">✓ visto</button>':''}</td>
-            <td><button class="btn btn--ghost btn--sm" onclick="Admin.updateEstudio('${e.id}','plan',prompt('Nuevo plan:', '${e.plan}'))">✎ plan</button></td>
+            <td><button class="btn btn--ghost btn--sm" onclick="Admin.updateEstudio('${e.id}','plan',prompt('Nuevo plan:', '${e.plan}'))">✎ plan</button> <a class="btn btn--ghost btn--sm" href="?preview_estudio=${e.id}" title="Ver dashboard con marca del estudio">👁 preview</a></td>
           </tr>`}).join('')}</tbody>
         </table>
         <div style="font-size:0.7rem; color:var(--text-tertiary); margin-top:6px;">Ej: Básico 5 marcas solo monitoreo (desmarcá INPI y Presentar), Pro 20 con todo, Premium ilimitado. Cambios se guardan al tocar. Uso: marcas/alertas y último acceso (14 días = activo).</div>

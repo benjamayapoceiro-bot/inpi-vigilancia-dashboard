@@ -90,6 +90,7 @@ const App = (() => {
             presentar: ['Presentar Marca', 'Generar XML o enviar directo al INPI'],
             admin: ['Admin', 'Gestión de estudios y usuarios'],
             'carteras-admin': ['Todas las carteras', 'Vista auditoría admin — todas las marcas de todos los estudios'],
+            configuracion: ['Configuración', 'Marca blanca de tu estudio — logo y colores'],
             login: ['Ingresar', 'Accedé a tu estudio']
         };
         const [title, sub] = titles[viewName] || ['', ''];
@@ -115,6 +116,9 @@ const App = (() => {
         }
         if (viewName === 'calendario') {
             if (typeof Calendario !== 'undefined') { Calendario.init(); Calendario.load(); }
+        }
+        if (viewName === 'configuracion') {
+            if (typeof Configuracion !== 'undefined') Configuracion.render();
         }
         if (viewName === 'login') {
             Auth.renderLogin('view-login');
@@ -298,6 +302,14 @@ const App = (() => {
                 Alertas.load(),
                 Cartera.load()
             ]);
+            try {
+                if (typeof Branding !== 'undefined' && typeof Auth !== 'undefined' && Auth.getPerfilConEstudio) {
+                    const { estudioId, rol } = await Auth.getPerfilConEstudio();
+                    await Branding.load(estudioId, rol);
+                    const preview = new URLSearchParams(window.location.search).get('preview_estudio');
+                    if (rol === 'admin' && preview) UI.toast('Vista previa como estudio (marca del estudio)', 'info');
+                }
+            } catch (e) { console.warn('branding fail', e); }
             Dashboard.render(alertas, marcas);
             updateAlertBadge();
             navigate('dashboard');

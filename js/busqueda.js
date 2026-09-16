@@ -128,6 +128,14 @@ const Busqueda = (() => {
         </div>
       </div>
 
+      <div class="card" style="margin-top: var(--space-lg);">
+        <h3 style="margin-bottom: var(--space-md); font-size: 0.9375rem;">Informe</h3>
+        <div class="form-alta" style="grid-template-columns: 1fr 120px;">
+          <div class="form-group"><label class="form-label">Aclaraciones del estudio (saldrán en el PDF)</label><textarea class="form-input" id="bq-nota" rows="2" placeholder="ej. Se recomienda avanzar solo en clases X..."></textarea></div>
+          <div class="form-group"><label class="form-label">Validez presup. (días)</label><input type="number" class="form-input" id="bq-validez" value="15" min="1"></div>
+        </div>
+      </div>
+
       <div style="display:flex; justify-content:flex-end; margin-top: var(--space-lg); gap: var(--space-sm);">
         <button class="btn btn--primary" id="bq-generar-pdf" type="button">📄 Generar PDF para el cliente</button>
       </div>
@@ -525,8 +533,19 @@ const Busqueda = (() => {
         }
     }
 
-    function generarPDF() {
+    async function generarPDF() {
         const cfg = window.APP_CONFIG;
+        const firm = (typeof Branding !== 'undefined') ? Branding.getFirm() : cfg.firm;
+        const notaEstudio = document.getElementById('bq-nota')?.value.trim() || '';
+        const validez = parseInt(document.getElementById('bq-validez')?.value) || 15;
+        let logoData = null;
+        if (firm.logoUrl) {
+            try {
+                const r = await fetch(firm.logoUrl);
+                const blob = await r.blob();
+                logoData = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+            } catch (e) { console.warn('logo PDF no cargó', e); }
+        }
         const cliente = document.getElementById('bq-cliente')?.value || '(sin nombre)';
         const marca = document.getElementById('bq-marca')?.value || '(sin nombre)';
         const descripcion = document.getElementById('bq-descripcion')?.value || '';
@@ -544,7 +563,7 @@ const Busqueda = (() => {
             doc.setFontSize(7.5);
             doc.setFont(undefined, 'normal');
             doc.setTextColor(150);
-            doc.text(`${cfg.firm.name} — Informe de búsqueda de antecedentes marcarios`, MARGEN, 290);
+            doc.text(firm.footer || `${firm.name} — Informe de búsqueda de antecedentes marcarios`, MARGEN, 290);
             doc.text(`Página ${pagina}`, 196, 290, { align: 'right' });
             doc.setTextColor(0);
         }
@@ -577,7 +596,7 @@ const Busqueda = (() => {
         function subtitulo(texto) {
             saltoSiNecesario(14);
             y += 3;
-            doc.setDrawColor(cfg.firm.primaryColor || '#6C5CE7');
+            doc.setDrawColor(firm.primaryColor || '#6C5CE7');
             doc.setLineWidth(0.6);
             doc.line(MARGEN, y, MARGEN + 8, y);
             doc.setFontSize(12);
@@ -590,17 +609,20 @@ const Busqueda = (() => {
 
         // ═══ ENCABEZADO / PORTADA ═══
         y = 22;
+        if (logoData) {
+            try { doc.addImage(logoData, 'PNG', 150, 10, 46, 20, undefined, 'FAST'); } catch (e) { console.warn('addImage fail', e); }
+        }
         doc.setFontSize(19);
         doc.setFont(undefined, 'bold');
-        doc.text(cfg.firm.name, MARGEN, y);
+        doc.text(firm.name, MARGEN, y);
         y += 7;
         doc.setFontSize(10);
         doc.setFont(undefined, 'normal');
         doc.setTextColor(100);
-        doc.text(cfg.firm.tagline || '', MARGEN, y);
+        doc.text(firm.tagline || '', MARGEN, y);
         y += 5;
         doc.setFontSize(8.5);
-        doc.text(`${cfg.firm.contactEmail || ''}   ${cfg.firm.contactPhone || ''}`, MARGEN, y);
+        doc.text(firm.contactLine || `${firm.contactEmail || ''}   ${firm.contactPhone || ''}`, MARGEN, y);
         doc.setTextColor(0);
         y += 6;
         doc.setDrawColor(180);
@@ -687,8 +709,8 @@ const Busqueda = (() => {
                 { espacioExtra: 6 }
             );
 
-            const headers = ['Marca similar', 'Clase', 'Titular', 'Riesgo'];
-            const colX = [MARGEN, MARGEN + 78, MARGEN + 103, MARGEN + 153];
+            const headers = ['Marca similar', 'Clase', 'Titular', 'Riesgo', 'Acta'];
+            const colX = [MARGEN, MARGEN + 68, MARGEN + 90, MARGEN + 136, MARGEN + 158];
             saltoSiNecesario(12);
             doc.setFillColor(240, 240, 245);
             doc.rect(MARGEN, y - 5, ANCHO, 7, 'F');
@@ -704,7 +726,7 @@ const Busqueda = (() => {
                 saltoSiNecesario(8);
                 doc.setFontSize(9);
                 doc.setTextColor(0);
-                doc.text(String(r.marca || '—').slice(0, 34), colX[0] + 2, y);
+                doc.text(String(r.marca || '—').slice(0, 30), colX[0] + 2, y);
                 doc.text(String(r.clase || '—'), colX[1] + 2, y);
                 doc.text(String(r.titular || '—').slice(0, 22), colX[2] + 2, y);
                 const [rr, gg, bb] = colorRiesgo[r.riesgo] || [0, 0, 0];
@@ -713,11 +735,31 @@ const Busqueda = (() => {
                 doc.text(String(r.riesgo || '—'), colX[3] + 2, y);
                 doc.setFont(undefined, 'normal');
                 doc.setTextColor(0);
+                if (r._acta) {
+                    doc.setTextColor(40, 80, 160);
+                    doc.textWithLink(String(r._acta), colX[4] + 2, y, { url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${r._acta}` });
+                    doc.setTextColor(0);
+                } else {
+                    doc.text('—', colX[4] + 2, y);
+                }
                 y += 6.5;
                 doc.setDrawColor(230);
                 doc.line(MARGEN, y - 2, MARGEN + ANCHO, y - 2);
             });
             y += 6;
+
+            // ═══ CONCLUSIÓN DEL ESTUDIO ═══
+            subtitulo('Conclusión del estudio');
+            const maxRiesgo = resultados.some(r => r.riesgo === 'Alto') ? 'alto' : resultados.some(r => r.riesgo === 'Medio') ? 'medio' : 'bajo';
+            const conclusion = resultados.length === 0
+                ? 'No se relevaron antecedentes confundibles en las clases analizadas: el registro resulta viable en principio.'
+                : maxRiesgo === 'alto'
+                ? 'Se relevaron antecedentes con riesgo ALTO de confundibilidad. Se sugiere revisar la estrategia (cambio de denominación, recorte de clases o análisis de coexistencia) antes de presentar.'
+                : maxRiesgo === 'medio'
+                ? 'Se relevaron antecedentes con riesgo medio. El registro es intentable, evaluando con el cliente la tolerancia al riesgo de una eventual oposición o denegatoria.'
+                : 'Solo se relevaron antecedentes de riesgo bajo: el registro resulta viable en principio.';
+            parrafo(conclusion);
+            if (notaEstudio) { parrafo('Aclaraciones del estudio: ' + notaEstudio); }
         }
 
         // ═══ PRESUPUESTO ═══
@@ -751,7 +793,13 @@ const Busqueda = (() => {
         doc.setFont(undefined, 'bold');
         doc.text('TOTAL', MARGEN + 4, y + 2);
         doc.text(`$${total.toLocaleString('es-AR')}`, 190, y + 2, { align: 'right' });
-        y += 14;
+        y += 9;
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(110);
+        doc.text(`Presupuesto válido por ${validez} días desde el ${fecha}. Incluye honorarios + tasas INPI vigentes a la fecha.`, MARGEN + 4, y + 2);
+        doc.setTextColor(0);
+        y += 12;
 
         // ═══ PRÓXIMOS PASOS ═══
         subtitulo('Próximos pasos');
