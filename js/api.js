@@ -61,7 +61,7 @@ const API = (() => {
         request,
         // ── Alertas ────────────────────────────────
         async getAlertas(limit = 500) {
-            return request(`/rest/v1/alertas?select=*,marcas_vigiladas(nombre,numero_acta)&order=similitud_score.desc&limit=${limit}`);
+            return request(`/rest/v1/alertas?select=*,marcas_vigiladas(nombre,numero_acta,estudio_id)&order=similitud_score.desc&limit=${limit}`);
         },
 
         async markRevisada(id, revisada) {

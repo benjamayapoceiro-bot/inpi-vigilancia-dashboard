@@ -15,6 +15,15 @@ const Alertas = (() => {
     try {
       cache = await API.getAlertas();
       if (!Array.isArray(cache)) cache = [];
+      // El admin ve todo por RLS: filtrar a su contexto (estudio propio o preview)
+      try {
+        if (typeof Auth !== 'undefined' && Auth.getPerfilConEstudio) {
+          const { estudioId, rol } = await Auth.getPerfilConEstudio();
+          const preview = new URLSearchParams(window.location.search).get('preview_estudio');
+          const contexto = (rol === 'admin' && preview) ? preview : estudioId;
+          if (contexto) cache = cache.filter(a => a.marcas_vigiladas?.estudio_id === contexto);
+        }
+      } catch (e) { console.warn('filtro estudio alertas fail', e); }
     } catch (err) {
       cache = [];
       UI.toast('Error cargando alertas', 'error');

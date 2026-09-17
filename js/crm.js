@@ -24,6 +24,15 @@ const CRM = (() => {
         try {
             cache = await API.getMarcas();
             if (!Array.isArray(cache)) cache = [];
+            // El admin ve todo por RLS: filtrar a su contexto (estudio propio o preview)
+            try {
+                if (typeof Auth !== 'undefined' && Auth.getPerfilConEstudio) {
+                    const { estudioId, rol } = await Auth.getPerfilConEstudio();
+                    const preview = new URLSearchParams(window.location.search).get('preview_estudio');
+                    const contexto = (rol === 'admin' && preview) ? preview : estudioId;
+                    if (contexto) cache = cache.filter(m => String(m.estudio_id) === String(contexto));
+                }
+            } catch (e) { console.warn('filtro estudio crm fail', e); }
         } catch (err) {
             cache = [];
             UI.toast('Error cargando el CRM', 'error');
