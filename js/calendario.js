@@ -46,7 +46,8 @@ const Calendario = (() => {
       const fechaStr = isNaN(d.getTime()) ? ev.fecha : d.toLocaleDateString('es-AR');
       const badge = ev.tipo === 'plazo' ? 'badge--warning' : ev.tipo === 'vencimiento' ? 'badge--danger' : 'badge--info';
       const esPlazo = ev.tipo === 'plazo';
-      return `<div style="display:flex; gap:12px; align-items:center; padding:10px; border:1px solid var(--border); border-radius:6px; margin-bottom:8px; background:${esPlazo?'#fffbeb':'#fff'};">
+      const bgCard = esPlazo ? 'var(--warning-bg)' : 'var(--bg-surface)';
+      return `<div style="display:flex; gap:12px; align-items:center; padding:10px; border:1px solid var(--border); border-radius:6px; margin-bottom:8px; background:${bgCard};">
         <div style="text-align:center; min-width:60px;"><div style="font-weight:700; font-size:0.875rem;">${fechaStr}</div><span class="badge ${badge}" style="font-size:0.65rem; margin-top:4px;">${ev.tipo}</span></div>
         <div style="flex:1;"><div style="font-weight:600;">${UI.escapeHtml(ev.titulo)}</div>${ev.data?.marca ? `<div style="font-size:0.75rem; color:var(--text-tertiary);">Marca: ${UI.escapeHtml(ev.data.marca)}</div>` : ''}${ev.data?.notas ? `<div style="font-size:0.75rem; color:var(--text-tertiary);">${UI.escapeHtml(ev.data.notas.slice(0,80))}</div>` : ''}</div>
         ${ev.tipo !== 'plazo' ? `<button class="btn btn--ghost btn--sm" onclick="Calendario.borrar('${ev.data.id}')">✕</button>` : ''}
@@ -69,11 +70,11 @@ const Calendario = (() => {
         const fechaStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const evsDia = all.filter(ev => ev.fecha && ev.fecha.slice(0,10) === fechaStr);
         const tienePlazo = evsDia.some(e=>e.tipo==='plazo');
-        const bg = evsDia.length ? (tienePlazo ? '#fef3c7' : '#e0f2fe') : '#fff';
-        const border = evsDia.length ? (tienePlazo ? '1px solid #f59e0b' : '1px solid #0ea5e9') : '1px solid var(--border)';
-        grid += `<div onclick="document.getElementById('calendario-fecha').value='${fechaStr}'; document.getElementById('calendario-form').style.display='block'; document.getElementById('calendario-titulo').focus();" style="min-height:60px; padding:4px; border:${border}; border-radius:6px; background:${bg}; cursor:pointer; position:relative;">
+        const bg = evsDia.length ? (tienePlazo ? 'var(--warning-bg)' : 'var(--info-bg)') : 'var(--bg-surface)';
+        const border = evsDia.length ? (tienePlazo ? 'var(--warning-border)' : 'var(--info-border)') : 'var(--border)';
+        grid += `<div onclick="document.getElementById('calendario-fecha').value='${fechaStr}'; document.getElementById('calendario-form').style.display='block'; document.getElementById('calendario-titulo').focus();" style="min-height:60px; padding:4px; border:1px solid ${border}; border-radius:6px; background:${bg}; cursor:pointer; position:relative;">
           <div style="font-weight:600; font-size:0.8125rem; ${d===hoy.getDate()?'color:var(--primary); background:var(--info-bg); border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center;':''}">${d}</div>
-          ${evsDia.slice(0,2).map(ev=>`<div style="font-size:0.65rem; background:${ev.tipo==='plazo'?'#f59e0b':'#0ea5e9'}; color:#fff; border-radius:3px; padding:1px 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${UI.escapeHtml(ev.titulo.slice(0,10))}</div>`).join('')}
+          ${evsDia.slice(0,2).map(ev=>`<div style="font-size:0.65rem; background:${ev.tipo==='plazo'?'var(--warning)':'var(--info)'}; color:#fff; border-radius:3px; padding:1px 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${UI.escapeHtml(ev.titulo.slice(0,10))}</div>`).join('')}
           ${evsDia.length>2?`<div style="font-size:0.6rem; color:var(--text-tertiary); text-align:center;">+${evsDia.length-2} más</div>`:''}
         </div>`;
       }
