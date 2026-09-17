@@ -104,6 +104,26 @@ const Busqueda = (() => {
       </div>
 
       <div class="card" style="margin-top: var(--space-lg);">
+        <div class="section-header" style="margin-bottom: var(--space-md);">
+          <h3 style="font-size: 0.9375rem;">Buscar por CUIT o titular</h3>
+        </div>
+        <div class="form-alta" style="grid-template-columns: repeat(auto-fit, minmax(180px,1fr));">
+          <div class="form-group">
+            <label class="form-label" for="bq-cuit">CUIT</label>
+            <input type="text" class="form-input" id="bq-cuit" placeholder="ej. 20458255297">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bq-cuit-titular">Titular (opcional)</label>
+            <input type="text" class="form-input" id="bq-cuit-titular" placeholder="ej. BENJAMIN AYAPO">
+          </div>
+          <div class="form-group" style="justify-content: flex-end;">
+            <button class="btn btn--secondary" id="bq-consultar-cuit" type="button">🔎 Consultar CUIT</button>
+          </div>
+        </div>
+        <div id="bq-cuit-resultado" style="margin-top: var(--space-md);"></div>
+      </div>
+
+      <div class="card" style="margin-top: var(--space-lg);">
         <h3 style="margin-bottom: var(--space-md); font-size: 0.9375rem;">Presupuesto</h3>
         <div class="form-alta" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr));">
           <div class="form-group">
@@ -292,6 +312,7 @@ const Busqueda = (() => {
         document.getElementById('bq-generar-pdf')?.addEventListener('click', generarPDF);
         document.getElementById('bq-buscar-historico')?.addEventListener('click', buscarEnHistorico);
         document.getElementById('bq-consultar-inpi')?.addEventListener('click', consultarInpiEnVivo);
+        document.getElementById('bq-consultar-cuit')?.addEventListener('click', consultarCuitEnVivo);
     }
 
     async function consultarInpiEnVivo() {
@@ -487,6 +508,39 @@ const Busqueda = (() => {
         resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo: 'Medio', _acta: r.acta });
         renderResultados();
         UI.toast('Agregada a las coincidencias del informe', 'success');
+    }
+
+    // ── Búsqueda por CUIT o titular (ConsultaCuitOTitular, op 8 del WS) ──
+    async function consultarCuitEnVivo() {
+        const cuit = document.getElementById('bq-cuit')?.value?.trim();
+        const titular = document.getElementById('bq-cuit-titular')?.value?.trim() || '';
+        const cont = document.getElementById('bq-cuit-resultado');
+        if (!cuit) { UI.toast('Escribí un CUIT primero', 'error'); return; }
+        const btn = document.getElementById('bq-consultar-cuit');
+        if (btn) { btn.disabled = true; btn.textContent = 'Consultando...'; }
+        try {
+            const j = await Inpi.consultaCuit(cuit, titular);
+            if (!j.ok) throw new Error(j.error || 'Error en la consulta CUIT');
+            const campos = j.campos || {};
+            if (!cont) return;
+            const filas = Object.entries(campos).filter(([k, v]) => v && !['xml_crudo'].includes(k));
+            if (filas.length === 0) {
+                cont.innerHTML = `<div style="color:var(--success)">✓ Sin resultados para el CUIT ${UI.escapeHtml(cuit)}.</div>`;
+                UI.toast('Sin resultados para ese CUIT', 'info');
+                return;
+            }
+            cont.innerHTML = `
+                <div style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:var(--space-sm);">Resultado del INPI (consulta pública, registro único):</div>
+                <table class="data-table">
+                  <tbody>${filas.map(([k, v]) => `<tr><td style="text-transform:capitalize; font-weight:600; width:220px; color:var(--text-secondary);">${UI.escapeHtml(k.replace(/_/g,' '))}</td><td>${UI.escapeHtml(v)}</td></tr>`).join('')}</tbody>
+                </table>`;
+            UI.toast('Datos del CUIT obtenidos', 'success');
+        } catch (err) {
+            if (cont) cont.innerHTML = `<strong style="color:var(--danger)">Error:</strong> ${UI.escapeHtml(err.message)}`;
+            UI.toast('Error consultando el CUIT', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🔎 Consultar CUIT'; }
+        }
     }
 
     // ── Búsqueda automática contra actas_historicas (pg_trgm) ──

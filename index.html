@@ -423,9 +423,27 @@
             <p style="font-size:0.8125rem; color:var(--text-tertiary); margin-top:4px;">Plazos legales automáticos (vencimientos, renovaciones, contestaciones) + eventos manuales que creás vos. Todo filtrado por tu estudio.</p>
             <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
               <button class="btn btn--primary btn--sm" id="btn-nuevo-evento">＋ Nuevo evento</button>
+              <button class="btn btn--secondary btn--sm" id="btn-inpi-notificaciones">🔔 Traer notificaciones INPI</button>
               <span id="calendario-count" style="font-size:0.8125rem; color:var(--text-tertiary);"></span>
             </div>
           </div>
+          <div id="inpi-notif-form" style="display:none; margin-top:12px;" class="card">
+            <h4>Consultar notificaciones del INPI</h4>
+            <div class="banner banner--warning" style="margin-bottom:10px; font-size:0.775rem;">
+              ⚠️ Tu CUIT/Clave del INPI se usan solo para esta consulta — no se guardan en ningún lado.
+            </div>
+            <div class="form-alta" style="grid-template-columns: 1fr 1fr;">
+              <div class="form-group"><label class="form-label">Fecha inicial *</label><input type="date" class="form-input" id="inpi-notif-fecha-ini"></div>
+              <div class="form-group"><label class="form-label">Fecha final *</label><input type="date" class="form-input" id="inpi-notif-fecha-fin"></div>
+              <div class="form-group"><label class="form-label">CUIT INPI *</label><input class="form-input" id="inpi-notif-cuit" placeholder="ej. 20458255297"></div>
+              <div class="form-group"><label class="form-label">Clave INPI *</label><input type="password" class="form-input" id="inpi-notif-clave"></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:10px; justify-content:flex-end;">
+              <button class="btn btn--secondary btn--sm" id="btn-cancelar-inpi-notif">Cancelar</button>
+              <button class="btn btn--primary btn--sm" id="btn-consultar-inpi-notif">Consultar</button>
+            </div>
+          </div>
+          <div id="inpi-notif-resultado" style="display:none; margin-top:12px;" class="card"></div>
           <div class="card" style="margin-top:12px; min-height:400px;">
             <div id="calendar"></div>
             <div id="calendar-list" style="margin-top:12px;"></div>

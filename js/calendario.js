@@ -112,6 +112,56 @@ const Calendario = (() => {
       document.getElementById('calendario-form').style.display = 'none';
     });
     document.getElementById('btn-guardar-evento')?.addEventListener('click', guardar);
+    document.getElementById('btn-inpi-notificaciones')?.addEventListener('click', () => {
+      const f = document.getElementById('inpi-notif-form');
+      if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    });
+    document.getElementById('btn-cancelar-inpi-notif')?.addEventListener('click', () => {
+      document.getElementById('inpi-notif-form').style.display = 'none';
+    });
+    document.getElementById('btn-consultar-inpi-notif')?.addEventListener('click', consultarNotificaciones);
+  }
+
+  async function consultarNotificaciones() {
+    const fechaInicial = document.getElementById('inpi-notif-fecha-ini')?.value;
+    const fechaFinal = document.getElementById('inpi-notif-fecha-fin')?.value;
+    const cuit = document.getElementById('inpi-notif-cuit')?.value.trim();
+    const clave = document.getElementById('inpi-notif-clave')?.value.trim();
+    const cont = document.getElementById('inpi-notif-resultado');
+    if (!fechaInicial || !fechaFinal || !cuit || !clave) {
+      UI.toast('Completá todas las fechas y credenciales', 'error');
+      return;
+    }
+    const btn = document.getElementById('btn-consultar-inpi-notif');
+    if (btn) { btn.disabled = true; btn.textContent = 'Consultando...'; }
+    try {
+      const cfg = window.APP_CONFIG.supabase;
+      const session = await Auth.getSession();
+      const token = session?.access_token || '';
+      const r = await fetch(`${cfg.url}/functions/v1/inpi-notificaciones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ fechaInicial, fechaFinal, cuit, clave })
+      });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'Error consultando notificaciones');
+      const campos = j.campos || {};
+      const filas = Object.entries(campos).filter(([k, v]) => v);
+      if (!cont) return;
+      cont.style.display = 'block';
+      if (filas.length === 0) {
+        cont.innerHTML = `<h4>Notificaciones del INPI</h4><div style="color:var(--success); margin-top:8px;">✓ Sin notificaciones en el rango.</div>`;
+      } else {
+        cont.innerHTML = `<h4>Notificaciones del INPI</h4>
+          <table class="data-table" style="margin-top:10px;"><tbody>${filas.map(([k, v]) => `<tr><td style="font-weight:600; width:220px;">${UI.escapeHtml(k.replace(/_/g, ' '))}</td><td>${UI.escapeHtml(v)}</td></tr>`).join('')}</tbody></table>`;
+      }
+      UI.toast('Notificaciones obtenidas', 'success');
+    } catch (err) {
+      if (cont) { cont.style.display = 'block'; cont.innerHTML = `<h4>Notificaciones del INPI</h4><strong style="color:var(--danger); margin-top:8px; display:block;">Error:</strong> ${UI.escapeHtml(err.message)}`; }
+      UI.toast('Error consultando notificaciones', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Consultar'; }
+    }
   }
 
   return { load, render, init, borrar };

@@ -25,5 +25,9 @@ const Inpi = (() => {
     const r = await fetch(`${cfg().url}/functions/v1/inpi-consulta`, {method:'POST', headers:{'Content-Type':'application/json', apikey: cfg().anonKey}, body: JSON.stringify({tipo:'denominacion', valor})});
     const j = await r.json(); if (!j.ok) throw new Error(j.error); return j;
   }
-  return { parseEstado, parseVencimiento, isLogoReal, acta, grilla, consultaDenominacion };
+  async function consultaCuit(cuit, titular = '') {
+    const r = await fetch(`${cfg().url}/functions/v1/inpi-consulta`, {method:'POST', headers:{'Content-Type':'application/json', apikey: cfg().anonKey}, body: JSON.stringify({tipo:'cuit', valor: cuit, titular})});
+    const j = await r.json(); if (!j.ok) throw new Error(j.error); return j;
+  }
+  return { parseEstado, parseVencimiento, isLogoReal, acta, grilla, consultaDenominacion, consultaCuit };
 })();
