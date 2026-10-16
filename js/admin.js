@@ -214,16 +214,29 @@ const Admin = (() => {
     } catch(e){ UI.toast('Error: '+e.message, 'error'); }
   }
   async function reenviarResumen(estudio_id) {
-    const ok = await UI.confirm('¿Reenviar resumen?', 'Dispara el workflow que manda por mail las alertas fuertes + vencimientos de este estudio.');
+    const ok = await UI.confirm('¿Reenviar resumen?', 'Dispara el workflow que manda por mail las alertas fuertes + vencimientos de este estudio (incluso "sin novedades" si no hubo alertas sobre lo procesado).');
     if (!ok) return;
     try {
       const cfg = window.APP_CONFIG.supabase;
-      const token = localStorage.getItem('sb-oomczohvjqycpuhhmotv-auth-token');
       let accessToken = null;
-      try { const parsed = JSON.parse(token); accessToken = parsed.access_token; } catch {}
+      try {
+        if (typeof Auth !== 'undefined' && Auth.getSession) {
+          const s = await Auth.getSession();
+          accessToken = s?.access_token || null;
+        }
+      } catch {}
+      if (!accessToken) {
+        try { const parsed = JSON.parse(localStorage.getItem('sb-oomczohvjqycpuhhmotv-auth-token')); accessToken = parsed.access_token; } catch {}
+      }
       const r = await fetch(`${cfg.url}/functions/v1/admin-reenviar`, { method:'POST', headers:{'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${accessToken || cfg.anonKey}`}, body: JSON.stringify({ estudio_id }) });
-      const j = await r.json();
-      if (!j.ok) throw new Error(j.error);
+      const t = await r.text();
+      let j = {};
+      try { j = JSON.parse(t); } catch { throw new Error(`HTTP ${r.status}: respuesta no JSON del edge`); }
+      if (!r.ok || !j.ok) {
+        const msg = j.error || t.slice(0, 200);
+        if (/GITHUB_PAT/i.test(msg)) throw new Error('Falta el secret GITHUB_PAT en Supabase (Edge Functions → Secrets). Creá un PAT fine-grained con Actions:write y agregalo.');
+        throw new Error(msg);
+      }
       UI.toast('Reenvío disparado (llega en unos minutos)', 'success');
     } catch(e){ UI.toast('Error: '+e.message, 'error'); }
   }

@@ -20,7 +20,7 @@ const UI = (() => {
         const icons = { success: '✓', error: '✕', info: 'ℹ' };
         const el = document.createElement('div');
         el.className = `toast toast--${type}`;
-        el.innerHTML = `<span>${icons[type] || ''}</span><span>${message}</span>`;
+        el.innerHTML = `<span>${icons[type] || ''}</span><span>${escapeHtml(message)}</span>`;
         getToastContainer().appendChild(el);
 
         setTimeout(() => {
@@ -138,7 +138,9 @@ const UI = (() => {
         if (!str) return '';
         const div = document.createElement('div');
         div.textContent = str;
-        return div.innerHTML;
+        // textContent→innerHTML escapa &<> pero NO comillas: se agregan para
+        // uso seguro también dentro de atributos value="..."/title="...".
+        return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     // ── File to Base64 ────────────────────────────────
