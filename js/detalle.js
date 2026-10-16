@@ -71,7 +71,7 @@ const Detalle = (() => {
     }
     if (!grilla) {
       const warn = document.createElement('div');
-      warn.style.cssText = 'margin-top:12px; padding:8px; background:#fff3cd; border:1px solid #ffe69c; border-radius:6px; font-size:0.75rem;';
+      warn.style.cssText = 'margin-top:12px; padding:8px; background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:6px; font-size:0.75rem;';
       warn.innerHTML = `No se pudo cargar la grilla completa desde el INPI para esta acta. Probá <a href="inpi-grilla.html?acta=${encodeURIComponent(acta)}" target="_blank" style="text-decoration:underline;">ver grilla en INPI ↗</a> con acta ${UI.escapeHtml(acta)}.`;
       body.appendChild(warn);
     }
@@ -94,11 +94,11 @@ const Detalle = (() => {
     };
     const grillaHtml2 = g ? `
       <div style="margin-bottom:16px;">
-        <div style="background:#0f3a5f; color:#fff; padding:8px 12px; font-weight:600; font-size:0.8125rem; border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center;"><span>Búsqueda avanzada — Grilla INPI</span><span style="font-weight:400; font-size:0.7rem; opacity:0.9;">${g.fecha_ingreso ? new Date(g.fecha_ingreso).toLocaleDateString('es-AR') : ''}</span></div>
-        <div style="overflow:auto; border:1px solid #0f3a5f; border-top:none; border-radius:0 0 6px 6px; background:#fff;">
+        <div style="background:var(--info); color:#fff; padding:8px 12px; font-weight:600; font-size:0.8125rem; border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center;"><span>Búsqueda avanzada — Grilla INPI</span><span style="font-weight:400; font-size:0.7rem; opacity:0.9;">${g.fecha_ingreso ? new Date(g.fecha_ingreso).toLocaleDateString('es-AR') : ''}</span></div>
+        <div style="overflow:auto; border:1px solid var(--info-border); border-top:none; border-radius:0 0 6px 6px; background:var(--bg-surface);">
           <table class="data-table" style="font-size:0.75rem; min-width:720px; margin:0;">
-            <thead><tr style="background:#f0f4f8; font-size:0.68rem; color:var(--text-secondary);"><th style="padding:8px;">NRO ACTA</th><th>TITULARES</th><th>FECHA INGRESO</th><th>CLASE</th><th>DENOMINACION</th><th>TIPO</th><th>RESOLUCION</th><th>ESTADO</th><th>VENCIMIENTO</th></tr></thead>
-            <tbody><tr style="background:#fff;">
+            <thead><tr style="background:var(--bg-main); font-size:0.68rem; color:var(--text-secondary);"><th style="padding:8px;">NRO ACTA</th><th>TITULARES</th><th>FECHA INGRESO</th><th>CLASE</th><th>DENOMINACION</th><th>TIPO</th><th>RESOLUCION</th><th>ESTADO</th><th>VENCIMIENTO</th></tr></thead>
+            <tbody><tr>
               <td class="mono" style="font-weight:700; color:var(--primary);">${UI.escapeHtml(g.acta)}</td>
               <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${UI.escapeHtml((g.titulares||'').replace(/\s+/g,' ').trim() || '—')}</td>
               <td>${g.fecha_ingreso ? new Date(g.fecha_ingreso).toLocaleDateString('es-AR') : '—'}</td>
@@ -131,11 +131,11 @@ const Detalle = (() => {
               <tr><th style="text-align:left; background:var(--bg-main);">Acta / Expediente</th><td class="mono">${UI.escapeHtml(d.acta)}${d.expediente_url ? ` · <button class="btn btn--ghost btn--sm" style="font-size:0.75rem; padding:2px 6px;" onclick="Detalle.irAInpi('${d.acta}')">Ver en INPI ↗</button>` : ''}</td></tr>
             </tbody>
           </table>
-          <div style="background:#0f3a5f; color:#fff; padding:6px 10px; font-weight:600; font-size:0.75rem; margin-top:14px; border-radius:6px 6px 0 0;">PROTECCION</div>
-          <div style="border:1px solid #0f3a5f; border-top:none; padding:12px; border-radius:0 0 6px 6px; background:#fff;">
-            ${d.clase ? `<div style="font-size:0.8125rem;"><strong>CLASE:</strong> <span style="color:#c0392b; font-weight:600;">${UI.escapeHtml(d.clase)}</span></div>` : ''}
+          <div style="background:var(--info); color:#fff; padding:6px 10px; font-weight:600; font-size:0.75rem; margin-top:14px; border-radius:6px 6px 0 0;">PROTECCION</div>
+          <div style="border:1px solid var(--info-border); border-top:none; padding:12px; border-radius:0 0 6px 6px; background:var(--bg-surface);">
+            ${d.clase ? `<div style="font-size:0.8125rem;"><strong>CLASE:</strong> <span style="color:var(--danger); font-weight:600;">${UI.escapeHtml(d.clase)}</span></div>` : ''}
             ${d.denominacion || g?.denominacion ? '' : ''}
-            ${d.reivindicaciones ? `<div style="margin-top:8px;font-size:0.8125rem;"><strong>PROTECCION:</strong> <span style="color:#c0392b; font-weight:600;">Solamente</span><div style="margin-top:4px; font-size:0.75rem; color:var(--text-secondary);">LIMITACION:</div><div style="margin-top:4px;white-space:pre-wrap;background:var(--bg-main);padding:10px;border-radius:6px;border:1px solid var(--border);line-height:1.4; font-size:0.75rem;">${UI.escapeHtml(d.reivindicaciones)}</div></div>` : '<div style="margin-top:8px;font-size:0.8125rem;color:var(--text-tertiary);">Sin reivindicaciones cargadas (puede ser acta antigua o figurativa sin texto). Ver grilla arriba para datos principales.</div>'}
+            ${d.reivindicaciones ? `<div style="margin-top:8px;font-size:0.8125rem;"><strong>PROTECCION:</strong> <span style="color:var(--danger); font-weight:600;">Solamente</span><div style="margin-top:4px; font-size:0.75rem; color:var(--text-secondary);">LIMITACION:</div><div style="margin-top:4px;white-space:pre-wrap;background:var(--bg-main);padding:10px;border-radius:6px;border:1px solid var(--border);line-height:1.4; font-size:0.75rem;">${UI.escapeHtml(d.reivindicaciones)}</div></div>` : '<div style="margin-top:8px;font-size:0.8125rem;color:var(--text-tertiary);">Sin reivindicaciones cargadas (puede ser acta antigua o figurativa sin texto). Ver grilla arriba para datos principales.</div>'}
           </div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn--secondary btn--sm" onclick="Detalle.abrirEnINPI('${d.acta}', '${UI.escapeHtml(d.denominacion|| (g?g.denominacion:''))}')">Abrir grilla completa en INPI ↗</button>

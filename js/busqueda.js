@@ -9,10 +9,11 @@ function inpiEstadoLabel(cod) { if (!cod) return '—'; return INPI_ESTADO_MAP[S
 function inpiLink(acta) { return acta ? `inpi-grilla.html?acta=${encodeURIComponent(acta)}` : '#'; }
 
 function normalizarFoneticoJS(s){
-  s = String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const reps = [["SHISHA","YIYA"],["QU","K"],["CU","K"],["C","K"],["Z","S"],["S","S"],["V","B"],["B","B"],["LL","Y"],["H",""],["Ñ","N"],["PH","F"],["W","V"],["SH","Y"],["CH","Y"],["Y","I"],["I","I"],["J","Y"],["G","Y"],["R","L"],["L","L"],["E","I"],["O","U"]];
+  // Espejo de matcher.py::normalizar_fonetico — solo equivalencias seguras.
+  s = String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/&/g,' Y ');
+  const reps = [["SHISHA","YIYA"],["QU","K"],["CU","K"],["C","K"],["Z","S"],["V","B"],["LL","Y"],["H",""],["Ñ","N"],["PH","F"],["W","B"],["SH","Y"],["CH","Y"]];
   for(const [a,b] of reps) s = s.split(a).join(b);
-  s = s.replace(/(.)\1+/g,'$1').replace(/[^A-Z]/g,'');
+  s = s.replace(/(.)\1+/g,'$1').replace(/[^A-Z0-9]/g,'');
   return s;
 }
 function calcularSimilitudJS(a, b) {

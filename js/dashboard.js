@@ -69,6 +69,7 @@ const Dashboard = (() => {
             ${renderInfoItem('Alertas de texto', alertas.filter(a => a.tipo_match === 'texto').length.toString(), '📝')}
             ${renderInfoItem('Alertas de logo', alertas.filter(a => a.tipo_match === 'logo').length.toString(), '🖼️')}
           </div>
+          <div id="cron-heartbeat" style="margin-top: var(--space-md); padding: var(--space-sm) var(--space-md); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-main); font-size: 0.75rem; color: var(--text-tertiary);">● Cotejo: verificando última corrida…</div>
         </div>
       </div>
 
@@ -177,5 +178,23 @@ const Dashboard = (() => {
     `;
     }
 
-    return { render };
+    async function cargarHeartbeat() {
+        const el = document.getElementById('cron-heartbeat');
+        if (!el || typeof API === 'undefined' || !API.request) return;
+        try {
+            const rows = await API.request('/rest/v1/debug_logs?select=mensaje,created_at&order=created_at.desc&limit=5');
+            const ok = (rows || []).find(r => /corrida completa/i.test(r.mensaje || ''));
+            const fallo = (rows || []).find(r => /FALLO|ERROR|Traceback/i.test(r.mensaje || ''));
+            if (ok) {
+                const f = new Date(ok.created_at).toLocaleString('es-AR');
+                el.innerHTML = `● <strong style="color:var(--success);">Cotejo activo</strong> — última corrida OK: ${UI.escapeHtml(f)}`;
+            } else if (fallo) {
+                el.innerHTML = `● <strong style="color:var(--danger);">Cotejo con fallos</strong> — revisar Admin`;
+            } else {
+                el.innerHTML = `● Cotejo: sin corridas registradas aún`;
+            }
+        } catch (e) { el.innerHTML = `● Cotejo: no se pudo verificar`; }
+    }
+
+    return { render, cargarHeartbeat };
 })();

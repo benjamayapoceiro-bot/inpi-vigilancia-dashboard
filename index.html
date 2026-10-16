@@ -222,6 +222,12 @@
               <option value="no">No revisadas</option>
               <option value="si">Revisadas</option>
             </select>
+            <select class="form-select" id="filtro-severidad">
+              <option value="">Toda severidad</option>
+              <option value="alto">Crítica &gt;85%</option>
+              <option value="medio">Moderada 60–85%</option>
+              <option value="bajo">Leve &lt;60%</option>
+            </select>
           </div>
 
           <!-- Table -->
@@ -250,6 +256,15 @@
               El sistema chequea el INPI todos los jueves automáticamente.
               Cuando se detecten coincidencias con tu cartera, aparecerán aquí.
             </div>
+          </div>
+
+          <div style="margin-top:12px; font-size:0.7rem; color:var(--text-tertiary); text-align:center;">
+            <span style="color:var(--danger); font-weight:600;">&gt;85% Oposición recomendada</span>
+            &nbsp;·&nbsp;
+            <span style="color:var(--warning); font-weight:600;">60–85% Evaluación jurídica</span>
+            &nbsp;·&nbsp;
+            <span style="color:var(--info); font-weight:600;">&lt;60% Observación informativa</span>
+            &nbsp;·&nbsp;Ventana de oposición legal: 30 días corridos desde publicación.
           </div>
         </div>
 

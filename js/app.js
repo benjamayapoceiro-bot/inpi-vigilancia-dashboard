@@ -198,7 +198,7 @@ const App = (() => {
         const navAdmin = document.getElementById('nav-admin');
         // No bloqueamos el sidebar, solo mostramos/ocultamos navs según sesión (demo bypass)
         if (!logged) {
-            if (banner) { banner.style.display = 'block'; banner.textContent = '🔒 Sesión requerida — iniciá sesión para ver tu cartera, alertas y plazos. Nadie sin login ve nada.'; banner.style.background = '#fee2e2'; banner.style.borderColor = '#fecaca'; }
+            if (banner) { banner.style.display = 'block'; banner.textContent = '🔒 Sesión requerida — iniciá sesión para ver tu cartera, alertas y plazos. Nadie sin login ve nada.'; banner.style.background = 'var(--danger-bg)'; banner.style.borderColor = 'var(--danger-border)'; }
             if (navLogin) navLogin.style.display = 'flex';
             if (navAdmin) navAdmin.style.display = 'none';
         } else {
@@ -268,6 +268,7 @@ const App = (() => {
 
         document.getElementById('filtro-tipo')?.addEventListener('change', Alertas.render);
         document.getElementById('filtro-revisada')?.addEventListener('change', Alertas.render);
+        document.getElementById('filtro-severidad')?.addEventListener('change', Alertas.render);
 
         const searchInput = document.getElementById('search-alertas');
         if (searchInput) {
@@ -311,6 +312,7 @@ const App = (() => {
                 }
             } catch (e) { console.warn('branding fail', e); }
             Dashboard.render(alertas, marcas);
+            if (Dashboard.cargarHeartbeat) Dashboard.cargarHeartbeat();
             updateAlertBadge();
             navigate('dashboard');
             // Tour solo una vez al iniciar por primera vez

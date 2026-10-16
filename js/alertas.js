@@ -35,12 +35,14 @@ const Alertas = (() => {
   function render() {
     const tipo = document.getElementById('filtro-tipo')?.value || '';
     const rev = document.getElementById('filtro-revisada')?.value || '';
+    const sev = document.getElementById('filtro-severidad')?.value || '';
     const search = searchQuery.toLowerCase();
 
     let filtered = cache;
     if (tipo) filtered = filtered.filter(a => a.tipo_match === tipo);
     if (rev === 'si') filtered = filtered.filter(a => a.revisada);
     if (rev === 'no') filtered = filtered.filter(a => !a.revisada);
+    if (sev) filtered = filtered.filter(a => (a.nivel_riesgo || 'bajo') === sev);
     if (search) {
       filtered = filtered.filter(a =>
         (a.denominacion_nueva || '').toLowerCase().includes(search) ||
