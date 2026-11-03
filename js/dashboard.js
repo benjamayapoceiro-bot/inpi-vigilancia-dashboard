@@ -182,6 +182,11 @@ const Dashboard = (() => {
         const el = document.getElementById('cron-heartbeat');
         if (!el || typeof API === 'undefined' || !API.request) return;
         try {
+            const contexto = await Auth.getPerfilConEstudio();
+            if (contexto?.rol !== 'admin') {
+                el.innerHTML = '● <strong>Vigilancia automática</strong> — estado técnico supervisado por administración';
+                return;
+            }
             const rows = await API.request('/rest/v1/debug_logs?select=mensaje,created_at&order=created_at.desc&limit=5');
             const ok = (rows || []).find(r => /corrida completa/i.test(r.mensaje || ''));
             const fallo = (rows || []).find(r => /FALLO|ERROR|Traceback/i.test(r.mensaje || ''));
