@@ -29,6 +29,9 @@ function calcularSimilitudJS(a, b) {
   const contrasteCHY = fa.replace(/CH/g,'#') === fb.replace(/Y/g,'#');
   const contrasteEnie = fa.replace(/Ñ/g,'N') === fb || fb.replace(/Ñ/g,'N') === fa;
   const contrasteWB = fa.replace(/W/g,'B') === fb || fb.replace(/W/g,'B') === fa;
+  const contrasteInicio = String(a).trim().split(/\\s+/).length === 1
+    && String(b).trim().split(/\\s+/).length === 1
+    && fa.length >= 4 && fb.length >= 4 && fa[0] !== fb[0];
   if (ca.includes(cb) || cb.includes(ca)) {
     const longer = Math.max(ca.length, cb.length), shorter = Math.min(ca.length, cb.length);
     return Math.min(0.99, 0.72 + 0.2 * (shorter/longer));
@@ -43,7 +46,7 @@ function calcularSimilitudJS(a, b) {
   const maxLen = Math.max(ca.length, cb.length);
   let score = Math.max(0, 1 - dist / maxLen);
   if (fa.slice(0,3) === fb.slice(0,3)) score = Math.min(0.89, score + 0.08);
-  if (contrasteCHY || contrasteEnie || contrasteWB) score = Math.min(score, 0.59);
+  if (contrasteCHY || contrasteEnie || contrasteWB || (contrasteInicio && score < 0.90)) score = Math.min(score, 0.59);
   return score;
 }
 const Busqueda = (() => {
