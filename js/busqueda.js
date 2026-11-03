@@ -681,7 +681,7 @@ const Busqueda = (() => {
         y = 22;
         if (logoData) {
             try {
-                const formatoLogo = /^data:image\\/(jpe?g)/i.test(logoData) ? 'JPEG' : /^data:image\\/(webp)/i.test(logoData) ? 'WEBP' : 'PNG';
+                const formatoLogo = /^data:image\/(jpe?g)/i.test(logoData) ? 'JPEG' : /^data:image\/(webp)/i.test(logoData) ? 'WEBP' : 'PNG';
                 doc.addImage(logoData, formatoLogo, 150, 10, 46, 20, undefined, 'FAST');
             } catch (e) { console.warn('addImage fail', e); }
         }
