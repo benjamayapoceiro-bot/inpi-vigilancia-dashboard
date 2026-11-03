@@ -15,6 +15,12 @@ const Alertas = (() => {
     try {
       cache = await API.getAlertas();
       if (!Array.isArray(cache)) cache = [];
+      // Bucket privado: generar URLs firmadas para que los img carguen sin exponer credenciales.
+      await Promise.all(cache.map(async a => {
+        const originalCartera = a.logo_url_cartera || a.marcas_vigiladas?.logo_url;
+        try { if (originalCartera && API.signedStorageUrl) a.logo_url_cartera = await API.signedStorageUrl(originalCartera); } catch (e) { console.warn('No se pudo firmar logo de cartera', a.id, e); }
+        try { if (a.logo_url_acta && API.signedStorageUrl) a.logo_url_acta = await API.signedStorageUrl(a.logo_url_acta); } catch (e) { console.warn('No se pudo firmar logo de acta', a.id, e); }
+      }));
       // El admin ve todo por RLS: filtrar a su contexto (estudio propio o preview)
       try {
         if (typeof Auth !== 'undefined' && Auth.getPerfilConEstudio) {
@@ -73,6 +79,9 @@ const Alertas = (() => {
         const titulares = (a.titular_nuevo || []).map(t => UI.escapeHtml(t.nombre)).join(', ') || '—';
         const isLogo = a.tipo_match === 'logo';
         const isOposicion = a.tipo_match === 'oposicion_recibida';
+        const logoNuestra = a.logo_url_cartera || a.marcas_vigiladas?.logo_url || '';
+        const logoDetectado = a.logo_url_acta || '';
+        const mostrarComparacionVisual = !!(logoNuestra || logoDetectado);
         const hasDraft = !!a.borrador_oposicion;
         const reviewed = a.revisada ? 'checked' : '';
         const opPresentada = a.oposicion_presentada ? 'checked' : '';
@@ -93,7 +102,12 @@ const Alertas = (() => {
             <td>
               <div class="marca-name">${UI.escapeHtml(a.denominacion_nueva) || '(marca mixta)'}</div>
               ${isLogo ? '<span class="badge badge--info" style="margin-top:4px">Logo</span>' : ''}
-              ${isLogo && (a.logo_url_cartera || a.logo_url_acta) ? `<div style="display:flex; gap:8px; margin-top:6px; align-items:center;"><div style="text-align:center;"><div style="font-size:0.6rem; color:var(--text-tertiary);">Nuestra</div><img src="${a.logo_url_cartera || a.marcas_vigiladas?.logo_url || ''}" style="width:48px; height:48px; object-fit:contain; border:1px solid var(--border); border-radius:6px; background:#fff;" onerror="this.style.display='none'"><div style="font-size:0.6rem; color:var(--text-tertiary);">${a.marcas_vigiladas?.nombre || ''}</div></div><div style="font-size:0.9rem;">↔</div><div style="text-align:center;"><div style="font-size:0.6rem; color:var(--text-tertiary);">Acta nueva</div><img src="${a.logo_url_acta || ''}" style="width:48px; height:48px; object-fit:contain; border:1px solid var(--border); border-radius:6px; background:#fff;" onerror="this.style.display='none'"><div style="font-size:0.6rem; color:var(--text-tertiary);">Acta ${a.acta_nueva}</div></div></div>` : ''}
+              ${mostrarComparacionVisual ? `<div class="alert-logo-comparison" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-main);align-items:center;">
+                <div style="text-align:center;min-width:90px;flex:1;"><div style="font-size:0.68rem;color:var(--text-tertiary);margin-bottom:5px;">MARCA VIGILADA</div>${logoNuestra ? `<img loading="lazy" src="${UI.escapeHtml(logoNuestra)}" alt="Logo de marca vigilada" style="width:100%;max-width:120px;height:100px;object-fit:contain;border:1px solid var(--border);border-radius:6px;background:#fff;padding:4px;" onerror="this.style.display='none'">` : '<div style="padding:18px 4px;color:var(--text-tertiary);font-size:0.7rem;">Sin imagen cargada</div>'}<div style="font-size:0.68rem;margin-top:4px;">${UI.escapeHtml(a.marcas_vigiladas?.nombre || a.marca_vigilada || 'Cartera')}</div></div>
+                <div style="font-size:1.1rem;color:var(--text-tertiary);">↔</div>
+                <div style="text-align:center;min-width:90px;flex:1;"><div style="font-size:0.68rem;color:var(--text-tertiary);margin-bottom:5px;">MARCA DETECTADA</div>${logoDetectado ? `<img loading="lazy" src="${UI.escapeHtml(logoDetectado)}" alt="Logo del acta detectada" style="width:100%;max-width:120px;height:100px;object-fit:contain;border:1px solid var(--border);border-radius:6px;background:#fff;padding:4px;" onerror="this.style.display='none'">` : '<div style="padding:18px 4px;color:var(--text-tertiary);font-size:0.7rem;">El boletín no aportó logo</div>'}<div style="font-size:0.68rem;margin-top:4px;">Acta ${UI.escapeHtml(a.acta_nueva || '—')}</div></div>
+                <div style="width:100%;font-size:0.68rem;color:var(--text-secondary);">Comparación visual automática: revisar manualmente antes de concluir que existe confundibilidad.</div>
+              </div>` : ''}
               ${isOposicion ? '<div style="margin-top:4px"><span class="badge badge--danger" style="background-color: var(--danger); color: white; padding: 4px 8px; font-weight: bold;">🚨 OPOSICIÓN RECIBIDA</span></div>' : ''}
               ${necesitaOposicion && a.fecha_limite_oposicion ? `<div style="margin-top:4px;">${UI.expiryBadge(a.fecha_limite_oposicion)} <span style="font-size:0.6875rem; color:var(--text-tertiary);">límite oposición</span></div>` : ''}
               ${opPresentada ? `<div style="margin-top:4px;"><span class="badge badge--success">✓ Oposición presentada</span></div>` : ''}
