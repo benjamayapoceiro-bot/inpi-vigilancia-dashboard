@@ -51,6 +51,7 @@ const Busqueda = (() => {
     let clasesElegidas = [];
     let ultimaBusquedaInpi = [];
     let ultimaBusquedaInpiFiltrada = [];
+    let fuentesConsultadas = [];
 
     function render() {
         const view = document.getElementById('view-busqueda');
@@ -350,7 +351,7 @@ const Busqueda = (() => {
             if (lower.startsWith('z')) vars.add('s'+lower.slice(1));
             return Array.from(vars).slice(0,4);
           }
-        let fuente = { resultados: [], total: 0 };
+        let fuente = { resultados: [], total: 0, origen: 'INPI en vivo' };
         let lastError = null;
         try {
             const cfg = window.APP_CONFIG.supabase;
@@ -377,11 +378,11 @@ const Busqueda = (() => {
             }
             const merged = Array.from(mergedMap.values());
             if (merged.length) {
-              fuente = { resultados: merged, total: merged.length };
+              fuente = { resultados: merged, total: merged.length, origen: 'INPI en vivo' };
             } else if (!anyOk) {
               throw lastError || new Error('No se pudo conectar con el proxy INPI');
             } else {
-              fuente = { resultados: [], total: 0 };
+              fuente = { resultados: [], total: 0, origen: 'INPI en vivo' };
             }
         } catch (err) {
             console.error('inpi-consulta fetch error', err);
@@ -397,7 +398,7 @@ const Busqueda = (() => {
             try {
               const hist = await API.buscarHistorico(marca);
               if (hist && hist.length) {
-                fuente = { resultados: hist.slice(0,30).map(r=> ({ acta: r.acta, denominacion: r.denominacion, clase: r.clase, titulares: (r.titulares||[]).map(t=>t.nombre).join(', '), estado: r.estado || '—', tipo_marca: r.tipo || '—' })), total: hist.length };
+                fuente = { resultados: hist.slice(0,30).map(r=> ({ acta: r.acta, denominacion: r.denominacion, clase: r.clase, titulares: (r.titulares||[]).map(t=>t.nombre).join(', '), estado: r.estado || '—', tipo_marca: r.tipo || '—' })), total: hist.length, origen: 'Histórico local (respaldo por indisponibilidad INPI)' };
               } else {
                 UI.toast('Sin resultados en histórico para "'+marca+'"', 'error');
                 return;
@@ -407,6 +408,8 @@ const Busqueda = (() => {
               return;
             }
         }
+        // Registrar la fuente exacta: no confundir fallback histórico con consulta INPI en vivo.
+        fuentesConsultadas = [...new Set([...fuentesConsultadas, fuente.origen || 'Fuente no identificada'])];
         // a partir de acá fuente.resultados está listo (sea del vivo o del fallback histórico)
         try {
 
@@ -569,6 +572,7 @@ const Busqueda = (() => {
 
         try {
             const encontrados = await API.buscarSimilares(marca, clase, 0.25, 20);
+            fuentesConsultadas = [...new Set([...fuentesConsultadas, 'Histórico local de actas'])];
             if (!Array.isArray(encontrados) || encontrados.length === 0) {
                 if (nota) {
                     nota.style.display = 'block';
@@ -812,7 +816,9 @@ const Busqueda = (() => {
 
         const maxRiesgo = resultados.some(r => r.riesgo === 'Alto') ? 'alto' : resultados.some(r => r.riesgo === 'Medio') ? 'medio' : 'bajo';
         const conclusionAutomatica = resultados.length === 0
-            ? 'En las fuentes y clases consultadas no se incorporaron antecedentes similares al informe. Este resultado no equivale a una garantía de registrabilidad.'
+            ? (fuentesConsultadas.length
+                ? 'No se incorporaron antecedentes a la tabla del informe. Fuentes consultadas: ' + fuentesConsultadas.join('; ') + '. La ausencia de resultados cargados no equivale a una garantía de registrabilidad.'
+                : 'No se registraron consultas ni antecedentes incorporados en este informe. No corresponde interpretar este documento como una búsqueda negativa o una opinión de registrabilidad.')
             : maxRiesgo === 'alto'
             ? 'Se identificaron antecedentes de riesgo alto. Se recomienda un análisis jurídico individualizado y una estrategia de mitigación antes de presentar.'
             : maxRiesgo === 'medio'
@@ -909,6 +915,9 @@ const Busqueda = (() => {
     function reset() {
         resultados = [];
         clasesElegidas = [];
+        ultimaBusquedaInpi = [];
+        ultimaBusquedaInpiFiltrada = [];
+        fuentesConsultadas = [];
     }
 
     return { render, agregar, editar, borrar, agregarClase, quitarClase, reset, agregarDesdeInpi };
