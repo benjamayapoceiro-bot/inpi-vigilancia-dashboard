@@ -77,7 +77,7 @@ const Branding = (() => {
     const preset = PRESETS[_cache.brand_preset_id] || PRESETS.fons;
     const d = firmDefault();
     const contacto = [_cache.telefono || d.contactPhone, _cache.gmail || d.contactEmail, _cache.direccion || ''].filter(Boolean).join('   ');
-    return { name: _cache.brand_nombre_visible || d.name, tagline: _cache.brand_tagline || d.tagline, logoUrl: _cache.brand_logo_url || d.logoUrl, primaryColor: _cache.brand_primary || preset.primary, accentColor: _cache.brand_accent || preset.accent, contactEmail: _cache.gmail || d.contactEmail, contactPhone: _cache.telefono || d.contactPhone, contactLine: contacto, direccion: _cache.direccion || '', footer: _cache.footer_pdf || '' };
+    return { name: _cache.brand_nombre_visible || d.name, tagline: _cache.brand_tagline || d.tagline, logoUrl: _cache.brand_logo_url || d.logoUrl, primaryColor: _cache.brand_primary || preset.primary, accentColor: _cache.brand_accent || preset.accent, contactEmail: _cache.gmail || d.contactEmail, contactPhone: _cache.telefono || d.contactPhone, contactLine: contacto, direccion: _cache.direccion || '', footer: _cache.footer_pdf || '', pdfTitle: _cache.pdf_titulo || '', pdfIntroduction: _cache.pdf_introduccion || '', pdfConclusion: _cache.pdf_conclusion || '', pdfDisclaimer: _cache.pdf_disclaimer || '', pdfShowBudget: _cache.pdf_mostrar_presupuesto !== false, pdfShowNextSteps: _cache.pdf_mostrar_proximos_pasos !== false };
   }
   return { PRESETS, load, getFirm, applyFirm, firmDefault, get estudioId() { return _estudioId; }, get cache() { return _cache; } };
 })();
