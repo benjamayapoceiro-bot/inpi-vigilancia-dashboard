@@ -15,6 +15,10 @@ const Configuracion = (() => {
     const ctx = await currentEstudio();
     estudioId = ctx?.estudioId;
     if (!estudioId) { view.innerHTML = `<div class="card"><h3>Configuración</h3><p style="color:var(--text-tertiary)">Iniciá sesión con tu estudio para personalizar marca.</p></div>`; return; }
+    if (ctx?.readOnly) {
+      view.innerHTML = `<div class="card"><h3>Configuración en modo lectura</h3><p style="color:var(--text-tertiary);margin-top:8px;">La vista de administración no modifica la configuración del estudio propio. Abrí la vista previa de un estudio para editar su marca blanca.</p></div>`;
+      return;
+    }
     try {
       const sb = Auth.sb();
       const { data } = await sb.from('estudios_config').select('*').eq('estudio_id', estudioId).maybeSingle();
