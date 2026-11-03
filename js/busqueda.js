@@ -596,7 +596,7 @@ const Busqueda = (() => {
         }
     }
 
-    async async function generarPDF(preview = false) {
+    async function generarPDF(preview = false) {
         const cfg = window.APP_CONFIG;
         const firm = (typeof Branding !== 'undefined') ? Branding.getFirm() : cfg.firm;
         const previewWindow = preview ? window.open('about:blank', '_blank') : null;
