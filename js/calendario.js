@@ -1,6 +1,13 @@
 const Calendario = (() => {
   let eventos = [];
   let plazos = [];
+  let mesVisible = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let initialized = false;
+  const fechaLocal = (valor) => {
+    if (!valor) return null;
+    const [y,m,d] = String(valor).slice(0,10).split('-').map(Number);
+    return y && m && d ? new Date(y, m - 1, d) : new Date(valor);
+  };
 
   async function load() {
     const list = document.getElementById('calendar-list');
@@ -9,18 +16,14 @@ const Calendario = (() => {
       const { estudioId } = await (Auth.getPerfilConEstudio ? Auth.getPerfilConEstudio() : Promise.resolve({ estudioId: null }));
       if (!estudioId) throw new Error('Sin estudio');
       const [evts, pls] = await Promise.all([
-        API.request(`/rest/v1/eventos_manuales?select=*&estudio_id=eq.${estudioId}&order=fecha.asc`),
-        API.request(`/rest/v1/plazos_legales?select=*,marcas_vigiladas!inner(nombre,estudio_id)&estudio_id=eq.${estudioId}&order=fecha_vencimiento.asc`).catch(()=> API.request('/rest/v1/plazos_legales?select=*,marcas_vigiladas(nombre)&order=fecha_vencimiento.asc'))
+        API.request(`/rest/v1/eventos_manuales?select=*&estudio_id=eq.${encodeURIComponent(estudioId)}&order=fecha.asc`),
+        API.request(`/rest/v1/plazos_legales?select=*,marcas_vigiladas!inner(nombre,estudio_id)&estudio_id=eq.${encodeURIComponent(estudioId)}&order=fecha_vencimiento.asc`)
       ]);
       eventos = Array.isArray(evts) ? evts : [];
-      // Fallback: si plazos filtrado por estudio_id no funciona, filtrar en frontend
-      if (Array.isArray(pls)) {
-        plazos = pls.filter(p => {
-          if (p.estudio_id) return String(p.estudio_id) === String(estudioId);
-          if (p.marcas_vigiladas && p.marcas_vigiladas.estudio_id) return String(p.marcas_vigiladas.estudio_id) === String(estudioId);
-          return true;
-        });
-      } else plazos = [];
+      // Fail closed: nunca traer plazos globales si falla el filtro por estudio.
+      plazos = Array.isArray(pls) ? pls.filter(p =>
+        String(p.estudio_id || p.marcas_vigiladas?.estudio_id || '') === String(estudioId)
+      ) : [];
     } catch(e){
       eventos = []; plazos = [];
       UI.toast('Error cargando calendario', 'error');
@@ -39,10 +42,8 @@ const Calendario = (() => {
     if (!list) return;
     if (!all.length) {
       list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-tertiary)">Sin plazos ni eventos. Creá uno manual.</div>';
-      return;
-    }
-    list.innerHTML = all.map(ev => {
-      const d = new Date(ev.fecha);
+    } else list.innerHTML = all.map(ev => {
+      const d = fechaLocal(ev.fecha);
       const fechaStr = isNaN(d.getTime()) ? ev.fecha : d.toLocaleDateString('es-AR');
       const badge = ev.tipo === 'plazo' ? 'badge--warning' : ev.tipo === 'vencimiento' ? 'badge--danger' : 'badge--info';
       const esPlazo = ev.tipo === 'plazo';
@@ -57,28 +58,28 @@ const Calendario = (() => {
     const calEl = document.getElementById('calendar');
     if (calEl) {
       const hoy = new Date();
-      const year = hoy.getFullYear();
-      const month = hoy.getMonth();
+      const year = mesVisible.getFullYear();
+      const month = mesVisible.getMonth();
       const primerDia = new Date(year, month, 1).getDay();
       const diasEnMes = new Date(year, month+1, 0).getDate();
-      const nombreMes = hoy.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
-      let grid = `<div style="text-align:center; font-weight:700; font-size:1rem; margin-bottom:8px; color:var(--primary); text-transform:capitalize;">${nombreMes}</div>`;
+      const nombreMes = mesVisible.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
+      let grid = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><button class="btn btn--secondary btn--sm" onclick="Calendario.cambiarMes(-1)">← Anterior</button><strong style="font-size:1rem;color:var(--primary);text-transform:capitalize;">${nombreMes}</strong><button class="btn btn--secondary btn--sm" onclick="Calendario.cambiarMes(1)">Siguiente →</button></div>`;
       grid += `<div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:4px; text-align:center; font-size:0.7rem; color:var(--text-tertiary); margin-bottom:4px;"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div>`;
       grid += `<div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:4px;">`;
       for (let i=0;i<primerDia;i++) grid += `<div style="padding:8px;"></div>`;
       for (let d=1; d<=diasEnMes; d++) {
         const fechaStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const evsDia = all.filter(ev => ev.fecha && ev.fecha.slice(0,10) === fechaStr);
+        const evsDia = all.filter(ev => ev.fecha && String(ev.fecha).slice(0,10) === fechaStr);
         const tienePlazo = evsDia.some(e=>e.tipo==='plazo');
         const bg = evsDia.length ? (tienePlazo ? 'var(--warning-bg)' : 'var(--info-bg)') : 'var(--bg-surface)';
         const border = evsDia.length ? (tienePlazo ? 'var(--warning-border)' : 'var(--info-border)') : 'var(--border)';
-        grid += `<div onclick="document.getElementById('calendario-fecha').value='${fechaStr}'; document.getElementById('calendario-form').style.display='block'; document.getElementById('calendario-titulo').focus();" style="min-height:60px; padding:4px; border:1px solid ${border}; border-radius:6px; background:${bg}; cursor:pointer; position:relative;">
+        grid += `<div onclick="Calendario.seleccionarFecha('${fechaStr}')" style="min-height:60px; padding:4px; border:1px solid ${border}; border-radius:6px; background:${bg}; cursor:pointer; position:relative;">
           <div style="font-weight:600; font-size:0.8125rem; ${d===hoy.getDate()?'color:var(--primary); background:var(--info-bg); border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center;':''}">${d}</div>
           ${evsDia.slice(0,2).map(ev=>`<div style="font-size:0.65rem; background:${ev.tipo==='plazo'?'var(--warning)':'var(--info)'}; color:#fff; border-radius:3px; padding:1px 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${UI.escapeHtml(ev.titulo.slice(0,10))}</div>`).join('')}
           ${evsDia.length>2?`<div style="font-size:0.6rem; color:var(--text-tertiary); text-align:center;">+${evsDia.length-2} más</div>`:''}
         </div>`;
       }
-      grid += `</div><div style="margin-top:8px; font-size:0.7rem; color:var(--text-tertiary); text-align:center;">Tocá un día para agregar evento</div>`;
+      grid += `</div><div style="margin-top:8px; font-size:0.7rem; color:var(--text-tertiary); text-align:center;">Tocá un día para cargar un evento en esa fecha</div>`;
       calEl.innerHTML = grid;
     }
   }
@@ -93,7 +94,8 @@ const Calendario = (() => {
     const { estudioId } = await Auth.getPerfilConEstudio();
     if (!estudioId) { UI.toast('Sin estudio', 'error'); return; }
     try {
-      await API.request('/rest/v1/eventos_manuales', { method:'POST', body: JSON.stringify({ estudio_id: estudioId, titulo, fecha, tipo, marca_id: null, cliente_id: null, notas }) });
+      const notasCompletas = [marca ? 'Marca: ' + marca : '', notas || ''].filter(Boolean).join(' · ') || null;
+      await API.request('/rest/v1/eventos_manuales', { method:'POST', body: JSON.stringify({ estudio_id: estudioId, titulo, fecha, tipo, marca_id: null, cliente_id: null, notas: notasCompletas }) });
       UI.toast('Evento creado', 'success');
       document.getElementById('calendario-form').style.display = 'none';
       await load();
@@ -106,6 +108,8 @@ const Calendario = (() => {
   }
 
   function init() {
+    if (initialized) return;
+    initialized = true;
     document.getElementById('btn-nuevo-evento')?.addEventListener('click', () => {
       document.getElementById('calendario-form').style.display = 'block';
     });
@@ -165,5 +169,17 @@ const Calendario = (() => {
     }
   }
 
-  return { load, render, init, borrar };
+  function cambiarMes(delta) {
+    mesVisible = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + delta, 1);
+    render();
+  }
+  function seleccionarFecha(fecha) {
+    const input = document.getElementById('calendario-fecha');
+    const form = document.getElementById('calendario-form');
+    if (input) input.value = fecha;
+    if (form) form.style.display = 'block';
+    document.getElementById('calendario-titulo')?.focus();
+  }
+
+  return { load, render, init, borrar, cambiarMes, seleccionarFecha };
 })();
