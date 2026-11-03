@@ -58,6 +58,47 @@ const Cartera = (() => {
         return cache;
     }
 
+    async function sincronizarConInpi() {
+        const btn = document.getElementById('btn-sync-inpi');
+        const status = document.getElementById('sync-inpi-status');
+        const conActa = cache.filter(m => m.numero_acta && /^\\d{5,}$/.test(String(m.numero_acta)));
+        if (!conActa.length) { UI.toast('No hay marcas con número de acta para actualizar', 'info'); return; }
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ Sincronizando…'; }
+        if (status) { status.hidden = false; status.textContent = `Actualizando 0 de ${conActa.length} actas. Se consulta el INPI en forma secuencial para evitar bloqueos.`; }
+        let ok = 0, fail = 0;
+        for (let i = 0; i < conActa.length; i++) {
+            const m = conActa[i];
+            try {
+                const d = await Inpi.acta(m.numero_acta, true);
+                const g = d?.grilla || {};
+                const estadoRaw = g.estado || d.estado;
+                const estado = estadoRaw ? Inpi.parseEstado(estadoRaw) : null;
+                const vencimiento = Inpi.parseVencimiento(g.vencimiento || g.fecha_vencimiento || d.fecha_vencimiento);
+                const logo = Inpi.isLogoReal(d.logo_url) ? d.logo_url : null;
+                const patch = {};
+                if (estado && estado !== '—') patch.estado = estado;
+                if (vencimiento) patch.fecha_vencimiento = vencimiento;
+                if (logo) patch.logo_url = logo;
+                if (g.clase || d.clase) patch.clase = Number(g.clase || d.clase) || m.clase;
+                if (g.denominacion || d.denominacion) patch.nombre = String(g.denominacion || d.denominacion).trim();
+                if (Object.keys(patch).length) {
+                    await API.updateMarca(m.id, patch);
+                    Object.assign(m, patch);
+                }
+                ok++;
+            } catch (e) {
+                fail++;
+                console.warn('[Cartera] Falló actualización INPI', m.numero_acta, e);
+            }
+            if (status) status.textContent = `Actualizando ${i + 1} de ${conActa.length} · ${ok} correctas · ${fail} con error`;
+            if (i < conActa.length - 1) await new Promise(resolve => setTimeout(resolve, 1200));
+        }
+        renderStats(); render();
+        if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar desde INPI'; }
+        if (status) status.textContent = `Proceso terminado: ${ok} actas actualizadas; ${fail} sin respuesta. Revisá los detalles de las que fallaron.`;
+        UI.toast(`Sincronización terminada: ${ok} correctas, ${fail} con error`, fail ? 'info' : 'success');
+    }
+
     function renderStats() {
         const cont = document.getElementById('cartera-stats');
         if (!cont) return;
