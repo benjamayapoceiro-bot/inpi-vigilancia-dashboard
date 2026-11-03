@@ -418,10 +418,12 @@
           <div class="card">
             <h3>Todas las carteras (auditoría admin)</h3>
             <p style="font-size:0.8125rem; color:var(--text-tertiary); margin-top:4px;">Vista de solo lectura — todas las marcas de todos los estudios, con columna Estudio. No se edita cartera ajena desde acá.</p>
-            <div style="margin-top:12px; display:flex; gap:8px;">
+            <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <button class="btn btn--primary btn--sm" id="btn-sync-todas-inpi" onclick="CarterasAdmin.sincronizarTodas()">↻ Sincronizar todas con INPI</button>
               <input class="form-input" id="carteras-admin-search" placeholder="Filtrar por estudio o marca..." style="max-width:320px;">
               <span id="carteras-admin-count" style="font-size:0.8125rem; color:var(--text-tertiary); align-self:center;"></span>
             </div>
+            <div id="sync-todas-inpi-status" class="sync-status" hidden role="status" aria-live="polite"></div>
           </div>
           <div class="card" style="padding:0; overflow:hidden; margin-top:12px;">
             <table class="data-table" id="table-carteras-admin">
