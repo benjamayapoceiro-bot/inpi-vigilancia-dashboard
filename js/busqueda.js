@@ -790,12 +790,15 @@ const Busqueda = (() => {
             const colorRiesgo = { Alto: [200, 60, 60], Medio: [190, 140, 30], Bajo: [60, 150, 90] };
 
             resultados.forEach(r => {
-                saltoSiNecesario(8);
-                doc.setFontSize(9);
+                doc.setFontSize(8.5);
+                const nombreLineas = doc.splitTextToSize(String(r.marca || '—'), 64);
+                const titularLineas = doc.splitTextToSize(String(r.titular || '—'), 42);
+                const altoFila = Math.max(nombreLineas.length, titularLineas.length, 1) * 4.2 + 2;
+                saltoSiNecesario(altoFila + 2);
                 doc.setTextColor(0);
-                doc.text(String(r.marca || '—').slice(0, 30), colX[0] + 2, y);
+                doc.text(nombreLineas, colX[0] + 2, y);
                 doc.text(String(r.clase || '—'), colX[1] + 2, y);
-                doc.text(String(r.titular || '—').slice(0, 22), colX[2] + 2, y);
+                doc.text(titularLineas, colX[2] + 2, y);
                 const [rr, gg, bb] = colorRiesgo[r.riesgo] || [0, 0, 0];
                 doc.setTextColor(rr, gg, bb);
                 doc.setFont(undefined, 'bold');
@@ -804,12 +807,12 @@ const Busqueda = (() => {
                 doc.setTextColor(0);
                 if (r._acta) {
                     doc.setTextColor(40, 80, 160);
-                    doc.textWithLink(String(r._acta), colX[4] + 2, y, { url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${r._acta}` });
+                    doc.textWithLink(String(r._acta), colX[4] + 2, y, { url: `https://portaltramites.inpi.gob.ar/MarcasConsultas/Resultado?acta=${encodeURIComponent(r._acta)}` });
                     doc.setTextColor(0);
                 } else {
                     doc.text('—', colX[4] + 2, y);
                 }
-                y += 6.5;
+                y += altoFila;
                 doc.setDrawColor(230);
                 doc.line(MARGEN, y - 2, MARGEN + ANCHO, y - 2);
             });
