@@ -584,9 +584,17 @@ const Busqueda = (() => {
             if (nota) nota.style.display = 'none';
 
             for (const r of encontrados) {
-                const sim = r.similitud || 0;
-                const riesgo = sim >= 0.5 ? 'Alto' : sim >= 0.35 ? 'Medio' : 'Bajo';
-                const titular = (r.titulares || []).map(t => t.nombre).join(', ') || '—';
+                const sim = Number(r.similitud) || 0;
+                const claseCoincide = clasesElegidas.some(cl => Number(cl.n) === Number(r.clase));
+                // El trigram del histórico sirve para recuperar candidatos, no mide riesgo jurídico.
+                const relacion = r.relacion_clases || (claseCoincide ? 'misma' : 'distinta');
+                const riesgo = relacion === 'misma'
+                    ? (sim >= 0.85 ? 'Alto' : sim >= 0.65 ? 'Medio' : 'Bajo')
+                    : relacion === 'afin'
+                        ? (sim >= 0.88 ? 'Alto' : sim >= 0.72 ? 'Medio' : 'Bajo')
+                        : (sim >= 0.92 ? 'Medio' : 'Bajo');
+                const titularLista = Array.isArray(r.titulares) ? r.titulares : (r.titulares ? [r.titulares] : []);
+                const titular = titularLista.map(t => typeof t === 'string' ? t : (t?.nombre || '')).filter(Boolean).join(', ') || '—';
                 // Evitar duplicar si ya estaba cargado (misma acta)
                 if (resultados.some(x => x._acta === r.acta)) continue;
                 resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo, _acta: r.acta });
