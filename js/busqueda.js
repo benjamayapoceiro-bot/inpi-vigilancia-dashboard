@@ -785,9 +785,9 @@ const Busqueda = (() => {
             y += 18;
         } else {
             parrafo(
-                `Se encontraron ${resultados.length} antecedente(s) que podrían representar un riesgo de confundibilidad. ` +
-                `El nivel de riesgo indicado es una evaluación preliminar del estudio y no reemplaza el análisis definitivo ` +
-                `que realiza el INPI al momento de examinar la solicitud.`,
+                `Se incorporaron ${resultados.length} antecedente(s) para revisión. ` +
+                `Los puntajes automáticos sirven para ordenar candidatos y no representan una probabilidad matemática de confusión. ` +
+                `El nivel de riesgo indicado es una evaluación preliminar del estudio y no reemplaza el análisis jurídico integral ni el examen del INPI.`,
                 { espacioExtra: 6 }
             );
 
