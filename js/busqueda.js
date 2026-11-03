@@ -9,11 +9,13 @@ function inpiEstadoLabel(cod) { if (!cod) return '—'; return INPI_ESTADO_MAP[S
 function inpiLink(acta) { return acta ? `inpi-grilla.html?acta=${encodeURIComponent(acta)}` : '#'; }
 
 function normalizarFoneticoJS(s){
-  // Espejo de matcher.py::normalizar_fonetico — solo equivalencias seguras.
-  s = String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/&/g,' Y ');
-  const reps = [["SHISHA","YIYA"],["QU","K"],["CU","K"],["C","K"],["Z","S"],["V","B"],["LL","Y"],["H",""],["Ñ","N"],["PH","F"],["W","B"],["SH","Y"],["CH","Y"]];
-  for(const [a,b] of reps) s = s.split(a).join(b);
-  s = s.replace(/(.)\1+/g,'$1').replace(/[^A-Z0-9]/g,'');
+  // Espejo conservador de matcher.py: seseo, yeísmo y B/V sin colapsar
+  // CH/Y, Ñ/N ni W/B. Se usa para preselección, no como conclusión legal.
+  s = String(s||'').toUpperCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/&/g,' Y ');
+  s = s.replace(/QU/g,'K').replace(/GUE/g,'G#E').replace(/GUI/g,'G#I');
+  s = s.replace(/C(?=[EI])/g,'S').replace(/C/g,'K').replace(/Z/g,'S').replace(/V/g,'B').replace(/LL/g,'Y');
+  s = s.replace(/G(?=[EI])/g,'J').replace(/G#/g,'G').replace(/H/g,'').replace(/PH/g,'F');
+  s = s.replace(/(.)\\1+/g,'$1').replace(/[^A-Z0-9Ñ]/g,'');
   return s;
 }
 function calcularSimilitudJS(a, b) {
