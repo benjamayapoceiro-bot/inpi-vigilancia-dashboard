@@ -45,7 +45,6 @@ const Branding = (() => {
   async function load(estudioId, rol) {
     const params = new URLSearchParams(window.location.search);
     const previewId = params.get('preview_estudio');
-    if (rol === 'admin' && !previewId) { _cache = null; _estudioId = null; applyFirm(firmDefault()); return null; }
     const eid = (rol === 'admin' && previewId) ? previewId : estudioId;
     if (!eid) { applyFirm(firmDefault()); return null; }
     _estudioId = eid;
