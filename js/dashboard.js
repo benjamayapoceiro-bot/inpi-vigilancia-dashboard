@@ -12,11 +12,9 @@ const Dashboard = (() => {
         marcas = Array.isArray(marcas) ? marcas : [];
 
         const totalAlertas = alertas.length;
-        const alertasAltas = alertas.filter(a => (a.similitud_score || 0) >= 0.85).length;
-        const alertasMedias = alertas.filter(a => {
-            const s = a.similitud_score || 0;
-            return s >= 0.5 && s < 0.85;
-        }).length;
+        const alertasAltas = alertas.filter(a => a.requiere_oposicion === true || a.tipo_match === 'oposicion_recibida' || a.nivel_riesgo === 'alto').length;
+        const alertasMedias = alertas.filter(a => a.nivel_riesgo === 'medio').length;
+        const alertasBajas = Math.max(0, totalAlertas - alertasAltas - alertasMedias);
         const totalMarcas = marcas.length;
         const noRevisadas = alertas.filter(a => !a.revisada).length;
 
@@ -43,7 +41,7 @@ const Dashboard = (() => {
         <div class="card card--stat hover-lift">
           <div class="stat-icon red">⚠️</div>
           <div class="stat-value">${alertasAltas}</div>
-          <div class="stat-label">Requieren oposición (&gt;85%)</div>
+          <div class="stat-label">Riesgo alto / atención urgente</div>
         </div>
         <div class="card card--stat hover-lift">
           <div class="stat-icon green">📋</div>
@@ -57,17 +55,18 @@ const Dashboard = (() => {
         <!-- Severity Distribution -->
         <div class="card">
           <h3 style="margin-bottom: var(--space-lg); font-size: 0.9375rem;">Distribución por severidad</h3>
-          ${renderSeverityChart(alertasAltas, alertasMedias, totalAlertas - alertasAltas - alertasMedias, totalAlertas)}
+          ${renderSeverityChart(alertasAltas, alertasMedias, alertasBajas, totalAlertas)}
         </div>
 
         <!-- Quick Info -->
         <div class="card">
           <h3 style="margin-bottom: var(--space-lg); font-size: 0.9375rem;">Resumen rápido</h3>
           <div class="quick-info-list">
-            ${renderInfoItem('Próximo escaneo', 'Jueves automático', '🗓️')}
+            ${renderInfoItem('Frecuencia de vigilancia', 'Automática según cron', '🗓️')}
             ${renderInfoItem('Marcas por vencer (90d)', expiringCount.toString(), '⏰')}
             ${renderInfoItem('Alertas de texto', alertas.filter(a => a.tipo_match === 'texto').length.toString(), '📝')}
             ${renderInfoItem('Alertas de logo', alertas.filter(a => a.tipo_match === 'logo').length.toString(), '🖼️')}
+            ${renderInfoItem('Oposiciones recibidas', alertas.filter(a => a.tipo_match === 'oposicion_recibida').length.toString(), '⚖️')}
           </div>
           <div id="cron-heartbeat" style="margin-top: var(--space-md); padding: var(--space-sm) var(--space-md); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-main); font-size: 0.75rem; color: var(--text-tertiary);">● Cotejo: verificando última corrida…</div>
         </div>
@@ -90,10 +89,11 @@ const Dashboard = (() => {
             </tr>
           </thead>
           <tbody>
-            ${alertas.slice(0, 5).map(a => {
+            ${[...alertas].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 5).map(a => {
             const pct = Math.round((a.similitud_score || 0) * 100);
             const colorClass = UI.scoreColor(a.similitud_score || 0);
-            const titulares = (a.titular_nuevo || []).map(t => t.nombre).join(', ') || '—';
+            const rawTitulares = Array.isArray(a.titular_nuevo) ? a.titular_nuevo : (a.titular_nuevo ? [a.titular_nuevo] : []);
+            const titulares = rawTitulares.map(t => typeof t === 'string' ? t : (t?.nombre || '')).filter(Boolean).join(', ') || '—';
             return `
                 <tr>
                   <td>
@@ -150,14 +150,14 @@ const Dashboard = (() => {
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: var(--space-sm);">
               <div style="width: 10px; height: 10px; border-radius: 3px; background: var(--warning);"></div>
-              <span style="font-size: 0.8125rem; color: var(--text-secondary);">Media (50-85%)</span>
+              <span style="font-size: 0.8125rem; color: var(--text-secondary);">Riesgo medio</span>
             </div>
             <span style="font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 600; color: var(--warning);">${media}</span>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: var(--space-sm);">
               <div style="width: 10px; height: 10px; border-radius: 3px; background: var(--success);"></div>
-              <span style="font-size: 0.8125rem; color: var(--text-secondary);">Baja (&lt;50%)</span>
+              <span style="font-size: 0.8125rem; color: var(--text-secondary);">Riesgo bajo / informativo</span>
             </div>
             <span style="font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 600; color: var(--success);">${baja}</span>
           </div>
