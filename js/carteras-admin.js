@@ -49,8 +49,40 @@ const CarterasAdmin = (() => {
       }).join('');
     }
   }
+  async function sincronizarTodas() {
+    const btn=document.getElementById('btn-sync-todas-inpi');
+    const status=document.getElementById('sync-todas-inpi-status');
+    const lista=cache.filter(m=>m.numero_acta && /^\\d{5,}$/.test(String(m.numero_acta)));
+    if(!lista.length){UI.toast('No hay actas cargadas para sincronizar','info');return;}
+    if(btn){btn.disabled=true;btn.textContent='⏳ Actualizando…';}
+    if(status){status.hidden=false;status.textContent=`Actualizando 0 de ${lista.length} expedientes (secuencial).`;}
+    let ok=0,fail=0;
+    for(let i=0;i<lista.length;i++){
+      const m=lista[i];
+      try{
+        const d=await Inpi.acta(m.numero_acta,true),g=d?.grilla||{};
+        const patch={};
+        const estado=g.estado||d.estado;
+        if(estado)patch.estado=Inpi.parseEstado(estado);
+        const venc=Inpi.parseVencimiento(g.vencimiento||g.fecha_vencimiento||d.fecha_vencimiento);
+        if(venc)patch.fecha_vencimiento=venc;
+        const logo=Inpi.isLogoReal(d.logo_url)?d.logo_url:null;
+        if(logo)patch.logo_url=logo;
+        if(g.denominacion||d.denominacion)patch.nombre=String(g.denominacion||d.denominacion).trim();
+        if(g.clase||d.clase)patch.clase=Number(g.clase||d.clase)||m.clase;
+        if(Object.keys(patch).length){await API.updateMarca(m.id,patch);Object.assign(m,patch);}
+        ok++;
+      }catch(e){fail++;console.warn('Sync INPI admin',m.numero_acta,e);}
+      if(status)status.textContent=`Actualizando ${i+1}/${lista.length} · ${ok} correctas · ${fail} errores`;
+      if(i<lista.length-1)await new Promise(resolve=>setTimeout(resolve,1200));
+    }
+    render();
+    if(btn){btn.disabled=false;btn.textContent='↻ Sincronizar todas con INPI';}
+    if(status)status.textContent=`Finalizado: ${ok} actualizadas; ${fail} con error. Los expedientes sin respuesta quedan sin cambios.`;
+    UI.toast(`Sincronización global: ${ok} correctas, ${fail} errores`,fail?'info':'success');
+  }
   function init() {
     document.getElementById('carteras-admin-search')?.addEventListener('input', () => render());
   }
-  return { load, render, init };
+  return { load, render, init, sincronizarTodas };
 })();
