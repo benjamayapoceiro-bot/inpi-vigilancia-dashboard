@@ -335,3 +335,29 @@
 .form-input,.form-select{min-height:42px;border-radius:10px}
 .data-table tbody tr:hover{background:var(--bg-hover)}
 @media(max-width:640px){.section-header{align-items:flex-start;gap:12px;flex-direction:column}.section-header__actions{width:100%;display:flex;flex-wrap:wrap;gap:8px}.section-header__actions .btn{flex:1 1 auto}.filter-bar{display:grid;grid-template-columns:1fr!important;gap:10px}.data-table{min-width:720px}.card:has(>.data-table){overflow-x:auto!important}}
+
+/* FONS interface refinement — clearer hierarchy, calmer surfaces, responsive controls */
+.main-header{backdrop-filter:blur(14px);background:var(--bg-glass);border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(22,35,63,.035)}
+.sidebar{box-shadow:8px 0 28px rgba(22,35,63,.045)}
+.sidebar__brand{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.nav-item{border-radius:9px;margin:3px 10px;width:calc(100% - 20px);transition:background .16s ease,transform .16s ease}
+.nav-item:hover{transform:translateX(2px)}
+.nav-item.active{box-shadow:inset 3px 0 0 var(--accent)}
+.content-area{padding:clamp(16px,2.4vw,30px)}
+.view>.card,.view .card{border-radius:14px;border-color:var(--border);box-shadow:var(--shadow-sm)}
+.section-header{margin-bottom:18px}
+.section-header h2{font-family:var(--font-display);letter-spacing:-.02em;font-size:1.35rem}
+.card--stat{border:1px solid var(--border);box-shadow:var(--shadow-sm);padding:18px;border-radius:14px;min-height:116px}
+.card--stat:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.stat-value{font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+.filter-bar{gap:10px;padding:12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px}
+.data-table thead th{font-size:.66rem;letter-spacing:.075em;padding:13px 14px}
+.data-table tbody td{padding:13px 14px}
+.data-table tbody tr:last-child td{border-bottom:0}
+.badge{border-radius:999px;padding:4px 9px;font-weight:650;letter-spacing:.01em}
+.btn{border-radius:9px;font-weight:650;letter-spacing:.005em}
+.btn--primary{box-shadow:0 3px 10px rgba(var(--primary-rgb),.14)}
+.form-input,.form-select{border-radius:9px;background:var(--bg-surface)}
+.form-input:focus,.form-select:focus{box-shadow:0 0 0 3px rgba(var(--primary-rgb),.10)}
+.empty-state{min-height:180px}
+@media(max-width:768px){.main-header{padding-inline:14px}.content-area{padding:14px}.card--stat{min-height:96px}.stat-grid{gap:10px}.nav-item{min-height:44px}}
