@@ -17,7 +17,7 @@ const Calendario = (() => {
       if (!estudioId) throw new Error('Sin estudio');
       const [evts, pls] = await Promise.all([
         API.request(`/rest/v1/eventos_manuales?select=*&estudio_id=eq.${encodeURIComponent(estudioId)}&order=fecha.asc`),
-        API.request(`/rest/v1/plazos_legales?select=*,marcas_vigiladas!inner(nombre,estudio_id)&estudio_id=eq.${encodeURIComponent(estudioId)}&order=fecha_vencimiento.asc`)
+        API.request(`/rest/v1/plazos_legales?select=*,marcas_vigiladas!inner(nombre,estudio_id)&marcas_vigiladas.estudio_id=eq.${encodeURIComponent(estudioId)}&order=fecha_vencimiento.asc`)
       ]);
       eventos = Array.isArray(evts) ? evts : [];
       // Fail closed: nunca traer plazos globales si falla el filtro por estudio.
