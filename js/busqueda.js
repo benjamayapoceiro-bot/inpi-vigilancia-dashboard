@@ -29,8 +29,8 @@ function calcularSimilitudJS(a, b) {
   const contrasteCHY = fa.replace(/CH/g,'#') === fb.replace(/Y/g,'#');
   const contrasteEnie = fa.replace(/Ñ/g,'N') === fb || fb.replace(/Ñ/g,'N') === fa;
   const contrasteWB = fa.replace(/W/g,'B') === fb || fb.replace(/W/g,'B') === fa;
-  const contrasteInicio = String(a).trim().split(/\\s+/).length === 1
-    && String(b).trim().split(/\\s+/).length === 1
+  const contrasteInicio = String(a).trim().split(/\s+/).length === 1
+    && String(b).trim().split(/\s+/).length === 1
     && fa.length >= 4 && fb.length >= 4 && fa[0] !== fb[0];
   if (ca.includes(cb) || cb.includes(ca)) {
     const longer = Math.max(ca.length, cb.length), shorter = Math.min(ca.length, cb.length);
