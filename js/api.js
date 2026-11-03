@@ -69,7 +69,7 @@ const API = (() => {
             const idx = u.pathname.indexOf(marker);
             if (idx >= 0) {
                 let tail = u.pathname.slice(idx + marker.length);
-                tail = tail.replace(/^public\\//, '').replace(/^sign\\//, '');
+                tail = tail.replace(/^public\//, '').replace(/^sign\//, '');
                 const bucket = 'logos-marcas/';
                 if (tail.startsWith(bucket)) objectPath = decodeURIComponent(tail.slice(bucket.length));
             }
