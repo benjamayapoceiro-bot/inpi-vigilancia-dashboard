@@ -13,8 +13,8 @@ const Inpi = (() => {
     const d=new Date(v); return isNaN(d.getTime())||d.getFullYear()>2100 ? null : d.toISOString().slice(0,10);
   }
   function isLogoReal(url){ return url && !url.includes('logon.png') && !url.includes('assets/img/logon'); }
-  async function acta(acta) {
-    const r = await fetch(`${cfg().url}/functions/v1/inpi-detalle`, {method:'POST', headers:{'Content-Type':'application/json', apikey: cfg().anonKey}, body: JSON.stringify({acta})});
+  async function acta(acta, force = false) {
+    const r = await fetch(`${cfg().url}/functions/v1/inpi-detalle`, {method:'POST', headers:{'Content-Type':'application/json', apikey: cfg().anonKey}, body: JSON.stringify({acta, force})});
     const j = await r.json(); if (!j.ok) throw new Error(j.error||'error inpi-detalle'); return j.data;
   }
   async function grilla(acta) {
