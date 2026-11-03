@@ -728,6 +728,13 @@ const Busqueda = (() => {
         // ═══ INTRODUCCIÓN ═══
         subtitulo('¿Qué es este informe?');
         parrafo(firm.pdfIntroduction || 'Una búsqueda de antecedentes marcarios releva solicitudes y registros que podrían entrar en conflicto con el signo pretendido. El análisis considera semejanzas denominativas, fonéticas, visuales y la relación entre productos o servicios, con alcance limitado a las fuentes y fecha indicadas en este informe.');
+        subtitulo('Alcance y fuentes consultadas');
+        parrafo(
+            fuentesConsultadas.length
+                ? 'Fuentes registradas en esta sesión: ' + fuentesConsultadas.join('; ') + '. Los resultados reflejan únicamente el alcance y la cobertura efectiva de esas fuentes.'
+                : 'No se registraron fuentes consultadas en esta sesión. Este documento no debe interpretarse como una búsqueda negativa ni como una opinión de registrabilidad.',
+            { size: 8.5, color: 90 }
+        );
 
         // ═══ CLASES ═══
         subtitulo('Clases sugeridas (Clasificación de Niza)');
