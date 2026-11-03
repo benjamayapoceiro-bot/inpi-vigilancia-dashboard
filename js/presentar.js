@@ -76,7 +76,7 @@ const Presentar = (() => {
         <div class="form-group" style="margin-top:16px;"><label class="form-label"><input type="checkbox" id="p-confirm"> Confirmo que revisé los datos y asumo responsabilidad legal por esta presentación (Ley 22.362)</label></div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
           <button class="btn btn--secondary" id="p-generar-xml">📄 Generar XML (presentar manual)</button>
-          <button class="btn btn--primary" id="p-enviar-directo">📨 Enviar directo al INPI</button>
+          <button class="btn btn--primary" id="p-enviar-directo">🧪 Simular envío (no presenta)</button>
           <button class="btn btn--ghost btn--sm" id="p-ver-preview">👁️ Vista previa</button>
         </div>
         <pre id="p-preview" style="display:none; margin-top:16px; padding:12px; background:var(--bg-main); border:1px solid var(--border); border-radius:8px; font-size:0.75rem; white-space:pre-wrap; max-height:320px; overflow:auto;"></pre>
@@ -251,7 +251,7 @@ const Presentar = (() => {
         const btn=document.getElementById('p-enviar-directo'); btn.disabled=true; btn.textContent='Enviando...';
         const data = await llamarEndpoint();
         const out=document.getElementById('p-result');
-        if(data.ok){ out.innerHTML=`<span style="color:var(--success)">✓ Presentada (mock): Acta ${UI.escapeHtml(data.acta||'—')}</span>`; UI.toast('Trámite presentado (mock)','success'); }
+        if(data.ok){ out.innerHTML=`<span style="color:var(--success)">✓ Simulación completada — NO presentada ante INPI. Acta simulada: ${UI.escapeHtml(data.acta||'—')}</span>`; UI.toast('Simulación completada; no se presentó ante el INPI','info'); }
         else{ out.innerHTML=`<span style="color:var(--danger)">✗ Error: ${UI.escapeHtml(data.error||'desconocido')}</span>`; UI.toast('Error presentando','error'); }
       } catch(e){ UI.toast('Error: '+e.message,'error'); } finally{ const b=document.getElementById('p-enviar-directo'); if(b){b.disabled=false; b.textContent='📨 Enviar directo al INPI';} }
     });
