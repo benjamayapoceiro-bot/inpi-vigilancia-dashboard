@@ -327,3 +327,11 @@
         font-size: 1.5rem;
     }
 }
+/* Refresh and usability polish */
+.sync-status{margin:0 0 16px;padding:12px 16px;border:1px solid var(--primary);border-radius:12px;background:var(--bg-elevated);color:var(--text-secondary);font-size:.82rem;line-height:1.5}
+.card{transition:box-shadow .18s ease,border-color .18s ease}
+.card--stat{border-radius:16px}
+.btn{min-height:38px}
+.form-input,.form-select{min-height:42px;border-radius:10px}
+.data-table tbody tr:hover{background:var(--bg-hover)}
+@media(max-width:640px){.section-header{align-items:flex-start;gap:12px;flex-direction:column}.section-header__actions{width:100%;display:flex;flex-wrap:wrap;gap:8px}.section-header__actions .btn{flex:1 1 auto}.filter-bar{display:grid;grid-template-columns:1fr!important;gap:10px}.data-table{min-width:720px}.card:has(>.data-table){overflow-x:auto!important}}
