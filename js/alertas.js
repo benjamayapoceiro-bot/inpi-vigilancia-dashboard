@@ -74,6 +74,10 @@ const Alertas = (() => {
     if (tbody) {
       tbody.innerHTML = filtered.map(a => {
         const pct = Math.round((a.similitud_score || 0) * 100);
+        const evidencia = (Array.isArray(a.evidencia) && a.evidencia[0]) ? a.evidencia[0] : {};
+        const pctFonetica = Number.isFinite(Number(evidencia.fonetica)) ? Math.round(Number(evidencia.fonetica) * 100) : null;
+        const pctOrtografica = Number.isFinite(Number(evidencia.ortografica)) ? Math.round(Number(evidencia.ortografica) * 100) : null;
+        const pctVisual = a.tipo_match === 'logo' ? pct : (evidencia.score_visual != null ? Math.round(Number(evidencia.score_visual) * 100) : null);
         const colorClass = UI.scoreColor(a.similitud_score || 0);
         const badgeClass = UI.scoreBadgeClass(a.similitud_score || 0);
         const titulares = (a.titular_nuevo || []).map(t => UI.escapeHtml(t.nombre)).join(', ') || '—';
@@ -98,6 +102,7 @@ const Alertas = (() => {
                 <span class="score-bar__value" style="color: var(--${colorClass})">${pct}%</span>
               </div>
               ${a.nivel_riesgo ? `<span class="seal seal--${RIESGO_SEAL[a.nivel_riesgo] || 'neutral'}" style="margin-top:4px;"><span class="seal__ring"></span>Riesgo ${a.nivel_riesgo}</span>` : ''}
+              ${(pctFonetica !== null || pctOrtografica !== null || a.tipo_match === 'logo') ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">${pctOrtografica !== null ? `<span class="badge badge--info" title="Similitud de escritura">Ortografía ${pctOrtografica}%</span>` : ''}${pctFonetica !== null ? `<span class="badge badge--warning" title="Similitud de pronunciación">Fonética ${pctFonetica}%</span>` : ''}${a.tipo_match === 'logo' ? `<span class="badge badge--primary" title="Similitud visual por hashes perceptuales">Visual ${pctVisual}%</span>` : ''}</div>` : ''}
             </td>
             <td>
               <div class="marca-name">${UI.escapeHtml(a.denominacion_nueva) || '(marca mixta)'}</div>
