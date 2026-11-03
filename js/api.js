@@ -57,11 +57,49 @@ const API = (() => {
         }
     }
 
+    const signedUrlCache = new Map();
+
+    async function signedStorageUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+        const cfgNow = cfg();
+        let objectPath = null;
+        try {
+            const u = new URL(rawUrl, cfgNow.url);
+            const marker = '/storage/v1/object/';
+            const idx = u.pathname.indexOf(marker);
+            if (idx >= 0) {
+                let tail = u.pathname.slice(idx + marker.length);
+                tail = tail.replace(/^public\\//, '').replace(/^sign\\//, '');
+                const bucket = 'logos-marcas/';
+                if (tail.startsWith(bucket)) objectPath = decodeURIComponent(tail.slice(bucket.length));
+            }
+        } catch {}
+        // Si no es un objeto de nuestro bucket, conservar la URL original.
+        if (!objectPath) return rawUrl;
+        const cached = signedUrlCache.get(objectPath);
+        if (cached && cached.expiresAt > Date.now() + 60000) return cached.url;
+
+        const result = await request(`/storage/v1/object/sign/logos-marcas/${objectPath.split('/').map(encodeURIComponent).join('/')}`, {
+            method: 'POST',
+            body: JSON.stringify({ expiresIn: 3600 })
+        });
+        const signed = result?.signedURL || result?.signedUrl;
+        if (!signed) throw new Error('Storage no devolvió signedURL para la imagen');
+        const absolute = signed.startsWith('http')
+            ? signed
+            : signed.startsWith('/storage/v1/')
+                ? cfgNow.url + signed
+                : cfgNow.url + '/storage/v1' + (signed.startsWith('/') ? signed : '/' + signed);
+        signedUrlCache.set(objectPath, { url: absolute, expiresAt: Date.now() + 3500000 });
+        return absolute;
+    }
+
     return {
         request,
+        signedStorageUrl,
         // ── Alertas ────────────────────────────────
         async getAlertas(limit = 500) {
-            return request(`/rest/v1/alertas?select=*,marcas_vigiladas(nombre,numero_acta,estudio_id)&order=similitud_score.desc&limit=${limit}`);
+            return request(`/rest/v1/alertas?select=*,marcas_vigiladas(nombre,numero_acta,estudio_id,logo_url)&order=similitud_score.desc&limit=${limit}`);
         },
 
         async markRevisada(id, revisada) {
