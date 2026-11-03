@@ -516,10 +516,20 @@ const Busqueda = (() => {
     function agregarDesdeInpi(i) {
         const r = ultimaBusquedaInpi[i];
         if (!r) return;
-        const titular = (r.titulares || '').replace(/^\d+\s+/, '').replace(/\s+[\d.]+%$/, '');
-        resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo: 'Medio', _acta: r.acta });
+        if (resultados.some(x => String(x._acta || '') === String(r.acta || '') && r.acta)) {
+            UI.toast('Ese antecedente ya está en el informe', 'info');
+            return;
+        }
+        const rawTitulares = Array.isArray(r.titulares) ? r.titulares : (r.titulares ? [r.titulares] : []);
+        const titular = rawTitulares.map(t => typeof t === 'string' ? t : (t?.nombre || '')).filter(Boolean).join(', ') || '—';
+        const score = Number(r._sim) || 0;
+        const mismaClase = clasesElegidas.some(cl => Number(cl.n) === Number(r.clase));
+        const riesgo = mismaClase
+            ? (score >= 0.85 ? 'Alto' : score >= 0.65 ? 'Medio' : 'Bajo')
+            : (score >= 0.92 ? 'Medio' : 'Bajo');
+        resultados.push({ marca: r.denominacion || '(mixta)', clase: r.clase, titular, riesgo, _acta: r.acta });
         renderResultados();
-        UI.toast('Agregada a las coincidencias del informe', 'success');
+        UI.toast('Agregada al informe con riesgo preliminar; revisá el antecedente', 'success');
     }
 
     // ── Búsqueda por CUIT o titular (ConsultaCuitOTitular, op 8 del WS) ──
