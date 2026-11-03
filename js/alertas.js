@@ -52,7 +52,7 @@ const Alertas = (() => {
     if (search) {
       filtered = filtered.filter(a =>
         (a.denominacion_nueva || '').toLowerCase().includes(search) ||
-        (a.titular_nuevo || []).some(t => (t.nombre || '').toLowerCase().includes(search))
+        (Array.isArray(a.titular_nuevo) ? a.titular_nuevo : (a.titular_nuevo ? [a.titular_nuevo] : [])).some(t => String(typeof t === 'string' ? t : (t.nombre || '')).toLowerCase().includes(search))
       );
     }
 
@@ -80,7 +80,8 @@ const Alertas = (() => {
         const pctVisual = a.tipo_match === 'logo' ? pct : (evidencia.score_visual != null ? Math.round(Number(evidencia.score_visual) * 100) : null);
         const colorClass = UI.scoreColor(a.similitud_score || 0);
         const badgeClass = UI.scoreBadgeClass(a.similitud_score || 0);
-        const titulares = (a.titular_nuevo || []).map(t => UI.escapeHtml(t.nombre)).join(', ') || '—';
+        const titularLista = Array.isArray(a.titular_nuevo) ? a.titular_nuevo : (a.titular_nuevo ? [a.titular_nuevo] : []);
+        const titulares = titularLista.map(t => UI.escapeHtml(typeof t === 'string' ? t : (t.nombre || ''))).filter(Boolean).join(', ') || '—';
         const isLogo = a.tipo_match === 'logo';
         const isOposicion = a.tipo_match === 'oposicion_recibida';
         const logoNuestra = a.logo_url_cartera || a.marcas_vigiladas?.logo_url || '';
