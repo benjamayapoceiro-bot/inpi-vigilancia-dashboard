@@ -75,8 +75,8 @@ const Alertas = (() => {
       tbody.innerHTML = filtered.map(a => {
         const pct = Math.round((a.similitud_score || 0) * 100);
         const evidencia = (Array.isArray(a.evidencia) && a.evidencia[0]) ? a.evidencia[0] : {};
-        const pctFonetica = Number.isFinite(Number(evidencia.fonetica)) ? Math.round(Number(evidencia.fonetica) * 100) : null;
-        const pctOrtografica = Number.isFinite(Number(evidencia.ortografica)) ? Math.round(Number(evidencia.ortografica) * 100) : null;
+        const pctFonetica = a.tipo_match === 'texto' && Number.isFinite(Number(evidencia.fonetica)) ? Math.round(Number(evidencia.fonetica) * 100) : null;
+        const pctOrtografica = a.tipo_match === 'texto' && Number.isFinite(Number(evidencia.ortografica)) ? Math.round(Number(evidencia.ortografica) * 100) : null;
         const pctVisual = a.tipo_match === 'logo' ? pct : (evidencia.score_visual != null ? Math.round(Number(evidencia.score_visual) * 100) : null);
         const colorClass = UI.scoreColor(a.similitud_score || 0);
         const badgeClass = UI.scoreBadgeClass(a.similitud_score || 0);
