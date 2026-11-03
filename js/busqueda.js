@@ -611,6 +611,7 @@ const Busqueda = (() => {
         if (firm.logoUrl) {
             try {
                 const r = await fetch(firm.logoUrl);
+                if (!r.ok) throw new Error('No se pudo descargar el logo del estudio');
                 const blob = await r.blob();
                 logoData = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
             } catch (e) { console.warn('logo PDF no cargó', e); }
@@ -679,7 +680,10 @@ const Busqueda = (() => {
         // ═══ ENCABEZADO / PORTADA ═══
         y = 22;
         if (logoData) {
-            try { doc.addImage(logoData, 'PNG', 150, 10, 46, 20, undefined, 'FAST'); } catch (e) { console.warn('addImage fail', e); }
+            try {
+                const formatoLogo = /^data:image\\/(jpe?g)/i.test(logoData) ? 'JPEG' : /^data:image\\/(webp)/i.test(logoData) ? 'WEBP' : 'PNG';
+                doc.addImage(logoData, formatoLogo, 150, 10, 46, 20, undefined, 'FAST');
+            } catch (e) { console.warn('addImage fail', e); }
         }
         doc.setFontSize(19);
         doc.setFont(undefined, 'bold');
