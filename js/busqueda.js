@@ -150,7 +150,7 @@ const Busqueda = (() => {
       </div>
 
       <div class="card" style="margin-top: var(--space-lg);">
-        <h3 style="margin-bottom: var(--space-md); font-size: 0.9375rem;">Informe</h3>
+        <h3 style="margin-bottom: var(--space-md); font-size: 0.9375rem;">Informe y presentación al cliente</h3>
         <div class="form-alta" style="grid-template-columns: 1fr 120px;">
           <div class="form-group"><label class="form-label">Aclaraciones del estudio (saldrán en el PDF)</label><textarea class="form-input" id="bq-nota" rows="2" placeholder="ej. Se recomienda avanzar solo en clases X..."></textarea></div>
           <div class="form-group"><label class="form-label">Validez presup. (días)</label><input type="number" class="form-input" id="bq-validez" value="15" min="1"></div>
@@ -158,7 +158,8 @@ const Busqueda = (() => {
       </div>
 
       <div style="display:flex; justify-content:flex-end; margin-top: var(--space-lg); gap: var(--space-sm);">
-        <button class="btn btn--primary" id="bq-generar-pdf" type="button">📄 Generar PDF para el cliente</button>
+        <button class="btn btn--secondary" id="bq-preview-pdf" type="button">👁 Vista previa del PDF</button>
+        <button class="btn btn--primary" id="bq-generar-pdf" type="button">📄 Descargar PDF para el cliente</button>
       </div>
     `;
 
@@ -310,7 +311,8 @@ const Busqueda = (() => {
         ['bq-precio-busqueda', 'bq-precio-clase', 'bq-precio-otros'].forEach(id => {
             document.getElementById(id)?.addEventListener('input', actualizarTotal);
         });
-        document.getElementById('bq-generar-pdf')?.addEventListener('click', generarPDF);
+        document.getElementById('bq-generar-pdf')?.addEventListener('click', () => generarPDF(false));
+        document.getElementById('bq-preview-pdf')?.addEventListener('click', () => generarPDF(true));
         document.getElementById('bq-buscar-historico')?.addEventListener('click', buscarEnHistorico);
         document.getElementById('bq-consultar-inpi')?.addEventListener('click', consultarInpiEnVivo);
         document.getElementById('bq-consultar-cuit')?.addEventListener('click', consultarCuitEnVivo);
@@ -588,9 +590,11 @@ const Busqueda = (() => {
         }
     }
 
-    async function generarPDF() {
+    async async function generarPDF(preview = false) {
         const cfg = window.APP_CONFIG;
         const firm = (typeof Branding !== 'undefined') ? Branding.getFirm() : cfg.firm;
+        const previewWindow = preview ? window.open('about:blank', '_blank') : null;
+        if (preview && !previewWindow) { UI.toast('Permití ventanas emergentes para ver el PDF', 'error'); return; }
         const notaEstudio = document.getElementById('bq-nota')?.value.trim() || '';
         const validez = parseInt(document.getElementById('bq-validez')?.value) || 15;
         let logoData = null;
@@ -687,7 +691,7 @@ const Busqueda = (() => {
 
         doc.setFontSize(16);
         doc.setFont(undefined, 'bold');
-        doc.text('Informe de Búsqueda de Antecedentes Marcarios', MARGEN, y, { maxWidth: ANCHO });
+        doc.text(firm.pdfTitle || 'Informe de Búsqueda de Antecedentes Marcarios', MARGEN, y, { maxWidth: ANCHO });
         y += 12;
 
         // Ficha de datos
@@ -709,13 +713,7 @@ const Busqueda = (() => {
 
         // ═══ INTRODUCCIÓN ═══
         subtitulo('¿Qué es este informe?');
-        parrafo(
-            `Una búsqueda de antecedentes marcarios es el primer paso antes de solicitar el registro de una marca ante el ` +
-            `Instituto Nacional de la Propiedad Industrial (INPI). Consiste en relevar si existen marcas ya registradas, en ` +
-            `trámite o publicadas que puedan resultar idénticas o confundibles con la marca que se pretende registrar, en las ` +
-            `mismas clases o clases relacionadas. Detectar esto de forma preventiva permite estimar la probabilidad de éxito ` +
-            `del registro y anticipar eventuales oposiciones de terceros, antes de incurrir en los costos de presentación.`
-        );
+        parrafo(firm.pdfIntroduction || 'Una búsqueda de antecedentes marcarios releva solicitudes y registros que podrían entrar en conflicto con el signo pretendido. El análisis considera semejanzas denominativas, fonéticas, visuales y la relación entre productos o servicios, con alcance limitado a las fuentes y fecha indicadas en este informe.');
 
         // ═══ CLASES ═══
         subtitulo('Clases sugeridas (Clasificación de Niza)');
@@ -803,21 +801,23 @@ const Busqueda = (() => {
             });
             y += 6;
 
-            // ═══ CONCLUSIÓN DEL ESTUDIO ═══
-            subtitulo('Conclusión del estudio');
-            const maxRiesgo = resultados.some(r => r.riesgo === 'Alto') ? 'alto' : resultados.some(r => r.riesgo === 'Medio') ? 'medio' : 'bajo';
-            const conclusion = resultados.length === 0
-                ? 'No se relevaron antecedentes confundibles en las clases analizadas: el registro resulta viable en principio.'
-                : maxRiesgo === 'alto'
-                ? 'Se relevaron antecedentes con riesgo ALTO de confundibilidad. Se sugiere revisar la estrategia (cambio de denominación, recorte de clases o análisis de coexistencia) antes de presentar.'
-                : maxRiesgo === 'medio'
-                ? 'Se relevaron antecedentes con riesgo medio. El registro es intentable, evaluando con el cliente la tolerancia al riesgo de una eventual oposición o denegatoria.'
-                : 'Solo se relevaron antecedentes de riesgo bajo: el registro resulta viable en principio.';
-            parrafo(conclusion);
-            if (notaEstudio) { parrafo('Aclaraciones del estudio: ' + notaEstudio); }
+
         }
 
+        const maxRiesgo = resultados.some(r => r.riesgo === 'Alto') ? 'alto' : resultados.some(r => r.riesgo === 'Medio') ? 'medio' : 'bajo';
+        const conclusionAutomatica = resultados.length === 0
+            ? 'En las fuentes y clases consultadas no se incorporaron antecedentes similares al informe. Este resultado no equivale a una garantía de registrabilidad.'
+            : maxRiesgo === 'alto'
+            ? 'Se identificaron antecedentes de riesgo alto. Se recomienda un análisis jurídico individualizado y una estrategia de mitigación antes de presentar.'
+            : maxRiesgo === 'medio'
+            ? 'Se identificaron antecedentes de riesgo medio. Corresponde evaluar semejanzas, productos o servicios, titulares y contexto comercial.'
+            : 'Los antecedentes identificados presentan, preliminarmente, riesgo bajo. La decisión debe considerar el alcance real de los productos o servicios y la situación registral.';
+        subtitulo('Conclusión y recomendación del estudio');
+        parrafo(firm.pdfConclusion || conclusionAutomatica);
+        if (notaEstudio) parrafo('Análisis particular del caso: ' + notaEstudio);
+
         // ═══ PRESUPUESTO ═══
+        if (firm.pdfShowBudget !== false) {
         subtitulo('Presupuesto estimado');
         const busqueda = parseFloat(document.getElementById('bq-precio-busqueda')?.value || 0);
         const porClase = parseFloat(document.getElementById('bq-precio-clase')?.value || 0);
@@ -855,8 +855,10 @@ const Busqueda = (() => {
         doc.text(`Presupuesto válido por ${validez} días desde el ${fecha}. Incluye honorarios + tasas INPI vigentes a la fecha.`, MARGEN + 4, y + 2);
         doc.setTextColor(0);
         y += 12;
+        }
 
         // ═══ PRÓXIMOS PASOS ═══
+        if (firm.pdfShowNextSteps !== false) {
         subtitulo('Próximos pasos');
         const pasos = [
             'Confirmación del cliente sobre las clases a registrar y aceptación del presupuesto.',
@@ -875,6 +877,8 @@ const Busqueda = (() => {
             y += lineas.length * 4.3 + 3;
         });
 
+        }
+
         // ═══ ACLARACIÓN LEGAL ═══
         y += 4;
         saltoSiNecesario(24);
@@ -882,16 +886,18 @@ const Busqueda = (() => {
         doc.line(MARGEN, y, 196, y);
         y += 6;
         parrafo(
-            'Este informe tiene carácter orientativo y se basa en el relevamiento realizado a la fecha indicada. No constituye ' +
-            'garantía de concesión del registro: la resolución final sobre la solicitud, incluyendo la evaluación de similitud ' +
-            'con marcas de terceros, es potestad exclusiva del INPI. El presupuesto es estimado y puede variar según cambios ' +
-            'normativos en las tasas oficiales o particularidades del expediente.',
+            firm.pdfDisclaimer || 'Este informe tiene carácter orientativo y refleja las fuentes consultadas a la fecha indicada. No garantiza la concesión ni reemplaza el examen del INPI. La confundibilidad requiere considerar los signos en su conjunto, los productos o servicios identificados, los derechos anteriores y las circunstancias del caso.'
             { size: 8, color: 120, espacioExtra: 0 }
         );
 
         piePagina();
-        doc.save(`busqueda-previa-${marca.replace(/\s+/g, '-').toLowerCase()}.pdf`);
-        UI.toast('PDF generado', 'success');
+        if (preview) {
+            previewWindow.location.href = doc.output('bloburl');
+            UI.toast('Vista previa lista', 'success');
+        } else {
+            doc.save(`busqueda-previa-${marca.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+            UI.toast('PDF generado', 'success');
+        }
     }
 
     function reset() {
