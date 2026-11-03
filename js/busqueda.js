@@ -902,7 +902,7 @@ const Busqueda = (() => {
         doc.line(MARGEN, y, 196, y);
         y += 6;
         parrafo(
-            firm.pdfDisclaimer || 'Este informe tiene carácter orientativo y refleja las fuentes consultadas a la fecha indicada. No garantiza la concesión ni reemplaza el examen del INPI. La confundibilidad requiere considerar los signos en su conjunto, los productos o servicios identificados, los derechos anteriores y las circunstancias del caso.'
+            firm.pdfDisclaimer || 'Este informe tiene carácter orientativo y refleja las fuentes consultadas a la fecha indicada. No garantiza la concesión ni reemplaza el examen del INPI. La confundibilidad requiere considerar los signos en su conjunto, los productos o servicios identificados, los derechos anteriores y las circunstancias del caso.',
             { size: 8, color: 120, espacioExtra: 0 }
         );
 
