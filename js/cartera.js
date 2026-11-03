@@ -43,6 +43,12 @@ const Cartera = (() => {
             }
             cache = await API.getMarcasPorEstudio(estudioId);
             if (!Array.isArray(cache)) cache = [];
+            // logos-marcas es privado: firmar cada imagen para mostrarla en la cartera.
+            await Promise.all(cache.map(async m => {
+                try {
+                    if (m.logo_url && API.signedStorageUrl) m.logo_url = await API.signedStorageUrl(m.logo_url);
+                } catch (e) { console.warn('No se pudo firmar logo de cartera', m.id, e); }
+            }));
         } catch (err) {
             cache = [];
             UI.toast('Error cargando cartera', 'error');
