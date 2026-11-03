@@ -90,6 +90,7 @@ const App = (() => {
             presentar: ['Presentar Marca', 'Generar XML o enviar directo al INPI'],
             admin: ['Admin', 'Gestión de estudios y usuarios'],
             'carteras-admin': ['Todas las carteras', 'Vista auditoría admin — todas las marcas de todos los estudios'],
+            calendario: ['Calendario', 'Plazos legales, vencimientos y eventos del estudio'],
             configuracion: ['Configuración', 'Marca blanca de tu estudio — logo y colores'],
             login: ['Ingresar', 'Accedé a tu estudio']
         };
