@@ -5,7 +5,7 @@ const Configuracion = (() => {
     const { estudioId: eid, rol } = await Auth.getPerfilConEstudio().catch(() => ({}));
     if (rol === 'admin') {
       const preview = new URLSearchParams(window.location.search).get('preview_estudio');
-      return { estudioId: preview || eid, rol, readOnly: !preview && rol === 'admin' };
+      return { estudioId: preview || eid, rol, readOnly: false };
     }
     return { estudioId: eid, rol, readOnly: false };
   }
